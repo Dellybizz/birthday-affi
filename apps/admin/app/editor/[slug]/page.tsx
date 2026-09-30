@@ -1,5 +1,6 @@
 "use client";
 import {useState} from "react";
+import {saveDraft,publishPage} from "../../../lib/site-actions";
 
 type Node={id:string;label:string;type:"section"|"block";parent?:string};
 const initial:Node[]=[
@@ -24,10 +25,11 @@ export default function Editor(){
  const undo=()=>{const prev=history.at(-1);if(!prev)return;setFuture(f=>[...f,nodes]);setNodes(prev);setHistory(h=>h.slice(0,-1));setSaved(false)};
  const redo=()=>{const next=future.at(-1);if(!next)return;setHistory(h=>[...h,nodes]);setNodes(next);setFuture(f=>f.slice(0,-1));setSaved(false)};
  const addSection=()=>commit([...nodes,{id:crypto.randomUUID(),label:"New Section",type:"section"}]);
+ const document={schemaVersion:1,nodes:nodes.map(n=>({id:n.id,type:n.type,component:n.type==="section"?"Section":"Block",parentId:n.parent??null,props:{label:n.label},children:[]})),rootIds:nodes.filter(n=>n.type==="section").map(n=>n.id)};
  return <main className="flex h-screen flex-col overflow-hidden bg-[#f4f2f0]">
   <header className="flex h-14 shrink-0 items-center justify-between border-b bg-white px-3 sm:px-4">
    <div className="flex items-center gap-2"><a href="/" className="grid size-8 place-items-center rounded-lg border">←</a><strong className="hidden sm:block">Home</strong><span className="text-xs text-[#81736d]">{saved?"Saved":"Unsaved changes"}</span></div>
-   <div className="flex items-center gap-1"><button onClick={undo} disabled={!history.length} className="rounded-lg border px-2 py-1.5 text-sm disabled:opacity-40">↶</button><button onClick={redo} disabled={!future.length} className="rounded-lg border px-2 py-1.5 text-sm disabled:opacity-40">↷</button><div className="mx-1 hidden h-6 w-px bg-[#e8e1dc] sm:block"/>{(["mobile","tablet","desktop"] as const).map(d=><button key={d} onClick={()=>setDevice(d)} className={"hidden rounded-lg px-2 py-1.5 text-xs sm:block "+(device===d?"bg-[#f7e5eb] font-semibold":"")}>{d}</button>)}<button onClick={()=>setSaved(true)} className="rounded-lg border px-3 py-1.5 text-sm">Save</button><button className="rounded-lg bg-[#d86f91] px-3 py-1.5 text-sm font-semibold text-white">Publish</button></div>
+   <div className="flex items-center gap-1"><button onClick={undo} disabled={!history.length} className="rounded-lg border px-2 py-1.5 text-sm disabled:opacity-40">↶</button><button onClick={redo} disabled={!future.length} className="rounded-lg border px-2 py-1.5 text-sm disabled:opacity-40">↷</button><div className="mx-1 hidden h-6 w-px bg-[#e8e1dc] sm:block"/>{(["mobile","tablet","desktop"] as const).map(d=><button key={d} onClick={()=>setDevice(d)} className={"hidden rounded-lg px-2 py-1.5 text-xs sm:block "+(device===d?"bg-[#f7e5eb] font-semibold":"")}>{d}</button>)}<button onClick={async()=>{if(location.search.includes("pageId=")){await saveDraft(new URLSearchParams(location.search).get("pageId")!,document);setSaved(true)}}} className="rounded-lg border px-3 py-1.5 text-sm">Save</button><button className="rounded-lg bg-[#d86f91] px-3 py-1.5 text-sm font-semibold text-white">Publish</button></div>
   </header>
   <div className="grid min-h-0 flex-1 grid-cols-[220px_1fr] lg:grid-cols-[250px_1fr_300px]">
    <aside className="overflow-auto border-r bg-white p-3 sm:p-4">
