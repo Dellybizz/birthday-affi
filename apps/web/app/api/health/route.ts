@@ -1,2 +1,2 @@
-import {NextResponse} from 'next/server';
-export async function GET(){return NextResponse.json({ok:true,service:'wiffeyyyy-web',time:new Date().toISOString()})}
+import {NextResponse} from "next/server";
+export function GET(){return NextResponse.json({ok:true,service:"web",timestamp:new Date().toISOString()});}
