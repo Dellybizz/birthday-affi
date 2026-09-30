@@ -1,1 +1,1 @@
-{"name":"@wiffeyyyy/content","private":true,"version":"0.2.0","exports":{".":"./src/index.ts"}}
+{"name":"@wiffeyyyy/content","private":true,"version":"0.2.1","exports":{".":"./src/index.ts","./cms":"./src/cms.ts","./app-builders":"./src/app-builders.ts","./editor-schema":"./src/editor-schema.ts"}}
