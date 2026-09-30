@@ -89,3 +89,34 @@ create policy "admins manage versions" on public.page_versions for all using(pub
 create policy "admins manage media" on public.media_assets for all using(public.is_admin()) with check(public.is_admin());
 create policy "admins read audit" on public.audit_logs for select using(public.is_admin());
 create policy "admins write audit" on public.audit_logs for insert with check(public.is_admin());
+
+create table public.recipient_profiles(
+ id uuid primary key default gen_random_uuid(),
+ site_id uuid not null references public.sites(id) on delete cascade,
+ name text not null,
+ nickname text,
+ birthdate date,
+ birthday_greeting text,
+ favorite_music_note text,
+ settings jsonb not null default '{}',
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(),
+ unique(site_id)
+);
+
+alter table public.recipient_profiles enable row level security;
+create policy "admins manage recipient profile" on public.recipient_profiles for all using(public.is_admin()) with check(public.is_admin());
+
+create table public.app_content(
+ id uuid primary key default gen_random_uuid(),
+ site_id uuid not null references public.sites(id) on delete cascade,
+ app_slug text not null,
+ content jsonb not null default '{}',
+ enabled boolean not null default true,
+ updated_at timestamptz not null default now(),
+ unique(site_id,app_slug)
+);
+
+alter table public.app_content enable row level security;
+create policy "public enabled app content readable" on public.app_content for select using(enabled or public.is_admin());
+create policy "admins manage app content" on public.app_content for all using(public.is_admin()) with check(public.is_admin());
