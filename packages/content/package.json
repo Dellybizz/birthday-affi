@@ -1,5 +1,1 @@
-{
-  "name": "@wiffeyyyy/content",
-  "private": true,
-  "version": "0.0.0"
-}
+{"name":"@wiffeyyyy/content","private":true,"version":"0.2.0","exports":{".":"./src/index.ts"}}
