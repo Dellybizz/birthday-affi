@@ -1,1 +1,21 @@
-{"name":"@wiffeyyyy/ui","private":true,"version":"0.2.1","exports":{"./styles":"./src/styles.css","./cn":"./src/cn.ts","./app-experience":"./src/app-experience.tsx"},"peerDependencies":{"react":"^19.0.0"},"devDependencies":{"@types/react":"^19.0.0","react":"^19.1.0"}}
+{
+  "name": "@wiffeyyyy/ui",
+  "private": true,
+  "version": "0.2.1",
+  "exports": {
+    "./styles": "./src/styles.css",
+    "./cn": "./src/cn.ts",
+    "./app-experience": "./src/app-experience.tsx",
+    "./cms-renderer": "./src/cms-renderer.tsx"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.1.0"
+  },
+  "dependencies": {
+    "@wiffeyyyy/content": "workspace:*"
+  }
+}

@@ -8,9 +8,12 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "turbo test"
+    "test": "pnpm test:phase2 && turbo test",
+    "test:phase2": "node --test tests/phase2.test.mjs",
+    "test:admin-smoke": "node tests/admin-smoke.mjs"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
   }

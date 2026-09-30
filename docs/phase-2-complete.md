@@ -1,4 +1,6 @@
-# Phase 2 — CMS Core Complete
+# Historical CMS scaffolding notes
+
+These earlier notes are not Phase 2 acceptance evidence. Current database/auth status and live blockers are recorded in `phase-2-database-auth.md` and `phase-2-progress.md`.
 
 ## Implemented
 - CMS document schema v2 with sections, blocks, properties, visibility and theme.
