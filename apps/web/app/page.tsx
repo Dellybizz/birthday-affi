@@ -5,8 +5,8 @@ const apps = [
   ["🎬","Our Birthday Movie","A tiny film about us."],
   ["💋","The Kiss Shop","Gifts, promises, and things to redeem."],
   ["📻","Birthday Radio","Songs with a reason behind them."],
-];
-
+] as const;
+const slugs=["reasons","hotline","adventure","movie","kiss-shop","radio"] as const;
 export default function Home() {
   return (
     <main className="min-h-screen px-5 py-8 sm:px-8">
@@ -18,7 +18,7 @@ export default function Home() {
         </header>
         <section aria-label="Wiffeyyyy OS apps" className="grid grid-cols-2 gap-4">
           {apps.map(([icon,title,description], index) => (
-            <a key={title} href={`/app/${["reasons","hotline","adventure","movie","kiss-shop","radio"][index]}`} className="group rounded-[var(--w-radius)] border border-[var(--w-border)] bg-[var(--w-surface)] p-5 shadow-sm transition-transform hover:-translate-y-0.5">
+            <a key={title} href={`/app/${slugs[index]}`} className="group rounded-[var(--w-radius)] border border-[var(--w-border)] bg-[var(--w-surface)] p-5 shadow-sm transition-transform hover:-translate-y-0.5">
               <span className="grid size-12 place-items-center rounded-2xl bg-[var(--w-accent-soft)] text-2xl">{icon}</span>
               <h2 className="mt-4 font-semibold">{title}</h2>
               <p className="mt-1 text-sm leading-5 text-[var(--w-muted)]">{description}</p>
