@@ -1,1 +1,1 @@
-{"name":"@wiffeyyyy/ui","private":true,"version":"0.1.0","exports":{"./styles":"./src/styles.css","./cn":"./src/cn.ts"}}
+{"name":"@wiffeyyyy/ui","private":true,"version":"0.2.0","exports":{"./styles":"./src/styles.css","./cn":"./src/cn.ts","./app-experience":"./src/app-experience.tsx"}}
