@@ -1,3 +1,4 @@
-import {getPublicApp} from "@wiffeyyyy/content";
-import {AppExperience} from "@wiffeyyyy/ui/app-experience";
-export default async function Preview({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const app=getPublicApp(slug);if(!app)return <div>Preview not found</div>;return <AppExperience app={app}/>;}
+import { notFound } from 'next/navigation';
+import { getPublishedDocument } from '../../../lib/cms';
+import { CMSRenderer } from '@wiffeyyyy/ui/cms-renderer';
+export default async function Preview({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const document=await getPublishedDocument(slug);if(!document)notFound();return <CMSRenderer document={document as any}/>;}
