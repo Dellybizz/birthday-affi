@@ -1,0 +1,2 @@
+import {adminDb} from "./supabase";
+export async function recordAudit(input:{siteId:string;actorId?:string;action:string;entityType:string;entityId:string;metadata?:Record<string,unknown>}){const db=adminDb();const {error}=await db.from("audit_logs").insert({site_id:input.siteId,actor_id:input.actorId??null,action:input.action,entity_type:input.entityType,entity_id:input.entityId,metadata:input.metadata??{}});if(error)throw new Error(error.message);return{ok:true}}
