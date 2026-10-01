@@ -29,3 +29,6 @@ test('viewer cannot save or publish app content',()=>run(viewer,async()=>{await 
 
 test('timed captions save and publish with text preserved',()=>run(owner,async()=>{const d=appDoc('movie-scene');d.nodes[1].props.captions='0 | 2.5 | Hello\n2.5 | 4 | Love you';await save(d);await publish(1);assert.equal((await live()).nodes[1].props.captions,d.nodes[1].props.captions)}));
 test('SQL caption guard rejects malformed types and invalid timings',()=>run(owner,async()=>{for(const captions of [4,'words','2 | 1 | words','0 | 604801 | words','2 | 3 | words\n1 | 2 | words','0 | 1 | '+'x'.repeat(501)]){const d=appDoc('movie-scene');d.nodes[1].props.captions=captions;await rejects(()=>save(d),/Invalid caption/)}}));
+
+test('responsive overrides survive authenticated save and publication',()=>run(owner,async()=>{const d=doc('Responsive');d.nodes[0].props['mobile:padding']=8;d.nodes[1].props['tablet:size']=24;await save(d);await publish(1);assert.equal((await live()).nodes[0].props['mobile:padding'],8)}));
+test('SQL rejects unsafe responsive values and unsupported override keys',()=>run(owner,async()=>{for(const [key,value] of [['mobile:padding',-1],['tablet:color','url(evil)'],['mobile:src','https://example.test/a'],['phone:padding',2]]){const d=doc('Responsive');d.nodes[0].props[key]=value;await rejects(()=>save(d),/Invalid/)}}));

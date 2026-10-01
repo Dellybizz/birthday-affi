@@ -9,3 +9,5 @@ export * from "./validate";
 export * from './editor-operations';
 export * from './inspector-fields';
 export * from './autosave';
+
+export * from './power-editor';

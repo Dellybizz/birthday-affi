@@ -29,7 +29,10 @@ export function parsePageDocument(input: unknown): PageDocument {
     if (raw.label !== undefined && (typeof raw.label !== 'string' || raw.label.length > 200)) fail(raw.id + ': invalid label');
     if (!Array.isArray(raw.children) || !raw.children.every(id) || new Set(raw.children).size !== raw.children.length) fail(raw.id + ': invalid children');
     if (!record(raw.props)) { fail(raw.id + ': invalid props'); continue; }
-    for (const [key, value] of Object.entries(raw.props)) {
+    for (const [rawKey, value] of Object.entries(raw.props)) {
+      let key=rawKey;
+      if(rawKey.includes(':')){const parts=rawKey.split(':');if(parts.length!==2||!['mobile','tablet','desktop'].includes(parts[0])||!['background','color','padding','margin','radius','opacity','size','weight','align','columns','gap','objectFit','focalX','focalY','displayHeight'].includes(parts[1])){fail(raw.id+': invalid responsive override');continue}key=parts[1]}
+
       if (!(value === null || ['string', 'number', 'boolean'].includes(typeof value)) || (typeof value === 'number' && !Number.isFinite(value))) fail(raw.id + ': invalid property ' + key);
       if (typeof value === 'string' && value.length > 20_000) fail(raw.id + ': property too long');
       const ranges: Record<string, [number, number]> = { padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96], focalX:[0,100], focalY:[0,100], displayHeight:[0,1200] };
