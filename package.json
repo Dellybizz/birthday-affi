@@ -8,9 +8,10 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "pnpm test:phase2 && turbo test",
+    "test": "pnpm test:phase2 && pnpm test:phase3 && turbo test",
     "test:phase2": "node --test tests/phase2.test.mjs",
-    "test:admin-smoke": "node tests/admin-smoke.mjs"
+    "test:admin-smoke": "node tests/admin-smoke.mjs",
+    "test:phase3": "node --test tests/phase3.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

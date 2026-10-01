@@ -1,3 +1,6 @@
+import { getPublishedDocument } from '../lib/cms';
+import { CMSRenderer } from '@wiffeyyyy/ui/cms-renderer';
+export const dynamic = 'force-dynamic';
 const apps = [
   ["💗","Reasons I’m Obsessed","Little things I love about you."],
   ["☎️","Birthday Hotline","A call, a voice, a little affection."],
@@ -7,7 +10,9 @@ const apps = [
   ["📻","Birthday Radio","Songs with a reason behind them."],
 ] as const;
 const slugs=["reasons","hotline","adventure","movie","kiss-shop","radio"] as const;
-export default function Home() {
+export default async function Home() {
+  const document=await getPublishedDocument("home");
+  if(document)return <CMSRenderer document={document}/>;
   return (
     <main className="min-h-screen px-5 py-8 sm:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col">

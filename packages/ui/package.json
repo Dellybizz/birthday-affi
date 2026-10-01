@@ -16,6 +16,7 @@
     "react": "^19.1.0"
   },
   "dependencies": {
-    "@wiffeyyyy/content": "workspace:*"
+    "@wiffeyyyy/content": "workspace:*",
+    "tailwindcss": "^4.1.0"
   }
 }
