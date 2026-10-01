@@ -1,5 +1,6 @@
 "use client";
 import { parsePageDocument, appComponents, getAppItems, getPublicApp, type CMSNode, type PageDocument } from '@wiffeyyyy/content';
+import {MediaPlayer} from './media-player';
 import {AppExperience} from './app-experience';
 import type { CSSProperties, ReactNode } from 'react';
 const apps=[['💗','Reasons I’m Obsessed','reasons'],['☎️','Birthday Hotline','hotline'],['🧭','Our Next Adventure','adventure'],['🎬','Our Birthday Movie','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
@@ -13,8 +14,8 @@ function Block({node,editing=false}:{node:CMSNode;editing?:boolean}) {
     case 'heading': return <h1 style={style(node)} className="text-3xl font-semibold">{p.text??''}</h1>;
     case 'text': return <p style={style(node)} className="leading-7 text-[var(--w-muted)]">{p.text??''}</p>;
     case 'app-grid': return <div style={{...style(node),display:'grid',gridTemplateColumns:`repeat(${p.columns??2},minmax(0,1fr))`,gap:Number(p.gap??12)}}>{apps.map(([icon,title,slug])=><a key={slug} href={editing?undefined:'/app/'+slug} tabIndex={editing?-1:undefined} style={{background:"var(--w-surface)",borderColor:"var(--w-accent)",borderRadius:"var(--w-radius)"}} className="border p-5"><span className="text-2xl">{icon}</span><h2 className="mt-3 font-semibold">{title}</h2></a>)}</div>;
-    case 'video': return p.src?<video src={String(p.src)} aria-label={String(p.alt??'Video')} controls={!editing} preload="metadata" style={style(node)} className="w-full rounded-3xl"/>:null;
-    case 'audio': return p.src?<audio src={String(p.src)} aria-label={String(p.alt??'Audio')} controls={!editing} preload="none" className="w-full"/>:null;
+    case 'video':
+    case 'audio': return p.src?<MediaPlayer identity={'block:'+node.id} src={String(p.src)} kind={node.component as 'audio'|'video'} title={String(p.alt??node.component)} captions={String(p.captions??'')} disabled={editing} style={style(node)} className="w-full rounded-3xl"/>:null;
     case 'image': return p.src?<img src={String(p.src)} srcSet={p.mediaAssetId&&p.variantWidths?String(p.variantWidths).split(',').map(w=>String(p.src)+'?variant='+w+' '+w+'w').concat(p.mediaWidth?[String(p.src)+' '+p.mediaWidth+'w']:[]).join(', '):undefined} sizes={p.mediaAssetId?'(max-width: 768px) 100vw, 672px':undefined} width={typeof p.mediaWidth==='number'?p.mediaWidth:undefined} height={typeof p.mediaHeight==='number'?p.mediaHeight:undefined} alt={String(p.alt??'')} loading="lazy" decoding="async" style={{...style(node),objectFit:(p.objectFit??'cover') as CSSProperties['objectFit'],objectPosition:`${p.focalX??50}% ${p.focalY??50}%`,height:p.displayHeight?Number(p.displayHeight):'auto'}} className="w-full rounded-3xl object-cover"/>:null;
     default: {if(Object.values(appComponents).includes(node.component))return <article style={style(node)} className="rounded-3xl border bg-white p-6"><p className="text-xs text-[var(--w-muted)]">{node.label}</p><h2 className="mt-2 text-xl font-semibold">{p.title??''}</h2><p className="mt-3 whitespace-pre-line leading-7">{p.body??''}</p>{p.category&&<p className="mt-3 text-sm">Category: {p.category}</p>}{p.price&&<p className="mt-3 text-sm">Price: {p.price}</p>}{p.invitation&&<p className="mt-3 text-sm">Invitation: {p.invitation}</p>}</article>;return null;} 
   }

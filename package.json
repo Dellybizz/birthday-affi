@@ -8,7 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8",
+    "test": "pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
@@ -16,6 +16,7 @@
     "test:phase5": "node --test tests/phase5.test.mjs tests/phase5-autosave.test.mjs",
     "test:phase6": "node --test tests/phase6.test.mjs tests/phase6-policy.test.mjs",
     "test:phase7": "node --test tests/phase7.test.mjs",
+    "test:phase9": "node --test tests/phase9.test.mjs",
     "test:phase8": "node --test tests/phase8.test.mjs tests/phase8-sql.test.mjs"
   },
   "devDependencies": {

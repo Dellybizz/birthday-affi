@@ -1,3 +1,4 @@
+import { parseCaptions } from '../../audio/src/controller';
 import type { PageDocument } from './cms';
 import { componentRegistry } from './registry';
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -40,6 +41,7 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (key === 'mediaAssetId' && value !== null && (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))) fail(raw.id + ': invalid media asset');
       if (['mediaWidth','mediaHeight'].includes(key) && value !== null && (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 20000)) fail(raw.id + ': invalid media dimensions');
       if (key === 'variantWidths' && (typeof value !== 'string' || !/^(|480|960|1600|480,960|480,1600|960,1600|480,960,1600)$/.test(value))) fail(raw.id + ': invalid image variants');
+      if (key === 'captions') {try {if(typeof value!=='string')throw new Error();parseCaptions(value)}catch{fail(raw.id + ': invalid timed captions')}}
       if (key === 'src' && !safeMediaUrl(value)) fail(raw.id + ': unsafe image URL');
       if (['text','alt','className','title','body','category','price','invitation'].includes(key) && typeof value !== 'string') fail(raw.id + ': invalid ' + key);
     }

@@ -1,14 +1,14 @@
 "use client";
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {emptyAppProgress,parseAppProgress,reduceAppProgress,sampleAppItems,type AppAction,type AppDefinition,type AppItem} from '@wiffeyyyy/content';
+import {MediaPlayer} from './media-player';
 const card='rounded-3xl border border-[var(--w-border)] bg-[var(--w-surface)] p-6';
 const button='min-h-11 rounded-2xl border border-[var(--w-border)] px-4 py-3 text-sm font-semibold disabled:opacity-50';
 const primary=button+' bg-[#a9476b] text-white';
 const muted='text-sm leading-7 text-[var(--w-muted)]';
 function Media({item,kind}:{item:AppItem;kind:'audio'|'video'}){
- const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0);
  if(!item.src)return <p className={muted}>The {kind==='audio'?'recording':'video'} hasn’t been added yet. You can read the message below.</p>;
- return <div className="space-y-3">{kind==='audio'?<audio key={attempt} aria-label={item.title} src={item.src} controls preload="none" onError={()=>setFailed(true)} className="w-full"/>:<video key={attempt} aria-label={item.alt||item.title} src={item.src} controls playsInline preload="metadata" onError={()=>setFailed(true)} className="aspect-video w-full rounded-2xl bg-black"/>}{failed&&<div role="alert"><p className={muted}>This media couldn’t load. The text is still available.</p><button className={button} onClick={()=>{setFailed(false);setAttempt(x=>x+1)}}>Retry media</button></div>}</div>;
+ return <MediaPlayer identity={kind+':'+item.id} src={item.src} kind={kind} title={item.alt||item.title} captions={item.captions} className={kind==='audio'?'w-full':'aspect-video w-full rounded-2xl bg-black'}/>;
 }
 function Photo({item}:{item:AppItem}){const [failed,setFailed]=useState(false);return item.src&&!failed?<img src={item.src} alt={item.alt} loading="lazy" decoding="async" onError={()=>setFailed(true)} className="mb-4 max-h-80 w-full rounded-2xl object-contain"/>:null;}
 export function AppExperience({app,items:provided,embedded=false}:{app:AppDefinition;items?:AppItem[];embedded?:boolean}){
