@@ -38,8 +38,8 @@ test('published app blocks render interactive experiences in hierarchy order',()
 
 const {builtinPages,createDefaultPage,updateNode:edit,installDefaultLayout}=load(path.join(root,'packages/content/src/index.ts'));
 test('complete default pages render the same real layout in selection and interactive modes',()=>{
- const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Incoming birthday call',adventure:'Choose an atmosphere',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
- for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);assert.doesNotMatch(html,/autoplay/);}}
+ const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Priority line to your future husband',adventure:'Choose an atmosphere',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
+ for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
  let document=createDefaultPage('hotline');const message=document.nodes.find(n=>n.component==='hotline-message');document=edit(document,message.id,{props:{title:'My real message',body:'My own transcript',src:'https://example.com/greeting.mp3'}});const html=render(CMSRenderer,{document,onSelect:()=>{},selectedId:message.id});assert.match(html,/My real message/);assert.match(html,/My own transcript/);assert.match(html,/data-layout-node-id/);assert.match(html,/greeting.mp3/);
@@ -66,4 +66,11 @@ test('iPhone home presents six destinations once, removes Android navigation and
  const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
  assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
  for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Reasons','hotline':'Hotline','adventure':'Adventure','movie':'Movie','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
+});
+
+test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
+ let document=createDefaultPage('hotline');const node=document.nodes.find(n=>n.props.sectionKind==='incoming-call');
+ document=edit(document,node.id,{props:{incomingTitle:'My private priority line',callerName:'Zaid',answerLabel:'Call Zaid'}});
+ const live=render(CMSRenderer,{document});assert.match(live,/My private priority line/);assert.match(live,/Zaid/);assert.match(live,/Open your private link/);
+ const preview=render(CMSRenderer,{document,onSelect:()=>{}});assert.match(preview,/Private audio-call screen/);assert.match(preview,/disabled=""[^>]*>Call Zaid/);
 });

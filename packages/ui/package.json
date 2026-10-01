@@ -9,6 +9,7 @@
     "./cms-renderer": "./src/cms-renderer.tsx",
     "./media-player": "./src/media-player.tsx",
     "./navigation": "./src/navigation.tsx",
+    "./live-hotline": "./src/live-hotline.tsx",
     "./page-layout": "./src/page-layout.tsx"
   },
   "peerDependencies": {
