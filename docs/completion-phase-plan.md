@@ -1,3 +1,5 @@
+> Active editor correction: [Part 1 blueprint](editor-correction/part-1-blueprint.md). The user-approved seven-part correction sequence governs complete default pages and the Shopify-style editor. Earlier C-phase implementation is supporting infrastructure, not proof that the desired editor is complete.
+
 # Wiffeyyyy OS — Completion implementation plan
 
 Prepared 1 October 2026. This plan builds on the existing implementation; C0–C10 are completion phases and do not replace the original Phase 0–13 history. See shopify-control-map.md for current coverage.
