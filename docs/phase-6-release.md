@@ -27,3 +27,14 @@ Once Supabase provisions Storage, run `select public.configure_media_storage();`
 Then verify a real raster upload and its responsive variants, video/audio metadata and playback, editor pick/save/preview/publish, anonymous published delivery, draft denial, archive/restore and rollback. Live upload/playback verification and authenticated interactive picker QA remain pending. Failed partial uploads are retained as incomplete entries for archive; physical object lifecycle cleanup is Phase 12.
 
 Sources: [private buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals), [upload restrictions](https://supabase.com/docs/guides/storage/uploads/file-limits), [Storage RLS](https://supabase.com/docs/guides/storage/security/access-control).
+
+## Production release
+
+Both Next.js apps are deployed from uploaded source matching GitHub commit `db65af59a1fc5d96991f87a85b3329e6e76886a9` (tree `b629d124ae98cb56c7a263775a0eb94e236bc7c7`).
+
+| App | URL | Deployment | Result | Build duration |
+| --- | --- | --- | --- | --- |
+| Admin | https://wiffeyyyy-panel.vercel.app/login | `dpl_7eoFNHvLmvfooKjhdNkFELgh2Fhh` | READY | 63 seconds |
+| Public | https://wiffeyyyy-os.vercel.app/ | `dpl_Egbj5Fs5KMDadEyMxq5pak5QHMmc` | READY | 70 seconds |
+
+The source upload initially ignored the saved monorepo root; redeploying that same source with current project settings produced successful builds. Browser checks confirm the public homepage opens without login and the admin entry shows the username login form. Authenticated HTTP checks confirm owner login, editor/version toolbar, private saved-draft preview, and the new `/media` library/upload controls with 50 MB video limits. Sign-out and anonymous denial of the media library, admin object route and private preview also pass. Both health endpoints return HTTP 200, and an unknown public media asset returns HTTP 404. No birthday content was edited by these checks. Live upload and interactive picker verification remain blocked as described above.
