@@ -1,4 +1,6 @@
 import "@wiffeyyyy/ui/styles";
+import "./os.css";
+import { OSProvider } from "../components/os-provider";
 
 export const metadata = {
   title: "Wiffeyyyy OS",
@@ -6,5 +8,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en"><body><OSProvider>{children}</OSProvider></body></html>;
 }
