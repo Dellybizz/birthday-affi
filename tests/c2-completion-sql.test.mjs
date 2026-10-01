@@ -1,3 +1,8 @@
+import {execFileSync} from 'node:child_process';
+import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {content as layoutContent} from '../scripts/export-default-pages.mjs';
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
@@ -67,4 +72,23 @@ test('valid page theme saves regardless of the last layer property; invalid them
   const result=await save(document);assert.equal(result.revision,1);
   await rejects(()=>save({...document,theme:{background:'invalid'}},1),/Invalid theme color/);
  });
+});
+
+test('complete default layouts save and publish with preserved private draft isolation',async()=>{await run(owner,async()=>{let revision=0;for(const slug of layoutContent.builtinPages){const document=layoutContent.createDefaultPage(slug);const saved=await save(document,revision);revision=saved.revision;const published=await publish(revision);assert.equal((await live()).layout.page,slug);}assert.ok(revision>=8);});});
+test('new layout references and section kinds are validated at the database boundary',async()=>{await run(owner,async()=>{const document=layoutContent.createDefaultPage('movie');document.nodes.find(n=>n.component==='chapter').props.sceneId='missing';await rejects(()=>save(document),/Missing layout reference/);const invalid=layoutContent.createDefaultPage('home');invalid.nodes[0].props.sectionKind='unknown';await rejects(()=>save(invalid),/Invalid section kind/);});});
+
+test('live installer aborts atomically on conflicts, backs up drafts and preserves published pointers',async()=>{
+ const target=(await db.query("insert into public.sites(name,slug,public_delivery_enabled)values('Layout test','wiffeyyyy-os',true)returning id")).rows[0].id;
+ for(const slug of layoutContent.builtinPages)await db.query('insert into public.pages(site_id,slug,title,draft_document)values($1,$2,$2,$3)',[target,slug,JSON.stringify(slug==='adventure'?doc('My existing content'):{schemaVersion:2,nodes:[],rootIds:[]})]);
+ const directory=mkdtempSync(path.join(tmpdir(),'wiffeyyyy-layout-')),input=path.join(directory,'snapshot.json'),output=path.join(directory,'install.sql');
+ const prepare=async()=>{const rows=(await db.query('select slug,draft_revision,draft_document from public.pages where site_id=$1',[target])).rows;writeFileSync(input,JSON.stringify(rows));execFileSync(process.execPath,['scripts/prepare-layout-install.mjs',input,output]);return readFileSync(output,'utf8')};
+ try{
+ const stale=await prepare();await db.query("update public.pages set title='Changed elsewhere' where site_id=$1 and slug='radio'",[target]);
+ await assert.rejects(()=>db.exec(stale),/Draft changed/);await db.exec('rollback');
+ assert.equal(Number((await db.query('select count(*) count from private.page_layout_backups')).rows[0].count),0);
+ assert.equal(Number((await db.query("select count(*) count from public.pages where site_id=$1 and draft_document ? 'layout'",[target])).rows[0].count),0);
+ const current=await prepare();await db.exec(current);assert.equal(Number((await db.query('select count(*) count from private.page_layout_backups')).rows[0].count),8);
+ const adventure=(await db.query("select draft_document,published_version_id from public.pages where site_id=$1 and slug='adventure'",[target])).rows[0];assert.ok(adventure.draft_document.nodes.some(n=>n.props.text==='My existing content'));assert.equal(adventure.published_version_id,null);
+ const revisions=(await db.query('select slug,draft_revision from public.pages where site_id=$1 order by slug',[target])).rows;await db.exec(current);assert.deepEqual((await db.query('select slug,draft_revision from public.pages where site_id=$1 order by slug',[target])).rows,revisions);
+ }finally{rmSync(directory,{recursive:true,force:true})}
 });

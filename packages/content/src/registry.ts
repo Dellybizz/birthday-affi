@@ -12,6 +12,10 @@ export const componentRegistry = {
   'movie-scene': {label:'Movie scene',type:'block',defaults:{title:'Our little movie',body:'',src:'',alt:''}},
   'kiss-gift': {label:'Kiss shop gift',type:'block',defaults:{title:'A gift for you',body:'',price:'1 kiss',src:'',alt:''}},
   'radio-track': {label:'Radio track',type:'block',defaults:{title:'Our song',body:'',src:'',alt:''}},
+  action:{label:'Action button',type:'block',defaults:{title:'Continue',href:'/home'}},
+  invitation:{label:'Date invitation',type:'block',defaults:{title:'It’s a date',body:'',date:'',time:'',place:''}},
+  chapter:{label:'Movie chapter',type:'block',defaults:{title:'Chapter',sceneId:''}},
+  station:{label:'Radio station',type:'block',defaults:{title:'Station',body:'',src:'',alt:''}},
   'app-grid': { label: 'App grid', type: 'block', defaults: { columns: 2, gap: 12 } },
 } as const;
 export type ComponentName = keyof typeof componentRegistry;

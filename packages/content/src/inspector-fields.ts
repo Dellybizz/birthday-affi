@@ -22,3 +22,24 @@ export const componentFields:Record<string,InspectorField[]>={
 
 const captionField:InspectorField={key:'captions',label:'Timed captions (start seconds | end seconds | text; one cue per line)',type:'textarea'};
 for(const kind of ['audio','video','hotline-message','movie-scene','radio-track']) componentFields[kind].push(captionField);
+
+componentFields.action=[{key:'title',label:'Button label',type:'text'}];
+componentFields.invitation=['title','body','date','time','place'].map(key=>({key,label:key,type:key==='body'?'textarea':'text'}));
+componentFields.chapter=[{key:'title',label:'Chapter title',type:'text'},{key:'sceneId',label:'Scene ID',type:'text'}];
+componentFields.station=[{key:'title',label:'Station name',type:'text'},{key:'body',label:'Station description',type:'textarea'},{key:'src',label:'Artwork URL',type:'text'},{key:'alt',label:'Artwork description',type:'text'}];
+componentFields['hotline-message'].push({key:'digit',label:'Keypad digit (keypad messages only)',type:'text'});
+componentFields['radio-track'].push({key:'stationId',label:'Station ID',type:'text'},{key:'introSrc',label:'Recorded introduction URL',type:'text'});
+componentFields['movie-scene'].push({key:'mediaKind',label:'Scene media type',type:'select',options:['video','image']});
+componentFields['kiss-gift'].push({key:'available',label:'Available',type:'select',options:['true','false']});
+export const sectionContentFields:Record<string,InspectorField[]>={};
+for(const [kind,keys] of Object.entries({
+ 'incoming-call':['callerName','incomingTitle','answerLabel','endLabel'],
+ 'reason-deck':['previousLabel','nextLabel','favoriteLabel'],
+ 'invitation-reveal':['directLabel','backLabel'],
+ 'product-collection':['addLabel','detailsLabel'],
+ 'gift-bag':['title','emptyMessage','removeLabel'],
+ 'gift-checkout':['title','checkoutLabel'],
+ 'gift-receipt':['title','note','downloadLabel'],
+ 'radio-player':['title','previousLabel','nextLabel']
+}))sectionContentFields[kind]=keys.map(key=>({key,label:key.replace(/([A-Z])/g,' $1'),type:'text'}));
+sectionContentFields['date-widget']=[{key:'dateMode',label:'Date display',type:'select',options:['current','birthday']}];

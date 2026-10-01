@@ -1,5 +1,6 @@
 import { parseCaptions } from '../../audio/src/controller';
 import type { PageDocument } from './cms';
+import {sectionKinds,layoutSingletons,sectionBlocks} from './layout-contract';
 import { componentRegistry } from './registry';
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const id = (value: unknown): value is string => typeof value === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(value);
@@ -50,6 +51,20 @@ export function parsePageDocument(input: unknown): PageDocument {
     }
     if(raw.props.mediaAssetId && raw.props.src !== '/media/'+raw.props.mediaAssetId) fail(raw.id + ': media source must match asset');
   }
+  if(input.layout!==undefined){
+   if(!record(input.layout)||input.layout.version!==1||!['welcome','home','reasons','hotline','adventure','movie','kiss-shop','radio'].includes(String(input.layout.page)))fail('Invalid layout version or page');
+  }
+  for(const raw of nodes.values()){
+   const props=record(raw.props)?raw.props:{};
+   if(props.sectionKind!==undefined&&(raw.type!=='section'||!sectionKinds.includes(props.sectionKind as never)))fail(String(raw.id)+': invalid section kind');
+   if(props.sectionKind!==undefined&&Array.isArray(raw.children)&&sectionBlocks[String(props.sectionKind)])for(const child of raw.children)if(!sectionBlocks[String(props.sectionKind)].includes(String(nodes.get(String(child))?.component)))fail(String(raw.id)+': incompatible block');
+   if(raw.component==='action'&&!['/home','/'].includes(String(props.href)))fail(String(raw.id)+': invalid action destination');
+   for(const [key,component] of [['sceneId','movie-scene'],['stationId','station']] as const)if(props[key]!==undefined&&props[key]!==''&&(!nodes.has(String(props[key]))||nodes.get(String(props[key]))?.component!==component))fail(String(raw.id)+': missing '+key+' reference');
+   if(props.introSrc!==undefined&&!safeMediaUrl(props.introSrc))fail(String(raw.id)+': unsafe intro URL');
+   if(props.digit!==undefined&&!/^[0-9]$/.test(String(props.digit)))fail(String(raw.id)+': invalid keypad digit');
+  }
+  for(const kind of layoutSingletons)if([...nodes.values()].filter(n=>record(n.props)&&n.props.sectionKind===kind).length>1)fail('Only one '+kind+' section is allowed');
+  for(const node of nodes.values())if(record(node.props)&&node.props.sectionKind==='affection-keypad'&&Array.isArray(node.children)){const digits=node.children.map(id=>nodes.get(String(id))).filter(n=>n?.visible!==false).map(n=>record(n?.props)?n.props.digit:undefined).filter(x=>x!==undefined);if(new Set(digits).size!==digits.length)fail('Duplicate keypad digits')}
   if (!input.rootIds.every(id) || new Set(input.rootIds).size !== input.rootIds.length) fail('Invalid root IDs');
   const visited = new Set<string>();
   function visit(nodeId: string, parent: string | null, depth: number) {

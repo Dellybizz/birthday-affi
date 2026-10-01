@@ -15,3 +15,6 @@ export * from './component-contracts';
 export * from './site-document';
 export * from './page-settings';
 export * from './navigation';
+export * from './default-pages';
+export {sectionBlocks} from './layout-contract';
+export * from './layout-progress';

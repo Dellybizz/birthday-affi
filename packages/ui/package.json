@@ -8,7 +8,8 @@
     "./app-experience": "./src/app-experience.tsx",
     "./cms-renderer": "./src/cms-renderer.tsx",
     "./media-player": "./src/media-player.tsx",
-    "./navigation": "./src/navigation.tsx"
+    "./navigation": "./src/navigation.tsx",
+    "./page-layout": "./src/page-layout.tsx"
   },
   "peerDependencies": {
     "react": "^19.0.0"
