@@ -1,7 +1,10 @@
 "use client";
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { playbackCoordinator, parsePlayback, resumeTime, parseCaptions } from '../../audio/src/controller';
+const AudioDefaults=createContext({volume:1,muted:false});
+export const AudioDefaultsProvider=AudioDefaults.Provider;
 export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean}) {
+ const defaults=useContext(AudioDefaults);
  const media=useRef<HTMLMediaElement|null>(null);
  const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0),[storageWarning,setStorageWarning]=useState(false),[caption,setCaption]=useState('');
  const [captionWarning,setCaptionWarning]=useState(false),[restored,setRestored]=useState(false);
@@ -9,8 +12,8 @@ export function MediaPlayer({src,kind,title,identity,captions='',style,className
   const element=media.current;if(!element)return;
   setFailed(false);setCaption('');setRestored(false);setCaptionWarning(false);
   const storageKey='wiffeyyyy:playback:v1:'+JSON.stringify([identity,src]);
-  let state=parsePlayback(null),lastWrite=0,loaded=false;
-  try{state=parsePlayback(localStorage.getItem(storageKey))}catch{setStorageWarning(true)}
+  let state={...parsePlayback(null),volume:defaults.volume,muted:defaults.muted},lastWrite=0,loaded=false;
+  try{const saved=localStorage.getItem(storageKey);if(saved)state=parsePlayback(saved)}catch{setStorageWarning(true)}
   element.volume=state.volume;element.muted=state.muted;
   const save=(force=false)=>{if(!loaded)return;const now=Date.now();if(!force&&now-lastWrite<3000)return;lastWrite=now;
    const value={version:1,time:element.ended?0:element.currentTime,volume:element.volume,muted:element.muted};
@@ -43,7 +46,7 @@ export function MediaPlayer({src,kind,title,identity,captions='',style,className
    document.removeEventListener('visibilitychange',hide);window.removeEventListener('pagehide',unload);
    if(track){track.mode='disabled';for(const cue of Array.from(track.cues??[]))track.removeCue(cue)}
   };
- },[src,identity,kind,captions,attempt,disabled]);
+ },[src,identity,kind,captions,attempt,disabled,defaults.volume,defaults.muted]);
  const ref=(element:HTMLMediaElement|null)=>{media.current=element};
  let transcript='';try{transcript=parseCaptions(captions).map(c=>c.text).join('\n')}catch{}
  const props={src,controls:!disabled,style,className,'aria-label':title};

@@ -7,6 +7,9 @@ export const metadata = {
   description: "A little birthday world made just for her.",
 };
 
-export default function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
-  return <html lang="en"><body><OSProvider>{children}</OSProvider></body></html>;
+import {getPublishedSiteConfiguration} from "../lib/cms";
+export const dynamic="force-dynamic";
+export default async function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
+  const settings=await getPublishedSiteConfiguration();
+  return <html lang="en"><body><OSProvider settings={settings}>{children}</OSProvider></body></html>;
 }
