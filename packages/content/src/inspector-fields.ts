@@ -33,7 +33,7 @@ componentFields['movie-scene'].push({key:'mediaKind',label:'Scene media type',ty
 componentFields['kiss-gift'].push({key:'available',label:'Available',type:'select',options:['true','false']});
 export const sectionContentFields:Record<string,InspectorField[]>={};
 for(const [kind,keys] of Object.entries({
- 'incoming-call':['callerName','callerPhoto','incomingTitle','answerLabel','endLabel'],
+ 'incoming-call':['callerName','callerPhoto','recipientName','incomingTitle','answerLabel','endLabel'],
  'reason-deck':['previousLabel','nextLabel','favoriteLabel'],
  'invitation-reveal':['directLabel','backLabel'],
  'product-collection':['addLabel','detailsLabel'],
