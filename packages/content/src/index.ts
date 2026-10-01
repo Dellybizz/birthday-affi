@@ -11,3 +11,4 @@ export * from './inspector-fields';
 export * from './autosave';
 
 export * from './power-editor';
+export * from './component-contracts';
