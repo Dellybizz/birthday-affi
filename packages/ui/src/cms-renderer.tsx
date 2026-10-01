@@ -1,5 +1,6 @@
 "use client";
-import { parsePageDocument, type CMSNode, type PageDocument } from '@wiffeyyyy/content';
+import { parsePageDocument, appComponents, getAppItems, getPublicApp, type CMSNode, type PageDocument } from '@wiffeyyyy/content';
+import {AppExperience} from './app-experience';
 import type { CSSProperties, ReactNode } from 'react';
 const apps=[['💗','Reasons I’m Obsessed','reasons'],['☎️','Birthday Hotline','hotline'],['🧭','Our Next Adventure','adventure'],['🎬','Our Birthday Movie','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
 function style(node:CMSNode):CSSProperties {
@@ -15,15 +16,18 @@ function Block({node,editing=false}:{node:CMSNode;editing?:boolean}) {
     case 'video': return p.src?<video src={String(p.src)} aria-label={String(p.alt??'Video')} controls={!editing} preload="metadata" style={style(node)} className="w-full rounded-3xl"/>:null;
     case 'audio': return p.src?<audio src={String(p.src)} aria-label={String(p.alt??'Audio')} controls={!editing} preload="none" className="w-full"/>:null;
     case 'image': return p.src?<img src={String(p.src)} srcSet={p.mediaAssetId&&p.variantWidths?String(p.variantWidths).split(',').map(w=>String(p.src)+'?variant='+w+' '+w+'w').concat(p.mediaWidth?[String(p.src)+' '+p.mediaWidth+'w']:[]).join(', '):undefined} sizes={p.mediaAssetId?'(max-width: 768px) 100vw, 672px':undefined} width={typeof p.mediaWidth==='number'?p.mediaWidth:undefined} height={typeof p.mediaHeight==='number'?p.mediaHeight:undefined} alt={String(p.alt??'')} loading="lazy" decoding="async" style={{...style(node),objectFit:(p.objectFit??'cover') as CSSProperties['objectFit'],objectPosition:`${p.focalX??50}% ${p.focalY??50}%`,height:p.displayHeight?Number(p.displayHeight):'auto'}} className="w-full rounded-3xl object-cover"/>:null;
-    default:return null;
+    default: {if(Object.values(appComponents).includes(node.component))return <article style={style(node)} className="rounded-3xl border bg-white p-6"><p className="text-xs text-[var(--w-muted)]">{node.label}</p><h2 className="mt-2 text-xl font-semibold">{p.title??''}</h2><p className="mt-3 whitespace-pre-line leading-7">{p.body??''}</p>{p.category&&<p className="mt-3 text-sm">Category: {p.category}</p>}{p.price&&<p className="mt-3 text-sm">Price: {p.price}</p>}{p.invitation&&<p className="mt-3 text-sm">Invitation: {p.invitation}</p>}</article>;return null;} 
   }
 }
 export function CMSRenderer({document,onSelect,selectedId,embedded=false}:{document:PageDocument;onSelect?:(id:string)=>void;selectedId?:string;embedded?:boolean}) {
   const valid=parsePageDocument(document);
   const byId=new Map(valid.nodes.map(n=>[n.id,n]));
+  const groups=Object.entries(appComponents).map(([kind,component])=>({component,app:getPublicApp(kind==='shop'?'kiss-shop':kind)!,items:getAppItems(valid,kind as keyof typeof appComponents)}));
   const render=(id:string):ReactNode=>{
     const n=byId.get(id)!;
     if(!n.visible)return null;
+    const group=!onSelect?groups.find(g=>g.component===n.component):undefined;
+    if(group)return group.items[0]?.id===id?<AppExperience key={id} app={group.app} items={group.items} embedded/>:null;
     return <div key={id} data-node-id={id} role={onSelect?'button':undefined} tabIndex={onSelect?0:undefined} aria-label={onSelect?'Select '+(n.label??n.component):undefined} onKeyDown={onSelect?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onSelect(id)}}:undefined} onClick={onSelect?e=>{e.preventDefault();e.stopPropagation();onSelect(id)}:undefined} style={{...(n.type==='section'?style(n):{}),outline:selectedId===id?'2px solid #d86f91':undefined}} className={n.type==='section'?'space-y-4':''}>{n.type==='block'&&<Block node={n} editing={!!onSelect}/>} {n.children.map(render)}</div>;
   };
   return <div className={embedded?'space-y-8':'min-h-screen px-5 py-8'} style={{background:String(valid.theme?.background??'#fbf5ef'),color:String(valid.theme?.text??'#302927'),'--w-accent':String(valid.theme?.primary??'#d86f91'),'--w-surface':String(valid.theme?.surface??'#ffffff'),'--w-muted':String(valid.theme?.muted??'#81736d'),'--w-radius':String(valid.theme?.radius??24)+'px'} as CSSProperties}><div className="mx-auto max-w-2xl space-y-8">{valid.rootIds.map(render)}</div></div>;
