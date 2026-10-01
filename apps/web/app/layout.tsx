@@ -7,9 +7,10 @@ export const metadata = {
   description: "A little birthday world made just for her.",
 };
 
-import {getPublishedSiteConfiguration} from "../lib/cms";
+import {SiteNavigationProvider} from '@wiffeyyyy/ui/navigation';
+import {getPublicNavigation,getPublishedSiteConfiguration} from "../lib/cms";
 export const dynamic="force-dynamic";
 export default async function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
-  const settings=await getPublishedSiteConfiguration();
-  return <html lang="en"><body><OSProvider settings={settings}>{children}</OSProvider></body></html>;
+  const [settings,navigation]=await Promise.all([getPublishedSiteConfiguration(),getPublicNavigation()]);
+  return <html lang="en"><body><SiteNavigationProvider value={navigation}><OSProvider settings={settings}>{children}</OSProvider></SiteNavigationProvider></body></html>;
 }

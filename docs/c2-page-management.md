@@ -1,6 +1,6 @@
 # C2 — Page management, Part A
 
-Implemented 1 October 2026. C2 is not yet complete.
+Implemented 1 October 2026. This Part A report is historical. See c2-complete.md for the completed implementation.
 
 ## Delivered
 - /pages in the authenticated panel lists active and archived pages.

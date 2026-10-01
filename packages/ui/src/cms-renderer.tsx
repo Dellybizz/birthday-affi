@@ -1,4 +1,5 @@
 "use client";
+import {HomeNavigation,useSiteNavigation} from './navigation';
 import { resolveResponsive, parsePageDocument, appComponents, getAppItems, getPublicApp, type CMSNode, type PageDocument } from '@wiffeyyyy/content';
 import {MediaPlayer} from './media-player';
 import {AppExperience} from './app-experience';
@@ -10,11 +11,11 @@ function style(node:CMSNode):CSSProperties {
   return {background:p.background as string|undefined,color:p.color as string|undefined,padding:p.padding as number|undefined,margin:p.margin as number|undefined,borderRadius:p.radius as number|undefined,opacity:p.opacity as number|undefined,fontSize:p.size as number|undefined,fontWeight:p.weight as number|undefined,textAlign:p.align as CSSProperties['textAlign']};
 }
 function Block({node,editing=false}:{node:CMSNode;editing?:boolean}) {
-  const p=node.props;
+  const p=node.props;const navigation=useSiteNavigation();
   switch(node.component) {
     case 'heading': return <h1 style={style(node)} className="text-3xl font-semibold">{p.text??''}</h1>;
     case 'text': return <p style={style(node)} className="leading-7 text-[var(--w-muted)]">{p.text??''}</p>;
-    case 'app-grid': return <div style={{...style(node),display:'grid',gridTemplateColumns:`repeat(${p.columns??2},minmax(0,1fr))`,gap:Number(p.gap??12)}}>{apps.map(([icon,title,slug])=><a key={slug} href={editing?undefined:'/app/'+slug} tabIndex={editing?-1:undefined} style={{background:"var(--w-surface)",borderColor:"var(--w-accent)",borderRadius:"var(--w-radius)"}} className="border p-5"><span className="text-2xl">{icon}</span><h2 className="mt-3 font-semibold">{title}</h2></a>)}</div>;
+    case 'app-grid': if(navigation)return <HomeNavigation items={navigation} editing={editing} style={{...style(node),display:'grid',gridTemplateColumns:`repeat(${p.columns??2},minmax(0,1fr))`,gap:Number(p.gap??12)}}/>;return <div style={{...style(node),display:'grid',gridTemplateColumns:`repeat(${p.columns??2},minmax(0,1fr))`,gap:Number(p.gap??12)}}>{apps.map(([icon,title,slug])=><a key={slug} href={editing?undefined:'/app/'+slug} tabIndex={editing?-1:undefined} style={{background:"var(--w-surface)",borderColor:"var(--w-accent)",borderRadius:"var(--w-radius)"}} className="border p-5"><span className="text-2xl">{icon}</span><h2 className="mt-3 font-semibold">{title}</h2></a>)}</div>;
     case 'video':
     case 'audio': return p.src?<MediaPlayer identity={'block:'+node.id} src={String(p.src)} kind={node.component as 'audio'|'video'} title={String(p.alt??node.component)} captions={String(p.captions??'')} disabled={editing} style={style(node)} className="w-full rounded-3xl"/>:null;
     case 'image': return p.src?<img src={String(p.src)} srcSet={p.mediaAssetId&&p.variantWidths?String(p.variantWidths).split(',').map(w=>String(p.src)+'?variant='+w+' '+w+'w').concat(p.mediaWidth?[String(p.src)+' '+p.mediaWidth+'w']:[]).join(', '):undefined} sizes={p.mediaAssetId?'(max-width: 768px) 100vw, 672px':undefined} width={typeof p.mediaWidth==='number'?p.mediaWidth:undefined} height={typeof p.mediaHeight==='number'?p.mediaHeight:undefined} alt={String(p.alt??'')} loading="lazy" decoding="async" style={{...style(node),objectFit:(p.objectFit??'cover') as CSSProperties['objectFit'],objectPosition:`${p.focalX??50}% ${p.focalY??50}%`,height:p.displayHeight?Number(p.displayHeight):'auto'}} className="w-full rounded-3xl object-cover"/>:null;

@@ -14,3 +14,4 @@ export * from './power-editor';
 export * from './component-contracts';
 export * from './site-document';
 export * from './page-settings';
+export * from './navigation';
