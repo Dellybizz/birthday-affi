@@ -38,7 +38,7 @@ test('published app blocks render interactive experiences in hierarchy order',()
 
 const {builtinPages,createDefaultPage,updateNode:edit,installDefaultLayout}=load(path.join(root,'packages/content/src/index.ts'));
 test('complete default pages render the same real layout in selection and interactive modes',()=>{
- const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Priority line to your future husband',adventure:'Choose an atmosphere',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
+ const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Choose an atmosphere',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
  for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
@@ -71,6 +71,6 @@ test('iPhone home presents six destinations once, removes Android navigation and
 test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
  let document=createDefaultPage('hotline');const node=document.nodes.find(n=>n.props.sectionKind==='incoming-call');
  document=edit(document,node.id,{props:{incomingTitle:'My private priority line',callerName:'Zaid',answerLabel:'Call Zaid'}});
- const live=render(CMSRenderer,{document});assert.match(live,/My private priority line/);assert.match(live,/Zaid/);assert.match(live,/Open your private link/);
- const preview=render(CMSRenderer,{document,onSelect:()=>{}});assert.match(preview,/Private audio-call screen/);assert.match(preview,/disabled=""[^>]*>Call Zaid/);
+ const live=render(CMSRenderer,{document});assert.match(live,/My private priority line/);assert.match(live,/Zaid/);assert.match(live,/Call Zaid/);assert.doesNotMatch(live,/Open your private link/);
+ const preview=render(CMSRenderer,{document,onSelect:()=>{}});assert.match(preview,/One tap away/);assert.match(preview,/disabled=""[^>]*><span[^>]*>☎<\/span> Call Zaid/);
 });

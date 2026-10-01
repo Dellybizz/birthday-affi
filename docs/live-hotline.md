@@ -1,8 +1,7 @@
 # Private live Hotline
 
-Her capability link opens `/app/hotline#key=…`; his opens `/hotline/receive#key=…`.
-The 256-bit key assigns the role without an account. Browser fragments are removed
-and keys retained only in sessionStorage for that tab. Database stores SHA-256
+The normal `/app/hotline` page prepares a temporary caller capability automatically; no caller link or login is required. His private receiver link opens `/hotline/receive#key=…`.
+The 256-bit key assigns the role without an account. Receiver fragments are removed and receiver keys retained only in sessionStorage for that tab. Caller tokens live only in component memory, expire in 12 hours, and are tied to the receiver-link generation. Other public visitors see a busy line and cannot inspect or hang up an active call. Database stores SHA-256
 hashes only. Treat each URL as an access credential. Replacing links in Admin →
 Settings → Private Hotline links revokes both and ends the active call.
 
@@ -10,11 +9,9 @@ The existing `incoming-call` section renders the live screen and the same disabl
 preview in the visual editor. Its incomingTitle, callerName, answerLabel remain
 editable through the existing hierarchy. Recorded messages stay playable separately.
 
-Calls use WebRTC audio (no video or recording). SDP includes completed ICE candidates,
-exchanged through token-authorized PostgreSQL RPCs. A single pair row is locked for
+Calls use WebRTC audio (no video or recording). SDP is exchanged immediately; trickle ICE candidates follow through token-authorized PostgreSQL RPCs. Ringing no longer waits for full ICE gathering. A single pair row is locked for
 updates to serialize call starts. Ringing expires after 60 seconds; connected calls
-expire after 90 seconds without heartbeats. Poll interval: 2 seconds, no overlapping
-requests. Invalid/stale IDs cannot answer or hang up a newer call. No direct table
+expire after 90 seconds without heartbeats. Adaptive polling: 1 second while waiting, 400ms while ringing/connecting, 5 seconds once audio is connected; no overlapping requests. Invalid/stale IDs cannot answer or hang up a newer call. No direct table
 access is granted to visitor or signed-in roles.
 
 ## Network setup
