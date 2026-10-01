@@ -11,10 +11,9 @@
 
 .birthday-os-phone{padding:0;background:#593f65!important}.os-phone-home{padding:0;margin:0}.birthday-os-phone #birthday-content{min-height:100dvh}
 
-/* A bounded iPhone canvas keeps desktop zoom from stretching the launcher. */
+/* One fixed canvas scales uniformly to fit every viewport. */
 body:has(.birthday-os-phone){min-height:100dvh;display:grid;place-items:center;background:#e8e2eb}
-.birthday-os-phone{--phone-width:390px;--phone-height:min(830px,calc(100dvh - 46px));--phone-top:max(16px,calc((100dvh - 844px)/2));--phone-corner:37px;position:relative;width:390px;max-width:calc(100vw - 32px);min-height:0!important;border:7px solid #19151e;border-radius:44px;overflow:hidden;margin:16px auto;box-shadow:0 22px 70px #20172930,0 2px 7px #20172930;background:#593f65!important}
+.birthday-os-phone{--phone-width:390px;--phone-height:830px;--phone-corner:37px;position:relative;width:390px;max-width:none;min-height:0!important;border:7px solid #19151e;border-radius:44px;overflow:hidden;margin:0 auto;padding:0;zoom:var(--phone-scale,1);box-shadow:0 22px 70px #20172930,0 2px 7px #20172930;background:#593f65!important}
 .birthday-os-phone #birthday-content{min-height:0;height:var(--phone-height)}
 .birthday-os-phone .phone-home{height:var(--phone-height);max-width:none}
-.birthday-os-phone .phone-shade{--phone-width:376px;--phone-height:min(830px,calc(100dvh - 46px));--phone-top:max(23px,calc((100dvh - 844px)/2 + 7px));--phone-corner:37px}
-@media(max-width:599px){body:has(.birthday-os-phone){display:block;background:#593f65}.birthday-os-phone{--phone-width:100vw;--phone-height:100dvh;--phone-top:0px;--phone-corner:0px;width:100%;max-width:none;border:0;border-radius:0;margin:0;box-shadow:none}.birthday-os-phone .phone-shade{--phone-width:100vw;--phone-height:100dvh;--phone-top:0px;--phone-corner:0px}}
+.birthday-os-phone .phone-shade{--phone-width:376px;--phone-height:830px;--phone-top:var(--phone-fit-top,23px);--phone-corner:37px;max-height:none}
