@@ -32,6 +32,7 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (!(value === null || ['string', 'number', 'boolean'].includes(typeof value)) || (typeof value === 'number' && !Number.isFinite(value))) fail(raw.id + ': invalid property ' + key);
       if (typeof value === 'string' && value.length > 20_000) fail(raw.id + ': property too long');
       const ranges: Record<string, [number, number]> = { padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96] };
+      if (key === 'columns' && (typeof value !== 'number' || !Number.isInteger(value))) fail(raw.id + ': columns must be an integer');
       if (ranges[key] && (typeof value !== 'number' || value < ranges[key][0] || value > ranges[key][1])) fail(raw.id + ': invalid ' + key);
       if (['background','color'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
       if (key === 'align' && !['left','center','right'].includes(String(value))) fail(raw.id + ': invalid alignment');
