@@ -5,21 +5,21 @@ import type {InspectorField} from './inspector-fields';
 
 export const phoneParts=['home','wallpaper','status','notifications','notification','widget','launcher','app-icon','navigation'] as const;
 export const phoneFields:Record<string,InspectorField[]>={
- home:[],
+ home:[{key:'showWidget',label:'Birthday widget',type:'select',options:['true','false']}],
  wallpaper:[{key:'dim',label:'Wallpaper dimming',type:'number',min:0,max:0.8,step:0.05}],
- status:[{key:'networkLabel',label:'Network label',type:'text'},{key:'battery',label:'Decorative battery (%)',type:'number',min:0,max:100}],
+ status:[{key:'battery',label:'Decorative battery (%)',type:'number',min:0,max:100}],
  notifications:[{key:'title',label:'Panel title',type:'text'},{key:'emptyMessage',label:'Empty inbox message',type:'text'}],
  notification:[{key:'title',label:'Notification title',type:'text'},{key:'body',label:'Notification message',type:'textarea'},{key:'icon',label:'Notification icon',type:'text'},{key:'pageSlug',label:'Open page (slug)',type:'text'}],
  widget:[{key:'clockFormat',label:'Clock format',type:'select',options:['12','24']}],
  launcher:[],
- 'app-icon':[{key:'text',label:'App label',type:'text'},{key:'icon',label:'Emoji icon',type:'text'},{key:'pageSlug',label:'Page to open (slug)',type:'text'},{key:'iconBackground',label:'Icon background',type:'color'},{key:'src',label:'Custom icon image URL',type:'text'}],
+ 'app-icon':[{key:'placement',label:'Icon placement',type:'select',options:['grid','dock']},{key:'text',label:'App label',type:'text'},{key:'icon',label:'Emoji icon',type:'text'},{key:'pageSlug',label:'Page to open (slug)',type:'text'},{key:'iconBackground',label:'Icon background',type:'color'},{key:'src',label:'Custom icon image URL',type:'text'}],
  navigation:[]
 };
 export function isPhoneHome(document:PageDocument){return document.nodes.some(n=>n.parentId===null&&n.props.phonePart==='home');}
 // Upgrade on read in both the public renderer and editor. Existing messages, media and IDs survive.
 // All phone parts use existing section/text/image components and the existing draft/publish schema.
 export function installPhoneHome(input:PageDocument):PageDocument{
- const doc=parsePageDocument(input);if(isPhoneHome(doc))return doc;
+ const doc=parsePageDocument(input);if(isPhoneHome(doc))return refinePhoneHome(doc);
  const used=new Set(doc.nodes.map(n=>n.id));let counter=0;
  const add=(component:'section'|'text'|'image'|'app-grid',part:string,label:string,parent:CMSNode|null,props:Record<string,CMSField>={})=>{
   let id='phone-'+part+'-'+ ++counter;while(used.has(id))id+='-new';used.add(id);
@@ -40,7 +40,7 @@ export function installPhoneHome(input:PageDocument):PageDocument{
  grid.props.columns=3;grid.props.gap=18;
  for(const [slug,label,icon,color] of [['reasons','Reasons','💗','#f3a8c8'],['hotline','Hotline','☎️','#b8e1b3'],['adventure','Adventure','🧭','#a7d7e8'],['movie','Movie','🎬','#c4b5ef'],['kiss-shop','Kiss Shop','💋','#ffc4ac'],['radio','Radio','📻','#f5d592']])add('image','app-icon',label,launcher,{text:label,pageSlug:slug,icon,iconBackground:color,src:''});
  add('section','navigation','Android navigation bar',home);
- doc.rootIds=[home.id];return parsePageDocument(doc);
+ doc.rootIds=[home.id];return refinePhoneHome(doc);
 }
 
 export function addPhoneItem(document:PageDocument,parentId:string,id:string):PageDocument{
@@ -50,4 +50,23 @@ export function addPhoneItem(document:PageDocument,parentId:string,id:string):Pa
  node.label=app?'New app':'New notification';
  node.props=app?{phonePart:'app-icon',text:'New app',pageSlug:'home',icon:'♡',iconBackground:'#e8b4d0',src:''}:{phonePart:'notification',title:'A little reminder',body:'Your message here',icon:'♡',pageSlug:'home'};
  parent.children.push(id);next.nodes.push(node);return parsePageDocument(next);
+}
+
+// A one-time presentation upgrade retains every editable layer and its media.
+export function refinePhoneHome(document:PageDocument):PageDocument{
+ const doc=structuredClone(document),home=doc.nodes.find(n=>n.props.phonePart==='home');
+ if(!home||home.props.phonePresentation===2)return doc;
+ home.props.phonePresentation=2;home.props.showWidget='true';
+ if(home.label==='Android home screen')home.label='iPhone home screen';
+ for(const node of doc.nodes){
+  if(node.props.phonePart==='navigation')node.label='Home indicator';
+  if(node.props.phonePart==='widget'&&!node.children.some(id=>doc.nodes.find(n=>n.id===id)?.props.binding==='nickname'))node.visible=false;
+  if(node.props.sectionKind==='recent-app'||node.props.sectionKind==='keepsake-note')node.visible=false;
+  if(node.props.phonePart==='app-icon'&&node.props.placement===undefined)node.props.placement=['hotline','radio'].includes(String(node.props.pageSlug))?'dock':'grid';
+  if(node.component==='app-grid'){node.props.columns=4;node.props.gap=12;}
+ }
+ return parsePageDocument(doc);
+}
+export function phoneSwipeCloses(dx:number,dy:number,elapsedMs:number){
+ const distance=-dy;return distance>Math.abs(dx)*1.2&&(distance>=55||(distance>=22&&distance/Math.max(1,elapsedMs)>0.45));
 }

@@ -59,5 +59,11 @@ test('Android home renders wallpaper, six full icon links, notification shade an
  const selected=document.nodes.find(n=>n.props.phonePart==='app-icon');
  const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:selected.id});
  assert.match(editor,/Select Reasons/);assert.doesNotMatch(editor,/href="\/app\//);
- const inspector=render(Editor,{pageId:'test',siteId:'site',initialDocument:document});assert.match(inspector,/Android home screen/);assert.match(inspector,/Select Wallpaper/);
+ const inspector=render(Editor,{pageId:'test',siteId:'site',initialDocument:document});assert.match(inspector,/iPhone home screen/);assert.match(inspector,/Select Wallpaper/);
+});
+
+test('iPhone home presents six destinations once, removes Android navigation and unnecessary copy',()=>{
+ const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
+ assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Reasons','hotline':'Hotline','adventure':'Adventure','movie':'Movie','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
 });
