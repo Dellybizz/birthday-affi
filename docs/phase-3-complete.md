@@ -20,3 +20,7 @@ The previous visual-editor completion statement described scaffolding and has be
 ## Following phases
 
 Phase 4 will complete the editor interactions, including component insertion choices, subtree duplication and responsive settings. Phase 5 covers autosave, conflict handling, transactional publication, private previews and rollback. Animation/custom-class controls still require their later implementation. No personal content has been populated or published by this change. The hosted apps require a deployment of this branch before these changes become live.
+
+## Deployment update
+
+This implementation is now live in the Phase 5 production deployments. See `phase-5-release.md` for activation evidence and remaining interactive/real-device QA boundaries.

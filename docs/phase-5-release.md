@@ -31,6 +31,13 @@ This hosted check uses SQL session claims, not a deployed browser or Auth/Data A
 
 ## Release and next phase
 
-Frontend deployment and live-browser acceptance are tracked separately from the hosted database acceptance above. Phase 6 adds media upload/picking/metadata. Scheduled publishing, signed guest preview links, revision comparisons and automated snapshot retention are outside this phase. Existing immutable snapshots are retained; the history UI lists only the latest 50.
+Both production apps are deployed from source corresponding to commit `d6492fd3f75ced89250018bb1ad841a446ad1c18`, including the earlier Phase 3/4 changes.
+
+| App | Production URL | Deployment | Status |
+| --- | --- | --- | --- |
+| Public | https://wiffeyyyy-os.vercel.app/ | dpl_GtjZGpztG4dgotUR1CiC5cGPwf3Z | READY |
+| Admin | https://wiffeyyyy-panel.vercel.app/login | dpl_2qRtbrGLdZsioSPdFndeKp96zY6D | READY |
+
+The source-upload flow initially ignored saved monorepo settings; redeploying the same source with current project settings produced successful 55-second public and 58-second admin production builds. Browser verification confirms the public homepage opens without login and the admin root redirects to the username login form. Both deployed health endpoints return HTTP 200; the retired public preview route returns HTTP 404. An authenticated HTTP smoke test passed username login, owner dashboard/editor access, Phase 5 toolbar presence, saved-draft preview, sign-out and anonymous editor/preview denial. It did not mutate a real birthday draft. Full authenticated interactive editor click-through and real-device QA remain separate from these checks. Phase 6 adds media upload/picking/metadata. Scheduled publishing, signed guest preview links, revision comparisons and automated snapshot retention are outside this phase. Existing immutable snapshots are retained; the history UI lists only the latest 50.
 
 Sources: [Supabase database functions](https://supabase.com/docs/guides/database/functions), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security).

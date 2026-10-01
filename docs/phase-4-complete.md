@@ -28,3 +28,7 @@ This record follows `phase-wise-plan.md`. The previous production-product-layer 
 ## Release boundary
 
 This is implemented and tested in source. It has not been deployed or exercised interactively in a live browser in this phase. No real recipient content was published. Autosave, conflict detection, draft versioning, transactional publishing, rollback and private preview remain Phase 5; media uploads/picking remain Phase 6. Canvas presets fit the available screen width and are not a substitute for real-device testing.
+
+## Deployment update
+
+This implementation is now live in the Phase 5 production deployments. See `phase-5-release.md` for activation evidence and remaining interactive/real-device QA boundaries.
