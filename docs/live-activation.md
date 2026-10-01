@@ -10,4 +10,4 @@ Live Auth API checks passed: owner login, owner draft access to eight pages, ref
 
 Supabase advisors report intentional SECURITY DEFINER warnings on the public published-document RPC. Its narrowly scoped query requires the explicit public-delivery flag and active published version. It provides the required anonymous delivery boundary; raw tables remain inaccessible.
 
-Still required for full Phase 2 certification: real viewer/editor access checks, expiry/revocation acceptance and invited-account lifecycle. Deployed HTTP form checks passed for username login, owner dashboard/editor access, logout and anonymous editor redirects. The live browser shows the enabled Username and Password form. Content and media have not been imported or published. The editor remains scaffolding awaiting later phases.
+Final certification is recorded in `phase-2-acceptance.md`. The live session guard closes post-logout JWT replay. Phase 2 is complete within the stated acceptance limits; content and editor work continues in later phases.

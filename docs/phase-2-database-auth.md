@@ -56,3 +56,7 @@ Phase 2 remains awaiting live activation and certification.
 - https://supabase.com/changelog
 
 Current SSR documentation distinguishes `middleware.ts` on Next.js 15 from `proxy.ts` on Next.js 16; this repository stays on its installed Next.js 15 baseline.
+
+## Hosted completion update — October 1, 2026
+
+The activation and acceptance checklist is completed within the explicitly documented test limits. Username sign-in replaces the original email form. The hosted session guard additionally denies signed-out/expired-session access tokens. See `phase-2-acceptance.md` for the final evidence, intentional advisor notices and boundaries. Earlier pending-status paragraphs above describe the implementation baseline and are superseded by this update.

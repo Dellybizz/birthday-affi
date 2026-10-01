@@ -16,6 +16,7 @@ async function as(role, id, sql) {
   await db.exec(`begin; set local role ${role};`);
   try {
     await db.query("select set_config('request.jwt.claim.sub', $1, true)", [id ?? '']);
+    await db.query("select set_config('request.jwt.claim.session_id', $1, true)", [id ?? '']);
     return await db.query(sql);
   } finally { await db.exec('rollback'); }
 }
@@ -25,6 +26,9 @@ before(async () => {
   await db.exec(`
     create role anon nologin; create role authenticated nologin;
     create schema auth; create table auth.users(id uuid primary key);
+    create table auth.sessions(id uuid primary key, user_id uuid references auth.users(id), not_after timestamptz);
+    create function auth.jwt() returns jsonb language sql stable as
+      $$ select jsonb_build_object('session_id',nullif(current_setting('request.jwt.claim.session_id',true),'')) $$;
     create function auth.uid() returns uuid language sql stable as
       $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema auth, public to anon, authenticated;
@@ -37,6 +41,7 @@ before(async () => {
   }
   await db.exec(`
     insert into auth.users values ('${owner}'),('${editor}'),('${viewer}'),('${stranger}');
+    insert into auth.sessions(id,user_id) select id,id from auth.users;
     insert into public.admin_users(id,role) values ('${owner}','owner'),('${editor}','editor'),('${viewer}','viewer');
     insert into public.sites(id,name,slug) values ('${site}','Test','test-site');
     insert into public.pages(id,site_id,slug,title,draft_document) values
@@ -96,6 +101,7 @@ test('successful mutations append authenticated audit rows; audit cannot be forg
   await db.exec('begin; set local role authenticated;');
   try {
     await db.query("select set_config('request.jwt.claim.sub',$1,true)", [editor]);
+    await db.query("select set_config('request.jwt.claim.session_id',$1,true)", [editor]);
     await db.exec(`update public.pages set title='Audit test' where id='${page}'`);
     const audit = await db.query(`select actor_id,site_id from public.audit_logs where actor_id='${editor}' order by id desc limit 1`);
     assert.deepEqual(audit.rows[0], { actor_id: editor, site_id: site });
@@ -106,4 +112,24 @@ test('successful mutations append authenticated audit rows; audit cannot be forg
 test('revoking an admin role removes database access immediately', async () => {
   await db.exec(`delete from public.admin_users where id='${viewer}'`);
   assert.equal((await as('authenticated', viewer, 'select * from public.pages')).rows.length, 0);
+});
+
+
+test('sign-out session removal rejects retained access-token claims', async () => {
+  await db.exec(`delete from auth.sessions where id='${editor}'`);
+  assert.equal((await as('authenticated', editor, 'select * from public.pages')).rows.length, 0);
+  assert.equal((await as('authenticated', editor, 'select * from public.admin_users')).rows.length, 0);
+  assert.equal((await as('authenticated', editor, `update public.pages set title='Replay' returning id`)).rows.length, 0);
+  await db.exec(`insert into auth.sessions(id,user_id) values('${editor}','${editor}')`);
+});
+test('expired session lifetime denies CMS access while valid sessions work', async () => {
+  await db.exec(`update auth.sessions set not_after=now()-interval '1 second' where id='${owner}'`);
+  assert.equal((await as('authenticated', owner, 'select * from public.pages')).rows.length, 0);
+  await db.exec(`update auth.sessions set not_after=null where id='${owner}'`);
+  assert.equal((await as('authenticated', owner, 'select * from public.pages')).rows.length, 1);
+});
+test('another user session id cannot authorize admin access', async () => {
+  await db.exec(`update auth.sessions set user_id='${stranger}' where id='${editor}'`);
+  assert.equal((await as('authenticated', editor, 'select * from public.pages')).rows.length, 0);
+  await db.exec(`update auth.sessions set user_id='${editor}' where id='${editor}'`);
 });
