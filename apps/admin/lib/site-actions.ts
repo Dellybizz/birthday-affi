@@ -7,7 +7,7 @@ export async function saveDraft(pageId:string,document:unknown,expectedRevision:
  try {
   await requireAdmin('site:write');const db=await adminDb();
   const {data,error}=await db.rpc('save_page_draft',{p_page_id:pageId,p_document:parsePageDocument(document),p_expected_revision:expectedRevision});
-  if(error)return {ok:false as const,code:error.code==='40001'?'conflict' as const:'error' as const,message:error.code==='40001'?'This draft changed in another tab. Download your edits, then reload the latest draft.':'Unable to save draft. Please retry.'};
+  if(error)return {ok:false as const,code:error.code==='40001'?'conflict' as const:'error' as const,message:error.code==='40001'?'This draft changed in another tab. Download your edits, then reload the latest draft.':error.message.startsWith('Invalid')||error.message.startsWith('Unsafe')?error.message+'. Review the selected settings and retry.':error.code==='42501'?'Your session cannot save this page. Sign in again with an owner or editor account.':'Unable to save draft. Please retry.'};
   return {ok:true as const,revision:Number(data.revision)};
  }catch{return {ok:false as const,code:'error' as const,message:'Unable to save. Check your session and document, then retry.'}};
 }

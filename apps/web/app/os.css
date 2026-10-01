@@ -4,3 +4,7 @@
 .birthday-os .os-app-card,.birthday-os .os-home-widget,.birthday-os .os-back,.birthday-os .os-dialog{background:var(--w-surface);color:var(--w-text);border-radius:var(--w-radius)}
 .birthday-os .os-brand,.birthday-os h1 em,.birthday-os .os-card-meta,.birthday-os .os-text-button{color:var(--w-accent)}
 .birthday-os .os-primary{background:var(--w-accent);border-radius:var(--w-radius)}
+
+/* The keepsake is a phone experience on every screen. */
+.birthday-os{width:100%;max-width:430px;margin-inline:auto;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+@media(min-width:600px){body{background:#eee5e1}.birthday-os{box-shadow:0 0 50px #40353218;min-height:100dvh}}

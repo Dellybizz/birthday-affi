@@ -60,3 +60,11 @@ test('C2 published navigation references prevent archive; editor cannot publish 
   await db.query("update public.pages set settings='{\"archived\":true}' where id=$1",[other]);
  }));
 });
+
+test('valid page theme saves regardless of the last layer property; invalid themes fail',async()=>{
+ await run(owner,async()=>{
+  const document=doc('Theme regression');document.theme={background:'#fbf5ef',primary:'#d86f91',radius:24};
+  const result=await save(document);assert.equal(result.revision,1);
+  await rejects(()=>save({...document,theme:{background:'invalid'}},1),/Invalid theme color/);
+ });
+});

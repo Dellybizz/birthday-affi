@@ -3,7 +3,7 @@ import {HomeNavigation,useSiteNavigation} from './navigation';
 import { resolveResponsive, parsePageDocument, appComponents, getAppItems, getPublicApp, type CMSNode, type PageDocument } from '@wiffeyyyy/content';
 import {MediaPlayer} from './media-player';
 import {AppExperience} from './app-experience';
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useRef,useState,useMemo} from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 const apps=[['💗','Reasons I’m Obsessed','reasons'],['☎️','Birthday Hotline','hotline'],['🧭','Our Next Adventure','adventure'],['🎬','Our Birthday Movie','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
 function style(node:CMSNode):CSSProperties {
@@ -25,7 +25,7 @@ function Block({node,editing=false}:{node:CMSNode;editing?:boolean}) {
 export function CMSRenderer({document,onSelect,selectedId,embedded=false,previewDevice}:{document:PageDocument;onSelect?:(id:string)=>void;selectedId?:string;embedded?:boolean;previewDevice?:'mobile'|'tablet'|'desktop'}) {
   const container=useRef<HTMLDivElement>(null),[device,setDevice]=useState<'mobile'|'tablet'|'desktop'>('desktop');
   useEffect(()=>{if(previewDevice||!container.current)return;const observe=new ResizeObserver(([entry])=>setDevice(entry.contentRect.width<600?'mobile':entry.contentRect.width<960?'tablet':'desktop'));observe.observe(container.current);return()=>observe.disconnect()},[previewDevice]);
-  const original=parsePageDocument(document),valid={...original,nodes:original.nodes.map(n=>resolveResponsive(n,previewDevice??device))};
+  const original=useMemo(()=>parsePageDocument(document),[document]),valid={...original,nodes:original.nodes.map(n=>resolveResponsive(n,previewDevice??device))};
   const byId=new Map(valid.nodes.map(n=>[n.id,n]));
   const groups=Object.entries(appComponents).map(([kind,component])=>({component,app:getPublicApp(kind==='shop'?'kiss-shop':kind)!,items:getAppItems(valid,kind as keyof typeof appComponents)}));
   const render=(id:string):ReactNode=>{
