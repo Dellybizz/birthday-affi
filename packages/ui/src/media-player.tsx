@@ -1,8 +1,8 @@
 "use client";
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
 import { playbackCoordinator, parsePlayback, resumeTime, parseCaptions } from '../../audio/src/controller';
 const AudioDefaults=createContext({volume:1,muted:false});
-export const AudioDefaultsProvider=AudioDefaults.Provider;
+export function AudioDefaultsProvider({value,children}:{value:{volume:number;muted:boolean};children:ReactNode}){return <AudioDefaults.Provider value={value}>{children}</AudioDefaults.Provider>;}
 export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean}) {
  const defaults=useContext(AudioDefaults);
  const media=useRef<HTMLMediaElement|null>(null);

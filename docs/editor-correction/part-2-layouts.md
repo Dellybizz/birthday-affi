@@ -27,7 +27,9 @@ Private input snapshots and generated installation SQL stay outside the reposito
 
 ## Verification
 
-142 tests passed, including deterministic defaults, all eight real-layout renders in both modes, preservation/idempotency/collision cases, escaped receipt output, browser-progress filtering, database save/publish of every layout, invalid-reference rejection, and existing publishing/RLS regressions. Type checks and both production builds passed. The additional backup deny policy passed the database suite. A rehearsed installation transaction proves all-or-nothing conflict handling, eight recovery snapshots, preserved existing text, unchanged publication pointers and idempotent reruns.
+143 tests passed, including deterministic defaults, all eight real-layout renders in both modes, preservation/idempotency/collision cases, escaped receipt output, browser-progress filtering, database save/publish of every layout, invalid-reference rejection, and existing publishing/RLS regressions. Type checks and both production builds passed. The additional backup deny policy passed the database suite. A rehearsed installation transaction proves all-or-nothing conflict handling, eight recovery snapshots, preserved existing text, unchanged publication pointers and idempotent reruns.
+
+A deployed browser check caught React error #306 from exporting a bare context Provider across the RSC boundary. All exported providers now use normal component functions, covered by a regression test; both builds and type checks passed again.
 
 Localhost interaction testing was blocked by the cloud browser (`ERR_BLOCKED_BY_CLIENT`); deployed public checks and live installation are recorded separately after deployment. This is not a measured speed certification.
 
