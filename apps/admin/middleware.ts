@@ -5,6 +5,8 @@ import { authConfig, authConfigured } from './lib/auth-config';
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
   response.headers.set('Cache-Control', 'private, no-store');
+  response.headers.set('X-Robots-Tag','noindex, nofollow');
+  response.headers.set('Referrer-Policy','no-referrer');
   const redirectTo = (path: string) => {
     const target = request.nextUrl.clone();
     target.pathname = path;
@@ -12,6 +14,8 @@ export async function middleware(request: NextRequest) {
     const result = NextResponse.redirect(target);
     for (const cookie of response.cookies.getAll()) result.cookies.set(cookie);
     result.headers.set('Cache-Control', 'private, no-store');
+    result.headers.set('X-Robots-Tag','noindex, nofollow');
+    result.headers.set('Referrer-Policy','no-referrer');
     return result;
   };
   if (!authConfigured()) return request.nextUrl.pathname === '/login' ? response : redirectTo('/login');
@@ -22,6 +26,8 @@ export async function middleware(request: NextRequest) {
       for (const { name, value } of values) request.cookies.set(name, value);
       response = NextResponse.next({ request });
       response.headers.set('Cache-Control', 'private, no-store');
+      response.headers.set('X-Robots-Tag','noindex, nofollow');
+      response.headers.set('Referrer-Policy','no-referrer');
       for (const { name, value, options } of values) response.cookies.set(name, value, options);
     },
   } });

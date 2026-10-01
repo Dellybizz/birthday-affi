@@ -8,11 +8,12 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && turbo test",
+    "test": "pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
-    "test:phase4": "node --test tests/phase4.test.mjs tests/phase4-render.test.mjs"
+    "test:phase4": "node --test tests/phase4.test.mjs tests/phase4-render.test.mjs",
+    "test:phase5": "node --test tests/phase5.test.mjs tests/phase5-autosave.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
