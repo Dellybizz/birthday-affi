@@ -40,6 +40,11 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (key === 'columns' && (typeof value !== 'number' || !Number.isInteger(value))) fail(raw.id + ': columns must be an integer');
       if (ranges[key] && (typeof value !== 'number' || value < ranges[key][0] || value > ranges[key][1])) fail(raw.id + ': invalid ' + key);
       if (['background','color'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
+      if (key === 'phonePart' && !['home','wallpaper','status','notifications','notification','widget','launcher','app-icon','navigation'].includes(String(value))) fail(raw.id + ': invalid phone part');
+      if (key === 'pageSlug' && (typeof value !== 'string' || !/^[a-z0-9][a-z0-9-]{0,99}$/.test(value))) fail(raw.id + ': invalid page slug');
+      if (key === 'iconBackground' && !color(value)) fail(raw.id + ': invalid icon color');
+      if (key === 'dim' && (typeof value !== 'number' || value < 0 || value > 0.8)) fail(raw.id + ': invalid wallpaper dimming');
+      if (key === 'battery' && (typeof value !== 'number' || value < 0 || value > 100)) fail(raw.id + ': invalid battery');
       if (key === 'align' && !['left','center','right'].includes(String(value))) fail(raw.id + ': invalid alignment');
       if (key === 'objectFit' && !['cover','contain'].includes(String(value))) fail(raw.id + ': invalid image fit');
       if (key === 'mediaAssetId' && value !== null && (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))) fail(raw.id + ': invalid media asset');

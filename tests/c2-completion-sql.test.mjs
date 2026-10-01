@@ -2,7 +2,7 @@ import {execFileSync} from 'node:child_process';
 import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {content as layoutContent} from '../scripts/export-default-pages.mjs';
+import {content as layoutContent,phone} from '../scripts/export-default-pages.mjs';
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
@@ -91,4 +91,15 @@ test('live installer aborts atomically on conflicts, backs up drafts and preserv
  const adventure=(await db.query("select draft_document,published_version_id from public.pages where site_id=$1 and slug='adventure'",[target])).rows[0];assert.ok(adventure.draft_document.nodes.some(n=>n.props.text==='My existing content'));assert.equal(adventure.published_version_id,null);
  const revisions=(await db.query('select slug,draft_revision from public.pages where site_id=$1 order by slug',[target])).rows;await db.exec(current);assert.deepEqual((await db.query('select slug,draft_revision from public.pages where site_id=$1 order by slug',[target])).rows,revisions);
  }finally{rmSync(directory,{recursive:true,force:true})}
+});
+
+test('Android home saves and publishes through the existing SQL schema with wallpaper media and app icons',async()=>{
+ await run(owner,async()=>{
+  const document=phone.installPhoneHome(layoutContent.createDefaultPage('home'));
+  const wallpaper=document.nodes.find(n=>n.props.phonePart==='wallpaper');wallpaper.props.src='https://example.com/wallpaper.jpg';
+  const icon=document.nodes.find(n=>n.props.phonePart==='app-icon');icon.props.src='https://example.com/icon.jpg';
+  const saved=await save(document);await publish(saved.revision);const published=await live();
+  assert.equal(published.nodes.find(n=>n.id===wallpaper.id).props.src,wallpaper.props.src);
+  assert.equal(published.nodes.find(n=>n.id===icon.id).props.pageSlug,icon.props.pageSlug);
+ });
 });

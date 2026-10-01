@@ -8,3 +8,4 @@ export const content=load('packages/content/src/default-pages.ts');
 export const progress=load('packages/content/src/layout-progress.ts');
 export const contracts=load('packages/content/src/layout-contract.ts');
 if(process.argv[1]===new URL(import.meta.url).pathname)process.stdout.write(JSON.stringify(Object.fromEntries(content.builtinPages.map(slug=>[slug,content.createDefaultPage(slug)]))));
+export const phone=load('packages/content/src/phone-home.ts');

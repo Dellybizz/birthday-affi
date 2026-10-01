@@ -47,3 +47,17 @@ test('typed app sections retain edited labels and media in the real editor layou
 test('receipt images escape user copy instead of injecting SVG markup',()=>{const {giftReceiptSvg}=load(path.join(root,'packages/ui/src/page-layout.tsx'));const svg=giftReceiptSvg([{id:'gift',props:{title:'<script>alert(1)</script>'}}],'A & B','No expiry');assert.doesNotMatch(svg,/<script>/);assert.match(svg,/&lt;script&gt;/);assert.match(svg,/A &amp; B/)});
 
 test('providers exported across the RSC boundary are component functions and render their children',()=>{for(const [file,key,value] of [['navigation','SiteNavigationProvider',null],['page-layout','DocumentSettingsProvider',load(path.join(root,'packages/content/src/site-document.ts')).defaultSiteDocument],['media-player','AudioDefaultsProvider',{volume:1,muted:false}]]){const Provider=load(path.join(root,'packages/ui/src/'+file+'.tsx'))[key];assert.equal(typeof Provider,'function');assert.match(render(Provider,{value,children:createElement('p',null,'Provider content')}),/Provider content/)}});
+
+test('Android home renders wallpaper, six full icon links, notification shade and selectable editor layers',()=>{
+ const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));
+ let document=installPhoneHome(createDefaultPage('home'));
+ const wallpaper=document.nodes.find(n=>n.props.phonePart==='wallpaper');
+ document=edit(document,wallpaper.id,{props:{src:'https://example.com/wallpaper.jpg',focalX:25,focalY:75,dim:0.3}});
+ const html=render(CMSRenderer,{document});
+ assert.match(html,/phone-wallpaper-image/);assert.match(html,/object-position:25% 75%/);assert.match(html,/Open notification shade/);assert.match(html,/Phone navigation/);assert.match(html,/Clear all/);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.match(html,new RegExp('href="/app/'+slug+'"'));
+ const selected=document.nodes.find(n=>n.props.phonePart==='app-icon');
+ const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:selected.id});
+ assert.match(editor,/Select Reasons/);assert.doesNotMatch(editor,/href="\/app\//);
+ const inspector=render(Editor,{pageId:'test',siteId:'site',initialDocument:document});assert.match(inspector,/Android home screen/);assert.match(inspector,/Select Wallpaper/);
+});

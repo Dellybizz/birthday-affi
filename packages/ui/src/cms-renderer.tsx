@@ -1,4 +1,5 @@
 "use client";
+import {PhoneHome} from './phone-home';
 import {PageLayoutProvider,LayoutSection} from './page-layout';
 import {HomeNavigation,useSiteNavigation} from './navigation';
 import { resolveResponsive, parsePageDocument, appComponents, getAppItems, getPublicApp, type CMSNode, type PageDocument } from '@wiffeyyyy/content';
@@ -45,5 +46,6 @@ export function CMSRenderer({document,onSelect,selectedId,embedded=false,preview
     if(group)return group.items[0]?.id===id?<AppExperience key={id} app={group.app} items={group.items} embedded/>:null;
     return <div key={id} data-node-id={id} role={onSelect?'button':undefined} tabIndex={onSelect?0:undefined} aria-label={onSelect?'Select '+(n.label??n.component):undefined} onKeyDown={onSelect?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onSelect(id)}}:undefined} onClick={onSelect?e=>{e.preventDefault();e.stopPropagation();onSelect(id)}:undefined} style={{...(n.type==='section'?style(n):{}),outline:selectedId===id?'2px solid #d86f91':undefined}} className={n.type==='section'?'space-y-4':''}>{n.type==='block'&&<Block node={n} editing={!!onSelect}/>} {n.children.map(render)}</div>;
   };
+  if(valid.nodes.some(n=>n.parentId===null&&n.props.phonePart==='home'))return <PageLayoutProvider persist={persistProgress} document={valid} editing={!!onSelect} selectedId={selectedId}><PhoneHome document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress} contained={!!previewDevice} renderNode={render}/></PageLayoutProvider>;
   return <PageLayoutProvider persist={persistProgress} document={valid} editing={!!onSelect} selectedId={selectedId}><div ref={container} className={embedded?'space-y-8':'min-h-screen px-5 py-8'} style={{background:String(valid.theme?.background??'#fbf5ef'),color:String(valid.theme?.text??'#302927'),'--w-accent':String(valid.theme?.primary??'#d86f91'),'--w-surface':String(valid.theme?.surface??'#ffffff'),'--w-muted':String(valid.theme?.muted??'#81736d'),'--w-radius':String(valid.theme?.radius??24)+'px'} as CSSProperties}><div className="mx-auto max-w-2xl space-y-8">{valid.rootIds.map(render)}</div></div></PageLayoutProvider>;
 }

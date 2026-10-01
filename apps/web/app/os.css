@@ -8,3 +8,5 @@
 /* The keepsake is a phone experience on every screen. */
 .birthday-os{width:100%;max-width:430px;margin-inline:auto;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 @media(min-width:600px){body{background:#eee5e1}.birthday-os{box-shadow:0 0 50px #40353218;min-height:100dvh}}
+
+.birthday-os-phone{padding:0;background:#593f65!important}.os-phone-home{padding:0;margin:0}.birthday-os-phone #birthday-content{min-height:100dvh}

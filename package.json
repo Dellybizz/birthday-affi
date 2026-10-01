@@ -8,7 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node --test tests/default-pages.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
+    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
