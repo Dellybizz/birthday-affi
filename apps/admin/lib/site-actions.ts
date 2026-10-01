@@ -13,8 +13,8 @@ export async function saveDraft(pageId:string,document:unknown,expectedRevision:
 }
 export async function publishPage(pageId:string,expectedRevision:number){
  await requireAdmin('site:publish');const db=await adminDb();
- const {data:page,error:readError}=await db.from('pages').select('draft_document').eq('id',pageId).single();
- if(readError)throw new Error('Unable to load draft');parsePageDocument(page.draft_document);
+ const {data:page,error:readError}=await db.from('pages').select('draft_document,settings').eq('id',pageId).single();
+ if(readError)throw new Error('Unable to load draft');if(page.settings?.archived===true)throw new Error('Restore this archived draft before publishing.');parsePageDocument(page.draft_document);
  const {data,error}=await db.rpc('publish_page',{p_page_id:pageId,p_expected_revision:expectedRevision});
  if(error)throw new Error(error.code==='40001'?'Draft changed before publication. Reload the latest draft.':error.message);
  revalidatePath('/');return {ok:true,version:Number(data.versionNumber)};

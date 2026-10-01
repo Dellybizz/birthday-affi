@@ -1,5 +1,5 @@
 "use server";
-import {appendTemplate, emptyPage, parsePageDocument} from '@wiffeyyyy/content';
+import {appendTemplate, emptyPage, parsePageDocument, parsePageSettings, protectedPageSlugs} from '@wiffeyyyy/content';
 import {randomUUID} from 'node:crypto';
 import {redirect} from 'next/navigation';
 import {revalidatePath} from 'next/cache';
@@ -28,4 +28,15 @@ export async function createPage(_state:{error:string},form:FormData):Promise<{e
   if(error)return {error:error.code==='23505'?'That slug already exists.':'Unable to create page. Check your session and try again.'};
  }catch{return {error:'Unable to create page. Check your permissions and try again.'};}
  revalidatePath('/');redirect('/editor/'+slug);
+}
+export async function updatePageSettings(pageId:string,input:{title:string;slug:string;description:string},archived:boolean){
+ await requireAdmin('site:write');const values=parsePageSettings(input);const db=await adminDb();
+ const {data:site,error:siteError}=await db.from('sites').select('id').eq('slug',process.env.NEXT_PUBLIC_SITE_SLUG??'wiffeyyyy-os').single();if(siteError)throw new Error('Site unavailable');
+ const {data:page,error:readError}=await db.from('pages').select('slug,settings,published_version_id,updated_at').eq('id',pageId).eq('site_id',site.id).single();if(readError)throw new Error('Page unavailable');
+ if(protectedPageSlugs.includes(page.slug)&&(values.slug!==page.slug||archived))throw new Error('Built-in routes cannot be renamed or archived.');
+ if(page.published_version_id&&(values.slug!==page.slug||archived))throw new Error('Published routes require redirects and navigation checks before renaming or archiving.');
+ const {data,error}=await db.from('pages').update({title:values.title,slug:values.slug,settings:{...page.settings,description:values.description,archived}}).eq('id',pageId).eq('site_id',site.id).eq('updated_at',page.updated_at).select('id');
+ if(error)throw new Error(error.code==='23505'?'That slug already exists.':'Unable to save page settings.');
+ if(!data?.length)throw new Error('Page changed elsewhere. Reload before saving.');
+ revalidatePath('/');revalidatePath('/pages');return {ok:true};
 }
