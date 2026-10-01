@@ -13,5 +13,5 @@ export default async function EditorPage({params}:{params:Promise<{slug:string}>
   const {data:page,error}=await db.from('pages').select('id,draft_document,draft_revision').eq('site_id',site.id).eq('slug',slug).maybeSingle();
   if(error) throw new Error('Unable to load page');
   if(!page) notFound();
-  return <Editor key={page.id} pageId={page.id} initialRevision={Number(page.draft_revision)} initialDocument={parsePageDocument(page.draft_document)} canWrite={can(admin.role,"site:write")} canPublish={can(admin.role,"site:publish")}/>;
+  return <Editor key={page.id} pageId={page.id} siteId={site.id} initialRevision={Number(page.draft_revision)} initialDocument={parsePageDocument(page.draft_document)} canWrite={can(admin.role,"site:write")} canPublish={can(admin.role,"site:publish")}/>;
 }

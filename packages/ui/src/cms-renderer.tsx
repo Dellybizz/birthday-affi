@@ -12,7 +12,9 @@ function Block({node,editing=false}:{node:CMSNode;editing?:boolean}) {
     case 'heading': return <h1 style={style(node)} className="text-3xl font-semibold">{p.text??''}</h1>;
     case 'text': return <p style={style(node)} className="leading-7 text-[var(--w-muted)]">{p.text??''}</p>;
     case 'app-grid': return <div style={{...style(node),display:'grid',gridTemplateColumns:`repeat(${p.columns??2},minmax(0,1fr))`,gap:Number(p.gap??12)}}>{apps.map(([icon,title,slug])=><a key={slug} href={editing?undefined:'/app/'+slug} tabIndex={editing?-1:undefined} style={{background:"var(--w-surface)",borderColor:"var(--w-accent)",borderRadius:"var(--w-radius)"}} className="border p-5"><span className="text-2xl">{icon}</span><h2 className="mt-3 font-semibold">{title}</h2></a>)}</div>;
-    case 'image': return p.src?<img src={String(p.src)} alt={String(p.alt??'')} loading="lazy" style={style(node)} className="w-full rounded-3xl object-cover"/>:null;
+    case 'video': return p.src?<video src={String(p.src)} aria-label={String(p.alt??'Video')} controls={!editing} preload="metadata" style={style(node)} className="w-full rounded-3xl"/>:null;
+    case 'audio': return p.src?<audio src={String(p.src)} aria-label={String(p.alt??'Audio')} controls={!editing} preload="none" className="w-full"/>:null;
+    case 'image': return p.src?<img src={String(p.src)} srcSet={p.mediaAssetId&&p.variantWidths?String(p.variantWidths).split(',').map(w=>String(p.src)+'?variant='+w+' '+w+'w').concat(p.mediaWidth?[String(p.src)+' '+p.mediaWidth+'w']:[]).join(', '):undefined} sizes={p.mediaAssetId?'(max-width: 768px) 100vw, 672px':undefined} width={typeof p.mediaWidth==='number'?p.mediaWidth:undefined} height={typeof p.mediaHeight==='number'?p.mediaHeight:undefined} alt={String(p.alt??'')} loading="lazy" decoding="async" style={{...style(node),objectFit:(p.objectFit??'cover') as CSSProperties['objectFit'],objectPosition:`${p.focalX??50}% ${p.focalY??50}%`,height:p.displayHeight?Number(p.displayHeight):'auto'}} className="w-full rounded-3xl object-cover"/>:null;
     default:return null;
   }
 }

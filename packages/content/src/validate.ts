@@ -31,14 +31,19 @@ export function parsePageDocument(input: unknown): PageDocument {
     for (const [key, value] of Object.entries(raw.props)) {
       if (!(value === null || ['string', 'number', 'boolean'].includes(typeof value)) || (typeof value === 'number' && !Number.isFinite(value))) fail(raw.id + ': invalid property ' + key);
       if (typeof value === 'string' && value.length > 20_000) fail(raw.id + ': property too long');
-      const ranges: Record<string, [number, number]> = { padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96] };
+      const ranges: Record<string, [number, number]> = { padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96], focalX:[0,100], focalY:[0,100], displayHeight:[0,1200] };
       if (key === 'columns' && (typeof value !== 'number' || !Number.isInteger(value))) fail(raw.id + ': columns must be an integer');
       if (ranges[key] && (typeof value !== 'number' || value < ranges[key][0] || value > ranges[key][1])) fail(raw.id + ': invalid ' + key);
       if (['background','color'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
       if (key === 'align' && !['left','center','right'].includes(String(value))) fail(raw.id + ': invalid alignment');
+      if (key === 'objectFit' && !['cover','contain'].includes(String(value))) fail(raw.id + ': invalid image fit');
+      if (key === 'mediaAssetId' && value !== null && (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))) fail(raw.id + ': invalid media asset');
+      if (['mediaWidth','mediaHeight'].includes(key) && value !== null && (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 20000)) fail(raw.id + ': invalid media dimensions');
+      if (key === 'variantWidths' && (typeof value !== 'string' || !/^(|480|960|1600|480,960|480,1600|960,1600|480,960,1600)$/.test(value))) fail(raw.id + ': invalid image variants');
       if (key === 'src' && !safeMediaUrl(value)) fail(raw.id + ': unsafe image URL');
       if (['text','alt','className'].includes(key) && typeof value !== 'string') fail(raw.id + ': invalid ' + key);
     }
+    if(raw.props.mediaAssetId && raw.props.src !== '/media/'+raw.props.mediaAssetId) fail(raw.id + ': media source must match asset');
   }
   if (!input.rootIds.every(id) || new Set(input.rootIds).size !== input.rootIds.length) fail('Invalid root IDs');
   const visited = new Set<string>();
