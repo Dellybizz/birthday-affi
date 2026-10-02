@@ -6,6 +6,8 @@ const renderer=fs.readFileSync(new URL('../packages/ui/src/cms-renderer.tsx',imp
 const inspector=fs.readFileSync(new URL('../apps/admin/components/editor-inspector-fields.tsx',import.meta.url),'utf8');
 const fields=fs.readFileSync(new URL('../packages/content/src/inspector-fields.ts',import.meta.url),'utf8');
 const adminLayout=fs.readFileSync(new URL('../apps/admin/app/layout.tsx',import.meta.url),'utf8');
+const editorLayout=fs.readFileSync(new URL('../apps/admin/app/editor/layout.tsx',import.meta.url),'utf8');
+const editorBootstrap=fs.readFileSync(new URL('../apps/admin/lib/editor-bootstrap.ts',import.meta.url),'utf8');
 const editorPage=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/page.tsx',import.meta.url),'utf8');
 const editor=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/editor-client.tsx',import.meta.url),'utf8');
 const frame=fs.readFileSync(new URL('../apps/admin/components/editor-live-frame.tsx',import.meta.url),'utf8');
@@ -17,7 +19,7 @@ const osProvider=fs.readFileSync(new URL('../apps/web/components/os-provider.tsx
 test('real editor opts into exact live renderers while legacy selection contracts remain isolated',()=>{
  assert.match(renderer,/LiveEditorPreviewContext/);
  assert.match(renderer,/exactLivePreview/);
- assert.match(editorPage,/LiveEditorPreviewProvider/);
+ assert.match(editorLayout,/LiveEditorPreviewProvider/);
  assert.doesNotMatch(renderer,/const group=!onSelect/);
  assert.match(renderer,/<KissShop document=\{valid\} persist=\{persistProgress\}/);
  assert.match(renderer,/<Saragram document=\{valid\} persist=\{persistProgress\}/);
@@ -28,11 +30,14 @@ test('real editor opts into exact live renderers while legacy selection contract
  assert.match(renderer,/<Block node=\{n\} editing=\{legacyEditing\}/);
 });
 
-test('admin preview loads live OS styling and draft site settings',()=>{
+test('admin preview loads live OS styling and persistent draft site settings',()=>{
  assert.match(adminLayout,/\.\.\/\.\.\/web\/app\/os\.css/);
- assert.match(editorPage,/site_configurations/);
- assert.match(editorPage,/DocumentSettingsProvider value=\{settings\}/);
- assert.match(editorPage,/AudioDefaultsProvider value=\{\{volume:settings\.defaultVolume,muted:settings\.defaultMuted\}\}/);
+ assert.match(editorBootstrap,/site_configurations/);
+ assert.match(editorBootstrap,/site_navigation/);
+ assert.match(editorLayout,/DocumentSettingsProvider value=\{settings\}/);
+ assert.match(editorLayout,/AudioDefaultsProvider value=\{\{volume:settings\.defaultVolume,muted:settings\.defaultMuted\}\}/);
+ assert.doesNotMatch(editorPage,/site_configurations/);
+ assert.doesNotMatch(editorPage,/site_navigation/);
 });
 
 test('P1 isolates the live preview in an iframe and streams unsaved drafts through postMessage',()=>{
