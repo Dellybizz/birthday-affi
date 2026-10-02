@@ -19,3 +19,4 @@ export * from './default-pages';
 export {sectionBlocks} from './layout-contract';
 export * from './layout-progress';
 export * from './phone-home';
+export * from './memories-archive';

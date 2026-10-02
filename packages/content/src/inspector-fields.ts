@@ -58,3 +58,12 @@ sectionContentFields['movie-chapters']=[];
 sectionContentFields['birthday-ending']=[];
 
 componentFields['movie-scene'].push({key:'username',label:'Post username (blank uses profile)',type:'text'},{key:'location',label:'Location',type:'text'},{key:'date',label:'Post date',type:'text'},{key:'audioLabel',label:'Reel audio label',type:'text'});
+
+for(const key of ['paddingTop','paddingRight','paddingBottom','paddingLeft','marginTop','marginRight','marginBottom','marginLeft'])designFields.push({key,label:key.replace(/([A-Z])/g,' $1'),type:'number',min:0,max:96});
+designFields.push({key:'borderWidth',label:'Border width',type:'number',min:0,max:12},{key:'borderColor',label:'Border color',type:'color'},{key:'shadow',label:'Shadow',type:'select',options:['none','soft','deep']},{key:'maxWidth',label:'Maximum width',type:'number',min:0,max:1600});
+componentFields.section.push({key:'columns',label:'Columns',type:'number',min:1,max:4},{key:'gap',label:'Space between layers',type:'number',min:0,max:96});
+for(const kind of ['heading','text'])componentFields[kind].push({key:'fontFamily',label:'Font',type:'select',options:['Georgia','Arial','serif','sans-serif']},{key:'lineHeight',label:'Line height',type:'number',min:1,max:3,step:0.1},{key:'letterSpacing',label:'Letter spacing',type:'number',min:0,max:12,step:0.5});
+componentFields.audio.push({key:'loop',label:'Repeat soundtrack',type:'select',options:['true','false']},{key:'initialVolume',label:'Starting volume',type:'number',min:0,max:1,step:0.05});
+componentFields.image.push({key:'emptyLabel',label:'Empty photo message',type:'text'});
+
+componentFields.text.push({key:'weight',label:'Font weight',type:'number',min:100,max:900,step:100});

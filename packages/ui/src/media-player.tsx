@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode,
 import { playbackCoordinator, parsePlayback, resumeTime, parseCaptions } from '../../audio/src/controller';
 const AudioDefaults=createContext({volume:1,muted:false});
 export function AudioDefaultsProvider({value,children}:{value:{volume:number;muted:boolean};children:ReactNode}){return <AudioDefaults.Provider value={value}>{children}</AudioDefaults.Provider>;}
-export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false,poster,autoPlay=false}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean;poster?:string;autoPlay?:boolean}) {
+export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false,poster,autoPlay=false,loop=false,initialVolume}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean;poster?:string;autoPlay?:boolean;loop?:boolean;initialVolume?:number}) {
  const defaults=useContext(AudioDefaults);
  const media=useRef<HTMLMediaElement|null>(null);
  const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0),[storageWarning,setStorageWarning]=useState(false),[caption,setCaption]=useState('');
@@ -12,7 +12,7 @@ export function MediaPlayer({src,kind,title,identity,captions='',style,className
   const element=media.current;if(!element)return;
   setFailed(false);setCaption('');setRestored(false);setCaptionWarning(false);
   const storageKey='wiffeyyyy:playback:v1:'+JSON.stringify([identity,src]);
-  let state={...parsePlayback(null),volume:defaults.volume,muted:defaults.muted},lastWrite=0,loaded=false;
+  let state={...parsePlayback(null),volume:initialVolume??defaults.volume,muted:defaults.muted},lastWrite=0,loaded=false;
   try{const saved=localStorage.getItem(storageKey);if(saved)state=parsePlayback(saved)}catch{setStorageWarning(true)}
   element.volume=state.volume;element.muted=state.muted;
   const save=(force=false)=>{if(!loaded)return;const now=Date.now();if(!force&&now-lastWrite<3000)return;lastWrite=now;
@@ -46,10 +46,10 @@ export function MediaPlayer({src,kind,title,identity,captions='',style,className
    document.removeEventListener('visibilitychange',hide);window.removeEventListener('pagehide',unload);
    if(track){track.mode='disabled';for(const cue of Array.from(track.cues??[]))track.removeCue(cue)}
   };
- },[src,identity,kind,captions,attempt,disabled,defaults.volume,defaults.muted]);
+ },[src,identity,kind,captions,attempt,disabled,defaults.volume,defaults.muted,initialVolume]);
  const ref=(element:HTMLMediaElement|null)=>{media.current=element};
  let transcript='';try{transcript=parseCaptions(captions).map(c=>c.text).join('\n')}catch{}
- const props={src,controls:!disabled,style,className,'aria-label':title};
+ const props={src,loop,controls:!disabled,style,className,'aria-label':title};
  return <div className="space-y-3">{kind==='audio'?<audio key={attempt+src} ref={ref} {...props} preload="metadata"/>:<video key={attempt+src} ref={ref} {...props} playsInline poster={poster} autoPlay={autoPlay&&!disabled} preload="metadata"/>}
  {restored&&<p className="text-xs text-[var(--w-muted)]">Your saved position is ready. Press play to continue.</p>}
  {kind==='audio'&&captions&&<p aria-label="Current caption" className="min-h-7 text-sm">{caption}</p>}

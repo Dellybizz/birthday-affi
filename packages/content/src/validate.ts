@@ -36,10 +36,10 @@ export function parsePageDocument(input: unknown): PageDocument {
 
       if (!(value === null || ['string', 'number', 'boolean'].includes(typeof value)) || (typeof value === 'number' && !Number.isFinite(value))) fail(raw.id + ': invalid property ' + key);
       if (typeof value === 'string' && value.length > 20_000) fail(raw.id + ': property too long');
-      const ranges: Record<string, [number, number]> = { padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96], focalX:[0,100], focalY:[0,100], displayHeight:[0,1200] };
+      const ranges: Record<string, [number, number]> = { paddingTop:[0,96],paddingRight:[0,96],paddingBottom:[0,96],paddingLeft:[0,96],marginTop:[0,96],marginRight:[0,96],marginBottom:[0,96],marginLeft:[0,96],maxWidth:[0,1600],borderWidth:[0,12],lineHeight:[1,3],letterSpacing:[0,12],initialVolume:[0,1],padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96], focalX:[0,100], focalY:[0,100], displayHeight:[0,1200] };
       if (key === 'columns' && (typeof value !== 'number' || !Number.isInteger(value))) fail(raw.id + ': columns must be an integer');
       if (ranges[key] && (typeof value !== 'number' || value < ranges[key][0] || value > ranges[key][1])) fail(raw.id + ': invalid ' + key);
-      if (['background','color'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
+      if (['background','color','borderColor'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
       if (key === 'phonePart' && !['home','wallpaper','status','notifications','notification','widget','launcher','app-icon','navigation'].includes(String(value))) fail(raw.id + ': invalid phone part');
       if (key === 'pageSlug' && (typeof value !== 'string' || !/^[a-z0-9][a-z0-9-]{0,99}$/.test(value))) fail(raw.id + ': invalid page slug');
       if (key === 'collection' && !['film','bonus'].includes(String(value))) fail(raw.id + ': invalid movie collection');
@@ -47,6 +47,8 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (key === 'iconBackground' && !color(value)) fail(raw.id + ': invalid icon color');
       if (key === 'dim' && (typeof value !== 'number' || value < 0 || value > 0.8)) fail(raw.id + ': invalid wallpaper dimming');
       if (key === 'battery' && (typeof value !== 'number' || value < 0 || value > 100)) fail(raw.id + ': invalid battery');
+      if(key==='fontFamily'&&!['Georgia','Arial','serif','sans-serif'].includes(String(value)))fail(raw.id+': invalid font');
+      if(key==='shadow'&&!['none','soft','deep'].includes(String(value)))fail(raw.id+': invalid shadow');
       if (key === 'align' && !['left','center','right'].includes(String(value))) fail(raw.id + ': invalid alignment');
       if (key === 'objectFit' && !['cover','contain'].includes(String(value))) fail(raw.id + ': invalid image fit');
       if (key === 'mediaAssetId' && value !== null && (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))) fail(raw.id + ': invalid media asset');
