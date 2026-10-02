@@ -41,6 +41,7 @@ test('P5 morphs apps from their real icon origin and reverses toward the remembe
  const motion=read('apps/web/components/phone-app-transition.tsx');
  const provider=read('apps/web/components/os-provider.tsx');
  const css=read('apps/web/app/app-transitions.css');
+ const pressCss=read('apps/web/app/navigation-performance.css');
  assert.match(provider,/PhoneAppTransition pathname=\{pathname\} reducedMotion=\{state\.reducedMotion\}/);
  assert.match(motion,/querySelector<HTMLElement>\('\.phone-icon'\)/);
  assert.match(motion,/getBoundingClientRect\(\)/);
@@ -49,14 +50,19 @@ test('P5 morphs apps from their real icon origin and reverses toward the remembe
  assert.match(motion,/pathname==='\/home'&&item\.path\.startsWith\('\/app\/'\)/);
  assert.match(motion,/pathname\.startsWith\('\/app\/'\)&&item\.path==='\/home'/);
  assert.match(motion,/IOS_EASE='cubic-bezier\(\.32,\.72,0,1\)'/);
- assert.match(motion,/OPEN_MS=360,CLOSE_MS=320,REVEAL_MS=120/);
+ assert.match(motion,/SETTLE_EASE='cubic-bezier\(\.22,\.78,\.16,1\)'/);
+ assert.match(motion,/OPEN_MS=410,CLOSE_MS=360,REVEAL_MS=165/);
  assert.match(motion,/artwork:icon\.innerHTML/);
- assert.match(motion,/scale\(\.965\)/);
+ assert.match(motion,/origin\.width\*\.035/);
+ assert.match(motion,/scale\(\.974\)/);
  assert.match(motion,/borderRadius:'0px'/);
+ assert.match(motion,/scale\(1\.003\)/);
  assert.match(motion,/if\(reducedMotion\|\|active\.current\)return/);
  assert.match(css,/phone-app-transition-artwork/);
  assert.match(css,/will-change:transform,border-radius,opacity,background-color/);
  assert.match(css,/transform-origin:0 0/);
+ assert.match(pressCss,/phone-app-link\[data-nav-press="true"\] \.phone-icon/);
+ assert.match(pressCss,/scale\(\.91\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
