@@ -18,7 +18,8 @@ export default function EditorLiveFrame({pageId,document,device,selectedId,inter
  const [ready,setReady]=useState(false),[scale,setScale]=useState(1);
  const viewport=VIEWPORTS[device];
  const src=useMemo(()=>'/preview/'+encodeURIComponent(pageId)+'?embed=1',[pageId]);
- const firstRoot=document.rootIds[0]??null,firstLayer=document.nodes.find(node=>node.parentId===firstRoot);
+ const firstRoot=document.rootIds[0]??null;
+ const firstLayer=document.nodes.find(node=>node.props.phonePart==='wallpaper')??document.nodes.find(node=>node.parentId===firstRoot);
  const firstLayerLabel=firstLayer?.label??firstLayer?.component??'';
  const previewTitle='Exact live draft preview'+(firstLayerLabel?' · Select '+firstLayerLabel:'');
  const send=()=>frame.current?.contentWindow?.postMessage({source:'wiffey-editor',type:'update',document,device,selectedId,interactive} satisfies PreviewMessage,window.location.origin);
