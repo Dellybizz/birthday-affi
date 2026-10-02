@@ -29,10 +29,22 @@ test('editor page selector prefetches and switches with client routing',()=>{
  assert.doesNotMatch(editor,/window\.location\.assign/);
 });
 
-test('editor avoids full-document work on every pointer movement',()=>{
+test('editor avoids full-document and pointer geometry work on every pointer movement',()=>{
  const editor=read('apps/admin/app/editor/[slug]/editor-client.tsx');
+ const preview=read('apps/admin/app/preview/[pageId]/preview-client.tsx');
  assert.match(editor,/serializedDoc=useMemo\(\(\)=>JSON\.stringify\(doc\),\[doc\]\)/);
- assert.match(editor,/hoveredId\.current===id/);
+ assert.doesNotMatch(editor,/onMouseMoveCapture=\{hoverPreview\}/);
+ assert.match(preview,/if\(target===hovered\.current\)return/);
+});
+
+test('P1 fixed logical viewports scale to fit without changing preview breakpoints',()=>{
+ const frame=read('apps/admin/components/editor-live-frame.tsx');
+ assert.match(frame,/mobile:\{width:390,height:830\}/);
+ assert.match(frame,/tablet:\{width:768,height:1024\}/);
+ assert.match(frame,/desktop:\{width:1440,height:900\}/);
+ assert.match(frame,/transform:`scale\(\$\{scale\}\)`/);
+ assert.match(frame,/ResizeObserver/);
+ assert.match(frame,/visualViewport/);
 });
 
 test('admin Supabase client is reused within a server request',()=>{
