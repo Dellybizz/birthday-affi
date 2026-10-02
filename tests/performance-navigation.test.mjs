@@ -37,6 +37,25 @@ test('P4 starts route navigation immediately and uses animation as a cover inste
  assert.match(homeLoading,/Opening home…/);
 });
 
+test('P5 morphs apps from their real icon origin and reverses toward the remembered origin',()=>{
+ const motion=read('apps/web/components/phone-app-transition.tsx');
+ const provider=read('apps/web/components/os-provider.tsx');
+ const css=read('apps/web/app/app-transitions.css');
+ assert.match(provider,/PhoneAppTransition pathname=\{pathname\} reducedMotion=\{state\.reducedMotion\}/);
+ assert.match(motion,/querySelector<HTMLElement>\('\.phone-icon'\)/);
+ assert.match(motion,/getBoundingClientRect\(\)/);
+ assert.match(motion,/rootRect\.width\/Math\.max\(1,root\.offsetWidth\)/);
+ assert.match(motion,/sessionStorage\.setItem\(STORAGE,JSON\.stringify\(origin\)\)/);
+ assert.match(motion,/pathname==='\/home'&&item\.path\.startsWith\('\/app\/'\)/);
+ assert.match(motion,/pathname\.startsWith\('\/app\/'\)&&item\.path==='\/home'/);
+ assert.match(motion,/cubic-bezier\(\.2,\.8,\.2,1\)/);
+ assert.match(motion,/OPEN_MS=260,CLOSE_MS=230,REVEAL_MS=90/);
+ assert.match(motion,/if\(reducedMotion\|\|active\.current\)return/);
+ assert.match(css,/will-change:transform,border-radius,opacity,background-color/);
+ assert.match(css,/transform-origin:0 0/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
+
 test('editor page selector prefetches and switches with client routing',()=>{
  const selector=read('apps/admin/components/editor-page-selector.tsx');
  const editor=read('apps/admin/app/editor/[slug]/editor-client.tsx');
