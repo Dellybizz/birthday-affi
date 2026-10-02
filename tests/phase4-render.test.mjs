@@ -77,7 +77,7 @@ test('live Hotline keeps editable section labels and a disabled editor call prev
 
  test('Pardanasheen retains editable photo/video layers and shows only supplied public media',()=>{
  let document=createDefaultPage('adventure');const image=document.nodes.find(n=>n.component==='image'),video=document.nodes.find(n=>n.component==='video');
- assert.match(render(CMSRenderer,{document}),/Your fit-check collection/);
+ assert.match(render(CMSRenderer,{document}),/No Photos or Videos/);
  document=edit(document,image.id,{props:{src:'https://example.com/fit.jpg',title:'Evening look',album:'Evenings'}});document=edit(document,video.id,{props:{src:'https://example.com/fit.mp4',title:'In motion'}});
  const publicHtml=render(CMSRenderer,{document});assert.match(publicHtml,/fit.jpg/);assert.match(publicHtml,/fit.mp4/);assert.match(publicHtml,/Open Evening look/);assert.doesNotMatch(publicHtml,/Choose an atmosphere|It’s a date/);
  const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:image.id});assert.ok(editor.includes('data-layout-node-id="'+image.id+'"'));assert.match(editor,/Select First fit check/);
