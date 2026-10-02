@@ -12,5 +12,5 @@ import {getPublicNavigation,getPublishedSiteConfiguration,getPublishedDocument} 
 export const dynamic="force-dynamic";
 export default async function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
   const [settings,navigation,home]=await Promise.all([getPublishedSiteConfiguration(),getPublicNavigation(),getPublishedDocument("home")]);
-  return <html lang="en"><body><SiteNavigationProvider value={navigation.filter((item:{href?:string|null})=>item.href!=='/app/radio')}><OSProvider settings={settings} homeDocument={home}>{children}</OSProvider></SiteNavigationProvider></body></html>;
+  return <html lang="en"><body><SiteNavigationProvider value={Array.isArray(navigation)?navigation.filter((item:{href?:string|null})=>item.href!=='/app/radio'):null}><OSProvider settings={settings} homeDocument={home}>{children}</OSProvider></SiteNavigationProvider></body></html>;
 }
