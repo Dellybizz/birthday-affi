@@ -8,6 +8,7 @@ export * from "./registry";
 export * from "./validate";
 export * from './editor-operations';
 export * from './inspector-fields';
+export * from './inspector-capabilities';
 export * from './autosave';
 
 export * from './power-editor';
