@@ -42,8 +42,8 @@ export function createDefaultPage(slug:BuiltinPage):PageDocument{
   block(library,'image','First fit check',{src:'',alt:'',title:'Fit check',album:'Fit checks',date:'',body:''});
   block(library,'video','First fit-check video',{src:'',alt:'',title:'In motion',album:'Fit checks',date:'',body:''});
  }else if(slug==='movie'){
-  const credits=section('movie-credits','Opening credits');heading(credits,'Our Birthday Movie');text(credits,'Dedication','Starring my favourite person. A little story about us.');
-  const player=section('movie-player','Movie player');for(const [title,body] of [['The beginning','A place for the first little moments you want to remember.'],['Our favourite memories','Add your favourite clips or photos and tell their story here.'],['Your birthday ending','Here is to all the memories still to come. Happy birthday.']])block(player,'movie-scene',title,{title,body,src:'',alt:title});
+  const credits=section('movie-credits','Saragram profile',{username:'sara',profileName:'Sara',avatar:'',bio:'My little world, through your eyes. ♡'});heading(credits,'Saragram');text(credits,'Bio','My little world, through your eyes. ♡');
+  const player=section('movie-player','Posts and reels');for(const [title,body] of [['The beginning','A place for the first little moments you want to remember.'],['Our favourite memories','Add your favourite clips or photos and tell their story here.'],['Your birthday ending','Here is to all the memories still to come. Happy birthday.']])block(player,'movie-scene',title,{title,body,src:'',alt:title});
   const chapters=section('movie-chapters','Chapters');for(const scene of document.nodes.filter(n=>n.parentId===player.id))block(chapters,'chapter',scene.label??'Chapter',{title:scene.props.title,sceneId:scene.id});
   const ending=section('birthday-ending','Birthday ending');heading(ending,'To all our next chapters');text(ending,'Ending message','Happy birthday, wiffeyyyy. You deserve a whole world of lovely things.');
  }else if(slug==='kiss-shop'){

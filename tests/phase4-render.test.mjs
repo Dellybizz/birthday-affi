@@ -38,7 +38,7 @@ test('published app blocks render interactive experiences in hierarchy order',()
 
 const {builtinPages,createDefaultPage,updateNode:edit,installDefaultLayout}=load(path.join(root,'packages/content/src/index.ts'));
 test('complete default pages render the same real layout in selection and interactive modes',()=>{
- const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
+ const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'saragram','kiss-shop':'Your bag',radio:'Choose a station'};
  for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
@@ -65,7 +65,7 @@ test('Android home renders wallpaper, six full icon links, notification shade an
 test('iPhone home presents six destinations once, removes Android navigation and unnecessary copy',()=>{
  const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
  assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotline','adventure':'Pardanasheen','movie':'Movie','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotline','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
 });
 
 test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
@@ -99,12 +99,13 @@ test('shared notifications expose an app trigger and reuse home editable message
  assert.match(html,/My personal copy/);assert.match(html,/href="\/app\/reasons"/);assert.match(html,/Open notification shade, 1 notifications/);assert.equal((html.match(/<dialog/g)??[]).length,1);
 });
 
-test('Cinema renders edited posters, isolates bonus clips, and keeps scene and credits editing usable',()=>{
- let document=createDefaultPage('movie');const opening=document.nodes.find(n=>n.props.sectionKind==='movie-credits'),scenes=document.nodes.filter(n=>n.component==='movie-scene'),ending=document.nodes.find(n=>n.props.sectionKind==='birthday-ending');
- document=edit(document,opening.id,{props:{poster:'https://example.com/poster.jpg',appTitle:'Our cinema'}});
- document=edit(document,scenes[1].id,{props:{collection:'bonus',src:'https://example.com/bonus.mp4',poster:'https://example.com/bonus.jpg',captions:'0 | 2 | A birthday caption'}});
- const live=render(CMSRenderer,{document});assert.match(live,/Our cinema/);assert.match(live,/poster.jpg/);assert.match(live,/2 chapters/);assert.doesNotMatch(live,/bonus.mp4/);
- const preview=render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id});assert.match(preview,/Behind the scenes/);assert.match(preview,/bonus.mp4/);assert.match(preview,/poster="https:\/\/example.com\/bonus.jpg"/);assert.doesNotMatch(preview,/autoPlay/);assert.match(preview,/Select Our favourite memories/);
- const credits=render(CMSRenderer,{document,onSelect:()=>{},selectedId:ending.id});assert.match(credits,/To all our next chapters/);assert.match(credits,/Watch again/);
- document=edit(document,scenes[1].parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id}),/bonus.mp4/);
+test('Saragram uses supplied media, keeps photo and reel selection editable, and hides removed media',()=>{
+ let document=createDefaultPage('movie');const profile=document.nodes.find(n=>n.props.sectionKind==='movie-credits'),scenes=document.nodes.filter(n=>n.component==='movie-scene');
+ assert.match(render(CMSRenderer,{document}),/Your moments belong here/);
+ document=edit(document,profile.id,{props:{username:'sara',profileName:'Sara',bio:'Our little memories'}});
+ document=edit(document,scenes[0].id,{props:{mediaKind:'image',src:'https://example.com/photo.jpg',body:'My photo caption'}});
+ document=edit(document,scenes[1].id,{props:{mediaKind:'video',src:'https://example.com/reel.mp4',body:'My reel caption'}});
+ const live=render(CMSRenderer,{document});assert.match(live,/saragram/);assert.match(live,/photo.jpg/);assert.match(live,/reel.mp4/);assert.match(live,/My photo caption/);assert.match(live,/Saragram navigation/);assert.doesNotMatch(live,/Cinema|Watch our film|PRIVATE SCREENING/);
+ const preview=render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id});assert.match(preview,/reel.mp4/);assert.match(preview,/Select Our favourite memories/);assert.doesNotMatch(preview,/controls=|autoPlay/);
+ document=edit(document,scenes[1].parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id}),/photo.jpg|reel.mp4/);
 });

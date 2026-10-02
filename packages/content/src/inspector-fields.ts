@@ -9,13 +9,13 @@ export const componentFields:Record<string,InspectorField[]>={
  reason:[{key:'title',label:'Reason title',type:'text'},{key:'body',label:'Reason',type:'textarea'},{key:'category',label:'Category',type:'text'},{key:'src',label:'Photo URL',type:'text'},{key:'alt',label:'Photo description',type:'text'}],
  'hotline-message':[{key:'title',label:'Keypad message title',type:'text'},{key:'body',label:'Text / transcript',type:'textarea'},{key:'src',label:'Recording URL',type:'text'}],
  'adventure-choice':[{key:'title',label:'Choice title',type:'text'},{key:'body',label:'Description',type:'textarea'},{key:'invitation',label:'Revealed invitation',type:'textarea'}],
- 'movie-scene':[{key:'title',label:'Scene title',type:'text'},{key:'body',label:'Scene caption / transcript',type:'textarea'},{key:'src',label:'Video URL',type:'text'},{key:'alt',label:'Video description',type:'text'}],
+ 'movie-scene':[{key:'title',label:'Post title',type:'text'},{key:'body',label:'Post caption',type:'textarea'},{key:'src',label:'Media URL',type:'text'},{key:'alt',label:'Video description',type:'text'}],
  'kiss-gift':[{key:'title',label:'Gift name',type:'text'},{key:'body',label:'Description',type:'textarea'},{key:'price',label:'Playful kiss price',type:'text'},{key:'src',label:'Gift photo URL',type:'text'},{key:'alt',label:'Photo description',type:'text'}],
  'radio-track':[{key:'title',label:'Track title',type:'text'},{key:'body',label:'Dedication / transcript',type:'textarea'},{key:'src',label:'Audio URL',type:'text'}],
  heading:[{key:'text',label:'Heading',type:'textarea'},{key:'size',label:'Text size',type:'number',min:10,max:72},{key:'weight',label:'Font weight',type:'number',min:100,max:900,step:100},{key:'align',label:'Alignment',type:'select',options:['left','center','right']}],
  text:[{key:'text',label:'Paragraph',type:'textarea'},{key:'size',label:'Text size',type:'number',min:10,max:72},{key:'align',label:'Alignment',type:'select',options:['left','center','right']}],
  image:[{key:'objectFit',label:'Image fit',type:'select',options:['cover','contain']},{key:'focalX',label:'Focal point horizontal (%)',type:'number',min:0,max:100},{key:'focalY',label:'Focal point vertical (%)',type:'number',min:0,max:100},{key:'displayHeight',label:'Display height (px; 0 = natural)',type:'number',min:0,max:1200},{key:'src',label:'Image URL (HTTPS or site path)',type:'text'},{key:'alt',label:'Image description',type:'text'}],
- video:[{key:'src',label:'Video URL',type:'text'},{key:'alt',label:'Video description',type:'text'}],
+ video:[{key:'src',label:'Media URL',type:'text'},{key:'alt',label:'Video description',type:'text'}],
  audio:[{key:'src',label:'Audio URL',type:'text'},{key:'alt',label:'Audio description',type:'text'}],
  'app-grid':[{key:'columns',label:'Columns',type:'number',min:1,max:4,step:1},{key:'gap',label:'Gap',type:'number',min:0,max:96}],
 };
@@ -29,7 +29,7 @@ componentFields.chapter=[{key:'title',label:'Chapter title',type:'text'},{key:'s
 componentFields.station=[{key:'title',label:'Station name',type:'text'},{key:'body',label:'Station description',type:'textarea'},{key:'src',label:'Artwork URL',type:'text'},{key:'alt',label:'Artwork description',type:'text'}];
 componentFields['hotline-message'].push({key:'digit',label:'Keypad digit (keypad messages only)',type:'text'});
 componentFields['radio-track'].push({key:'stationId',label:'Station ID',type:'text'},{key:'introSrc',label:'Recorded introduction URL',type:'text'});
-componentFields['movie-scene'].push({key:'mediaKind',label:'Scene media type',type:'select',options:['video','image']});
+componentFields['movie-scene'].push({key:'mediaKind',label:'Post media type',type:'select',options:['video','image']});
 componentFields['kiss-gift'].push({key:'available',label:'Available',type:'select',options:['true','false']});
 export const sectionContentFields:Record<string,InspectorField[]>={};
 for(const [kind,keys] of Object.entries({
@@ -51,8 +51,10 @@ sectionContentFields['photo-library']=[{key:'title',label:'App heading',type:'te
 componentFields.reason.push({key:'voiceSrc',label:'Voice note URL',type:'text'},{key:'transcript',label:'Voice transcript',type:'textarea'});
 sectionContentFields['heartfelt-card']=[{key:'sealedTitle',label:'Envelope title',type:'text'},{key:'openLabel',label:'Open letter button',type:'text'}];
 
-componentFields['movie-scene'].push({key:'poster',label:'Chapter poster URL',type:'text'},{key:'collection',label:'Collection',type:'select',options:['film','bonus']});
-sectionContentFields['movie-credits']=[{key:'appTitle',label:'App name',type:'text'},{key:'title',label:'Film title (blank uses heading)',type:'text'},{key:'poster',label:'Film poster URL',type:'text'},{key:'posterAlt',label:'Poster description',type:'text'},{key:'badge',label:'Poster badge',type:'text'},{key:'accent',label:'Cinema accent',type:'color'},{key:'footer',label:'Footer dedication',type:'text'}];
-sectionContentFields['movie-player']=[{key:'playLabel',label:'Play button',type:'text'},{key:'continueLabel',label:'Continue button',type:'text'},{key:'emptyMessage',label:'Missing film message',type:'text'},{key:'extrasTitle',label:'Bonus clips heading',type:'text'}];
-sectionContentFields['movie-chapters']=[{key:'title',label:'Chapters heading',type:'text'}];
-sectionContentFields['birthday-ending']=[{key:'replayLabel',label:'Replay button',type:'text'}];
+componentFields['movie-scene'].push({key:'poster',label:'Reel cover URL',type:'text'});
+sectionContentFields['movie-credits']=[{key:'username',label:'Username',type:'text'},{key:'profileName',label:'Profile name',type:'text'},{key:'avatar',label:'Profile photo URL',type:'text'},{key:'bio',label:'Profile bio',type:'textarea'}];
+sectionContentFields['movie-player']=[];
+sectionContentFields['movie-chapters']=[];
+sectionContentFields['birthday-ending']=[];
+
+componentFields['movie-scene'].push({key:'username',label:'Post username (blank uses profile)',type:'text'},{key:'location',label:'Location',type:'text'},{key:'date',label:'Post date',type:'text'},{key:'audioLabel',label:'Reel audio label',type:'text'});

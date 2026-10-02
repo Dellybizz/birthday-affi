@@ -1,5 +1,5 @@
 "use client";
-import {MovieCinema} from './movie-cinema';
+import {Saragram} from './saragram';
 import {PhotoLibrary} from './photo-library';
 import {AdoreJournal} from './adore-journal';
 import {AdoreFrame} from './adore-frame';
@@ -11,7 +11,7 @@ import {MediaPlayer} from './media-player';
 import {AppExperience} from './app-experience';
 import {useEffect,useRef,useState,useMemo} from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-const apps=[['💗','Adore','reasons'],['☎️','Birthday Hotline','hotline'],['🌸','Pardanasheen','adventure'],['🎬','Our Birthday Movie','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
+const apps=[['💗','Adore','reasons'],['☎️','Birthday Hotline','hotline'],['🌸','Pardanasheen','adventure'],['📷','Saragram','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
 function style(node:CMSNode):CSSProperties {
   const p=node.props;
   return {background:p.background as string|undefined,color:p.color as string|undefined,padding:p.padding as number|undefined,margin:p.margin as number|undefined,borderRadius:p.radius as number|undefined,opacity:p.opacity as number|undefined,fontSize:p.size as number|undefined,fontWeight:p.weight as number|undefined,textAlign:p.align as CSSProperties['textAlign'],'--section-radius':String(p.radius??24)+'px'} as CSSProperties;
@@ -50,7 +50,7 @@ export function CMSRenderer({document,onSelect,selectedId,embedded=false,preview
     if(group)return group.items[0]?.id===id?<AppExperience key={id} app={group.app} items={group.items} embedded/>:null;
     return <div key={id} data-node-id={id} role={onSelect?'button':undefined} tabIndex={onSelect?0:undefined} aria-label={onSelect?'Select '+(n.label??n.component):undefined} onKeyDown={onSelect?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onSelect(id)}}:undefined} onClick={onSelect?e=>{e.preventDefault();e.stopPropagation();onSelect(id)}:undefined} style={{...(n.type==='section'?style(n):{}),outline:selectedId===id?'2px solid #d86f91':undefined}} className={n.type==='section'?'space-y-4':''}>{n.type==='block'&&<Block node={n} editing={!!onSelect}/>} {n.children.map(render)}</div>;
   };
-  if(valid.layout?.page==='movie')return <MovieCinema document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
+  if(valid.layout?.page==='movie')return <Saragram document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
   if(valid.layout?.page==='reasons')return <AdoreJournal document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
   if(valid.layout?.page==='adventure')return <PhotoLibrary document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
   if(valid.nodes.some(n=>n.parentId===null&&n.props.phonePart==='home'))return <PageLayoutProvider persist={persistProgress} document={valid} editing={!!onSelect} selectedId={selectedId}><PhoneHome document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress} contained={!!previewDevice} renderNode={render}/></PageLayoutProvider>;
