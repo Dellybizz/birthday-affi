@@ -13,7 +13,7 @@ function heartStyle(el,p){
  if(p.displayHeight)el.style.height=p.displayHeight+'px';
  if(p.shadow)el.style.boxShadow=p.shadow==='none'?'none':p.shadow==='soft'?'0 10px 35px #0003':'0 22px 58px #0006';
 }
-function heartElement(part){const map={page:'body',intro:'#boot',tools:'.hud',scene:'#stage',appearance:'body',popup:'#cornerPopup',navigation:'.heart-navigation',soundtrack:'#heartSoundControl',brandTitle:'.brand strong',brandChapter:'#brandChapter',zoomHint:'.zoom-hint',next:'.next',back:'.heart-back'};return document.querySelector(map[part]||'#'+part)}
+function heartElement(part){const map={page:'body',intro:'#boot',tools:'.hud',scene:'#stage',appearance:'body',popup:'#cornerPopup',navigation:'.heart-navigation',soundtrack:'#heartSoundControl',brandTitle:'.brand strong',brandChapter:'#brandChapter',zoomHint:'.zoom-hint',next:'.next:not(.heart-back)',back:'.heart-back'};return document.querySelector(map[part]||'#'+part)}
 function heartSend(type,data){parent.postMessage({type,...data},'*')}
 function applyHeartDocument(data){
  cmsDocument=data.document;editingHeart=!!data.editing;heartSelectedId=data.selectedId||'';
