@@ -38,7 +38,7 @@ test('published app blocks render interactive experiences in hierarchy order',()
 
 const {builtinPages,createDefaultPage,updateNode:edit,installDefaultLayout}=load(path.join(root,'packages/content/src/index.ts'));
 test('complete default pages render the same real layout in selection and interactive modes',()=>{
- const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'saragram','kiss-shop':'Your bag',radio:'Choose a station'};
+ const checks={welcome:'Open your birthday world',home:'Hotdial',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'saragram','kiss-shop':'Your bag',radio:'Choose a station'};
  for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
@@ -55,7 +55,7 @@ test('Android home renders wallpaper, six full icon links, notification shade an
  document=edit(document,wallpaper.id,{props:{src:'https://example.com/wallpaper.jpg',focalX:25,focalY:75,dim:0.3}});
  const html=render(CMSRenderer,{document});
  assert.match(html,/phone-wallpaper-image/);assert.match(html,/object-position:25% 75%/);assert.match(html,/Open notification shade/);assert.match(html,/Phone navigation/);assert.match(html,/Clear all/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.match(html,new RegExp('href="/app/'+slug+'"'));
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera'])assert.match(html,new RegExp('href="/app/'+slug+'"'));
  const selected=document.nodes.find(n=>n.props.phonePart==='app-icon');
  const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:selected.id});
  assert.match(editor,/Select Adore/);assert.doesNotMatch(editor,/href="\/app\//);
@@ -65,7 +65,7 @@ test('Android home renders wallpaper, six full icon links, notification shade an
 test('iPhone home presents six destinations once, removes Android navigation and unnecessary copy',()=>{
  const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
  assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotline','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotdial','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','camera':'Camera'}[slug])+'"','g'))??[]).length,1);
 });
 
 test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
@@ -108,4 +108,16 @@ test('Saragram uses supplied media, keeps photo and reel selection editable, and
  const live=render(CMSRenderer,{document});assert.match(live,/saragram/);assert.match(live,/photo.jpg/);assert.match(live,/reel.mp4/);assert.match(live,/My photo caption/);assert.match(live,/Saragram navigation/);assert.doesNotMatch(live,/Cinema|Watch our film|PRIVATE SCREENING/);
  const preview=render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id});assert.match(preview,/reel.mp4/);assert.match(preview,/Select Our favourite memories/);assert.doesNotMatch(preview,/controls=|autoPlay/);
  document=edit(document,scenes[1].parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id}),/photo.jpg|reel.mp4/);
+});
+
+test('Camera requires an explicit permission action and exposes photo and video controls',()=>{
+ const {CameraApp}=load(path.join(root,'packages/ui/src/camera-app.tsx'));const html=render(CameraApp,{});
+ assert.match(html,/Enable camera/);assert.match(html,/Take photo/);assert.match(html,/Switch camera/);assert.match(html,/VIDEO/);assert.match(html,/PHOTO/);assert.match(html,/href="\/home"/);
+});
+test('Saved iPhone homes replace Radio with Camera and move Hotdial into the grid',()=>{
+ const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home'));
+ const phone=document.nodes.find(n=>n.props.pageSlug==='hotline'&&n.props.phonePart==='app-icon');phone.props.placement='dock';
+ const camera=document.nodes.find(n=>n.props.pageSlug==='camera'&&n.props.phonePart==='app-icon');camera.props.pageSlug='radio';
+ const html=render(CMSRenderer,{document});assert.doesNotMatch(html,/href="\/app\/radio"/);assert.match(html,/href="\/app\/camera"/);
+ assert.match(html.split('phone-dock')[0],/aria-label="Open Hotdial"/);
 });

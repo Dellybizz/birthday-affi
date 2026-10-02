@@ -1,6 +1,6 @@
 import type {PageDocument, CMSNode} from './cms';
 import type {AppDefinition} from './public-apps';
-export const appComponents:Record<AppDefinition['kind'],string>={reasons:'reason',hotline:'hotline-message',adventure:'adventure-choice',movie:'movie-scene',shop:'kiss-gift',radio:'radio-track'};
+export const appComponents:Partial<Record<AppDefinition['kind'],string>>={reasons:'reason',hotline:'hotline-message',adventure:'adventure-choice',movie:'movie-scene',shop:'kiss-gift',radio:'radio-track'};
 export const componentMediaKind:Record<string,'image'|'video'|'audio'>={image:'image',video:'video',audio:'audio',reason:'image','hotline-message':'audio','movie-scene':'video','kiss-gift':'image','radio-track':'audio',station:'image'};
 export type AppItem={id:string;title:string;body:string;src:string;alt:string;category:string;price:string;invitation:string;captions?:string;design?:Record<string,string|number|boolean|null>};
 export function nodeToAppItem(n:CMSNode):AppItem {const p=n.props;const text=(k:string)=>typeof p[k]==='string'?String(p[k]):'';return {id:n.id,title:text('title'),body:text('body'),src:text('src'),alt:text('alt'),category:text('category'),price:text('price'),invitation:text('invitation'),captions:text('captions'),design:{...p}};}
@@ -8,6 +8,7 @@ export function nodeToAppItem(n:CMSNode):AppItem {const p=n.props;const text=(k:
 export function getAppItems(document:PageDocument,kind:AppDefinition['kind']):AppItem[]{const byId=new Map(document.nodes.map(n=>[n.id,n]));const items:AppItem[]=[];const visit=(id:string)=>{const n=byId.get(id);if(!n?.visible)return;if(n.component===appComponents[kind])items.push(nodeToAppItem(n));n.children.forEach(visit)};document.rootIds.forEach(visit);return items;}
 const item=(id:string,title:string,body:string,extra:Partial<AppItem>={}):AppItem=>({id,title,body,src:'',alt:'',category:'',price:'1 kiss',invitation:'It’s a date. We’ll choose the details together.',...extra});
 export const sampleAppItems:Record<AppDefinition['kind'],AppItem[]>={
+ camera:[],
  reasons:[item('smile','Your smile','The way you smile when you’re trying not to.',{category:'Little things'}),item('ordinary','Our ordinary days','How you make ordinary days worth remembering.',{category:'Together'}),item('home','You feel like home','Because being around you feels like coming home.',{category:'Together'})],
  hotline:[item('birthday','Birthday message','Happy birthday. I hope you always know how ridiculously loved you are.'),item('smile','For a little smile','This is your reminder that my favourite place is next to you.'),item('hug','A hug in words','Take your time. You are loved on the quiet days too.')],
  adventure:[item('cosy','Cosy evening','A favourite meal and a film together.',{invitation:'You, me, something delicious and nowhere else to be.'}),item('outside','Daytime adventure','A walk, a new café and a little exploring.',{invitation:'Let’s pick a free afternoon and get a little lost together.'}),item('surprise','A little surprise','Leave room for something unexpected.')],
