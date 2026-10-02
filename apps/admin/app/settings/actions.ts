@@ -49,3 +49,42 @@ export async function changeUsername(form: FormData) {
   await db.auth.signOut({ scope: 'local' });
   redirect('/login?changed=1');
 }
+
+export async function changePassword(form: FormData) {
+  await requireAdmin();
+
+  const currentPassword = String(form.get('currentPassword') ?? '');
+  const newPassword = String(form.get('newPassword') ?? '');
+  const confirmPassword = String(form.get('confirmPassword') ?? '');
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    redirect('/settings?passwordError=invalid');
+  }
+  if (newPassword !== confirmPassword) redirect('/settings?passwordError=mismatch');
+  if (newPassword.length < 8 || newPassword.length > 128) redirect('/settings?passwordError=weak');
+  if (newPassword === currentPassword) redirect('/settings?passwordError=same');
+
+  const db = await adminDb();
+  const { error } = await db.auth.updateUser({
+    password: newPassword,
+    currentPassword,
+  });
+
+  if (error) {
+    console.error('Admin password change failed', {
+      code: error.code,
+      status: error.status,
+      name: error.name,
+    });
+
+    if (error.code === 'invalid_credentials') redirect('/settings?passwordError=current');
+    if (error.code === 'same_password') redirect('/settings?passwordError=same');
+    if (error.code === 'weak_password') redirect('/settings?passwordError=weak');
+    if (error.code === 'reauthentication_needed') redirect('/settings?passwordError=reauth');
+    redirect('/settings?passwordError=failed');
+  }
+
+  // A password change is security-sensitive: revoke other sessions and require a fresh login.
+  await db.auth.signOut({ scope: 'global' });
+  redirect('/login?changed=password');
+}
