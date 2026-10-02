@@ -1,5 +1,5 @@
 import {notFound} from 'next/navigation';
-import {defaultSiteDocument,installPhoneHome,parseNavigation,parsePageDocument,parseSiteDocument} from '@wiffeyyyy/content';
+import {createDefaultPage,defaultSiteDocument,installPhoneHome,parseNavigation,parsePageDocument,parseSiteDocument,type CMSField} from '@wiffeyyyy/content';
 import {DocumentSettingsProvider} from '@wiffeyyyy/ui/page-layout';
 import {AudioDefaultsProvider} from '@wiffeyyyy/ui/media-player';
 import {LiveEditorPreviewProvider} from '@wiffeyyyy/ui/cms-renderer';
@@ -20,11 +20,14 @@ export default async function DraftPreview({params,searchParams}:{params:Promise
  const [{data:configuration,error:configurationError},{data:navigation,error:navigationError},{data:pages,error:pagesError}]=await Promise.all([
   db.from('site_configurations').select('draft').eq('site_id',page.site_id).maybeSingle(),
   db.from('site_navigation').select('draft').eq('site_id',page.site_id).maybeSingle(),
-  db.from('pages').select('id,title,slug,settings,published_version_id').eq('site_id',page.site_id).order('slug')
+  db.from('pages').select('id,title,slug,settings,published_version_id,draft_document').eq('site_id',page.site_id).order('slug')
  ]);
  if(configurationError)throw new Error('Unable to load preview settings');if(navigationError)throw new Error('Unable to load preview navigation');if(pagesError)throw new Error('Unable to load preview pages');
  const settings=parseSiteDocument(configuration?.draft??defaultSiteDocument),catalog=buildEditorPageCatalog(pages??[]),hrefByPageId=new Map((pages??[]).map(row=>[row.id,catalog.find(item=>item.slug===row.slug)?.livePath??null]));
  const previewNavigation=parseNavigation(navigation?.draft??[]).map(item=>({...item,href:item.pageId?hrefByPageId.get(item.pageId)??null:null})).filter(item=>item.href!=='/app/radio');
  const document=page.slug==='home'?installPhoneHome(rawDocument):parsePageDocument(rawDocument),embedded=embed==='1';
- return <DocumentSettingsProvider value={settings}><AudioDefaultsProvider value={{volume:settings.defaultVolume,muted:settings.defaultMuted}}><SiteNavigationProvider value={previewNavigation}><LiveEditorPreviewProvider>{!embedded&&<header className="border-b bg-white p-3 text-sm">Private {version?'version':'saved draft'} preview · {page.title} · <a href={'/editor/'+page.slug}>Back to editor</a></header>}<DraftPreviewFrame initialDocument={document}/></LiveEditorPreviewProvider></SiteNavigationProvider></AudioDefaultsProvider></DocumentSettingsProvider>;
+ const homeRow=(pages??[]).find(row=>row.slug==='home'),homeDocument=homeRow?installPhoneHome(homeRow.draft_document):installPhoneHome(createDefaultPage('home'));
+ const archiveRow=(pages??[]).find(row=>row.slug==='memories-archive'),archiveDocument=archiveRow?parsePageDocument(archiveRow.draft_document):null;
+ const initialArchiveSettings:Record<string,CMSField>={...(archiveDocument?.nodes.find(node=>node.props.archivePart==='page'&&node.parentId===null)?.props??{})};
+ return <DocumentSettingsProvider value={settings}><AudioDefaultsProvider value={{volume:settings.defaultVolume,muted:settings.defaultMuted}}><SiteNavigationProvider value={previewNavigation}><LiveEditorPreviewProvider>{!embedded&&<header className="border-b bg-white p-3 text-sm">Private {version?'version':'saved draft'} preview · {page.title} · <a href={'/editor/'+page.slug}>Back to editor</a></header>}<DraftPreviewFrame initialDocument={document} pageSlug={page.slug} siteSettings={settings} homeDocument={homeDocument} initialArchiveSettings={initialArchiveSettings}/></LiveEditorPreviewProvider></SiteNavigationProvider></AudioDefaultsProvider></DocumentSettingsProvider>;
 }
