@@ -47,8 +47,8 @@ test('P5 morphs apps from their real icon origin and reverses toward the remembe
  assert.match(motion,/getBoundingClientRect\(\)/);
  assert.match(motion,/rootRect\.width\/Math\.max\(1,root\.offsetWidth\)/);
  assert.match(motion,/sessionStorage\.setItem\(STORAGE,JSON\.stringify\(origin\)\)/);
- assert.match(motion,/pathname==='\/home'&&item\.path\.startsWith\('\/app\/'\)/);
- assert.match(motion,/pathname\.startsWith\('\/app\/'\)&&item\.path==='\/home'/);
+ assert.match(motion,/currentPath==='\/home'&&item\.path\.startsWith\('\/app\/'\)/);
+ assert.match(motion,/currentPath\.startsWith\('\/app\/'\)&&item\.path==='\/home'/);
  assert.match(motion,/IOS_EASE='cubic-bezier\(\.32,\.72,0,1\)'/);
  assert.match(motion,/SETTLE_EASE='cubic-bezier\(\.22,\.78,\.16,1\)'/);
  assert.match(motion,/OPEN_MS=410,CLOSE_MS=360,REVEAL_MS=165/);
@@ -64,6 +64,18 @@ test('P5 morphs apps from their real icon origin and reverses toward the remembe
  assert.match(pressCss,/phone-app-link\[data-nav-press="true"\] \.phone-icon/);
  assert.match(pressCss,/scale\(\.91\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
+
+test('app transition fails open instead of leaving a black overlay stuck',()=>{
+ const motion=read('apps/web/components/phone-app-transition.tsx');
+ assert.match(motion,/normalizePath/);
+ assert.match(motion,/MAX_COVER_MS=1050,HARD_RESET_MS=1750,REVEAL_FAILSAFE_MS=REVEAL_MS\+180/);
+ assert.match(motion,/currentPath===normalizePath\(motion\.target\)/);
+ assert.match(motion,/setRevealing\(true\)/);
+ assert.match(motion,/window\.setTimeout\(\(\)=>finish\(motion\.id\)/);
+ assert.match(motion,/visibilitychange/);
+ assert.match(motion,/pageshow/);
+ assert.doesNotMatch(motion,/,6000\)/);
 });
 
 test('editor page selector prefetches and switches with client routing',()=>{
