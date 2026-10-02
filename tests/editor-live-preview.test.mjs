@@ -9,7 +9,10 @@ const adminLayout=fs.readFileSync(new URL('../apps/admin/app/layout.tsx',import.
 const editorPage=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/page.tsx',import.meta.url),'utf8');
 const editor=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/editor-client.tsx',import.meta.url),'utf8');
 const frame=fs.readFileSync(new URL('../apps/admin/components/editor-live-frame.tsx',import.meta.url),'utf8');
+const previewPage=fs.readFileSync(new URL('../apps/admin/app/preview/[pageId]/page.tsx',import.meta.url),'utf8');
 const preview=fs.readFileSync(new URL('../apps/admin/app/preview/[pageId]/preview-client.tsx',import.meta.url),'utf8');
+const publicShell=fs.readFileSync(new URL('../packages/ui/src/public-page-shell.tsx',import.meta.url),'utf8');
+const osProvider=fs.readFileSync(new URL('../apps/web/components/os-provider.tsx',import.meta.url),'utf8');
 
 test('real editor opts into exact live renderers while legacy selection contracts remain isolated',()=>{
  assert.match(renderer,/LiveEditorPreviewContext/);
@@ -41,6 +44,19 @@ test('P1 isolates the live preview in an iframe and streams unsaved drafts throu
  assert.match(preview,/source!=='wiffey-editor'/);
  assert.match(preview,/parsePageDocument\(message\.document\)/);
  assert.match(preview,/data-isolated-live-preview/);
+});
+
+test('P2 Archive and Heart preview reuse the same public non-phone shell without a nested synthetic shell',()=>{
+ assert.match(osProvider,/PublicPageShell/);
+ assert.match(preview,/PublicPageShell/);
+ assert.match(preview,/ArchiveNavigationProvider/);
+ assert.match(preview,/pageSlug==='memories-archive'\|\|pageSlug==='in-my-heart'/);
+ assert.match(preview,/externalShell=\{shellPage\}/);
+ assert.match(renderer,/externalShell=false/);
+ assert.match(renderer,/if\(!exactLivePreview\|\|externalShell\)return content/);
+ assert.match(previewPage,/published_version_id,draft_document/);
+ assert.match(previewPage,/initialArchiveSettings/);
+ for(const className of ['os-topbar','os-brand','os-status','os-footer'])assert.match(publicShell,new RegExp(className));
 });
 
 test('inspector exposes Shopify-style semantic settings groups and full image controls',()=>{
