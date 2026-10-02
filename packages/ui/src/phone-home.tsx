@@ -3,6 +3,7 @@ import {useContext,useEffect,useRef,useState,type CSSProperties,type ReactNode,t
 import {getPublicApp,safeMediaUrl,phoneSwipeCloses,type CMSNode,type PageDocument} from '@wiffeyyyy/content';
 import {DocumentSettingsContext} from './page-layout';
 import {PhoneAppIcon,CameraAppIcon} from './camera-app';
+import {VaultIcon} from './vault-icon';
 import {SaragramLogo} from './saragram-icon';
 import {useNotificationShade,useNotificationCount,useNotificationExpanded} from './notification-shade';
 import {useSiteNavigation} from './navigation';
@@ -46,16 +47,17 @@ export function PhoneHome({document,onSelect,selectedId,persist=false,contained=
  const appIcon=(n:CMSNode)=>{
   const slug=text(n,'pageSlug'),target=navigation?.find(item=>item.href===route(slug));
   if(slug==='radio')return null;
-  if(navigation&&!target&&slug!=='camera'&&slug!=='hotline')return null;
+  if(navigation&&!target&&slug!=='camera'&&slug!=='hotline'&&slug!=='vault')return null;
   if(target&&!target.visible)return null;
   const visibleParent=(id:string|null):boolean=>{if(!id)return true;const item=navigation?.find(x=>x.id===id);return !!item&&item.visible&&visibleParent(item.parentId)};
   if(target&&!visibleParent(target.parentId))return null;
-  const appLabel=slug==='camera'?'Clicksara':slug==='hotline'?'Hotdial':slug==='movie'?'Saragram':slug==='adventure'?'Pardanasheen':slug==='reasons'&&['Reasons','Reasons I’m Obsessed'].includes(text(n,'text',target?.label??slug))?'Adore':text(n,'text',target?.label??slug);
+  const appLabel=slug==='vault'?'Vault':slug==='camera'?'Clicksara':slug==='hotline'?'Hotdial':slug==='movie'?'Saragram':slug==='adventure'?'Pardanasheen':slug==='reasons'&&['Reasons','Reasons I’m Obsessed'].includes(text(n,'text',target?.label??slug))?'Adore':text(n,'text',target?.label??slug);
   const custom=text(n,'src'),icon=slug==='reasons'?'♡':slug==='adventure'?'🌸':text(n,'icon',target?.icon??'♡');
-  return mark(n,<a className="phone-app-link" href={editing?undefined:target?.href??route(slug)} tabIndex={editing?-1:undefined} aria-label={'Open '+appLabel}><span className="phone-icon" style={{background:slug==='reasons'&&['#f3a8c8','#e8b4d0'].includes(text(n,'iconBackground','#e8b4d0'))?'#75263e':text(n,'iconBackground','#e8b4d0'),borderRadius:Number(n.props.radius??14)}}>{slug==='hotline'?<PhoneAppIcon/>:slug==='camera'?<CameraAppIcon/>:slug==='movie'?<SaragramLogo size={60}/>:custom&&safeMediaUrl(custom)?<img src={custom} alt="" loading="lazy"/>:<span aria-hidden="true">{icon}</span>}</span><span className="phone-icon-label">{appLabel}</span></a>,'phone-app');
+  return mark(n,<a className="phone-app-link" href={editing?undefined:target?.href??route(slug)} tabIndex={editing?-1:undefined} aria-label={'Open '+appLabel}><span className="phone-icon" style={{background:slug==='reasons'&&['#f3a8c8','#e8b4d0'].includes(text(n,'iconBackground','#e8b4d0'))?'#75263e':text(n,'iconBackground','#e8b4d0'),borderRadius:Number(n.props.radius??14)}}>{slug==='vault'?<VaultIcon/>:slug==='hotline'?<PhoneAppIcon/>:slug==='camera'?<CameraAppIcon/>:slug==='movie'?<SaragramLogo size={60}/>:custom&&safeMediaUrl(custom)?<img src={custom} alt="" loading="lazy"/>:<span aria-hidden="true">{icon}</span>}</span><span className="phone-icon-label">{appLabel}</span></a>,'phone-app');
  };
  const launcher=(node:CMSNode,dock=false)=>{const children=node.children.map(id=>byId.get(id)!).filter(n=>n.visible),grid=children.find(n=>n.component==='app-grid'),icons=children.filter(n=>n.props.phonePart==='app-icon'&&n.props.pageSlug!=='radio');
   if(!icons.some(n=>n.props.pageSlug==='camera'))icons.push({...node,id:node.id+'-camera',component:'image',children:[],props:{phonePart:'app-icon',pageSlug:'camera',text:'Clicksara',placement:'dock'}});
+  if(!icons.some(n=>n.props.pageSlug==='vault'))icons.push({...node,id:node.id+'-vault',component:'image',children:[],props:{phonePart:'app-icon',pageSlug:'vault',text:'Vault',placement:'grid'}});
   const extra=dock?[]:navigation?.filter(item=>item.parentId===null&&item.visible&&!node.children.map(id=>byId.get(id)!).some(icon=>icon.props.phonePart==='app-icon'&&route(text(icon,'pageSlug'))===item.href)&&!item.href?.startsWith('/app/'))??[];
   return mark(node,<>{grid&&editing&&!dock&&mark(grid,<span>App grid settings</span>,'phone-grid-settings')}<div className="phone-apps" style={{gridTemplateColumns:dock?undefined:`repeat(${Math.min(4,Math.max(1,Number(grid?.props.columns??4)))},minmax(0,1fr))`,gap:Number(grid?.props.gap??12)}}>{icons.filter(n=>['camera','hotline','adventure'].includes(String(n.props.pageSlug))||(n.props.placement==='dock')===dock).map(appIcon)}{extra.map(item=><div key={item.id} className="phone-app">{navigation?.some(n=>n.parentId===item.id&&n.visible)?<button className="phone-app-link" onClick={()=>!editing&&setFolder(item.id)} disabled={editing}><span className="phone-icon">{item.icon||'▦'}</span><span className="phone-icon-label">{item.label}</span></button>:item.href&&<a className="phone-app-link" href={editing?undefined:item.href}><span className="phone-icon">{item.icon||'♡'}</span><span className="phone-icon-label">{item.label}</span></a>}</div>)}</div></>,dock?'phone-dock':'phone-launcher');};
  return <div className="phone-home phone-ios" data-reduce-motion={reduceMotion||undefined} style={{color:root.props.color?String(root.props.color):'#ffffff',backgroundColor:wallpaper?text(wallpaper,'background','#593f65'):'#593f65'}}>

@@ -1,6 +1,7 @@
 // Metadata only. Personal content and real app behavior belong to the content/app phases.
-export type AppDefinition = { slug: string; kind: 'reasons' | 'hotline' | 'adventure' | 'movie' | 'shop' | 'radio' | 'camera'; title: string; icon: string };
+export type AppDefinition = { slug: string; kind: 'reasons' | 'hotline' | 'adventure' | 'movie' | 'shop' | 'radio' | 'camera' | 'vault'; title: string; icon: string };
 const apps: AppDefinition[] = [
+  {slug:'vault',kind:'vault',title:'Vault',icon:'🔐'},
   { slug: 'reasons', kind: 'reasons', title: 'Adore', icon: '💗' },
   { slug: 'hotline', kind: 'hotline', title: 'Hotdial', icon: '☎️' },
   { slug: 'adventure', kind: 'adventure', title: 'Pardanasheen', icon: '🌸' },

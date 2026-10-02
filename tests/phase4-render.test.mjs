@@ -55,17 +55,17 @@ test('Android home renders wallpaper, six full icon links, notification shade an
  document=edit(document,wallpaper.id,{props:{src:'https://example.com/wallpaper.jpg',focalX:25,focalY:75,dim:0.3}});
  const html=render(CMSRenderer,{document});
  assert.match(html,/phone-wallpaper-image/);assert.match(html,/object-position:25% 75%/);assert.match(html,/Open notification shade/);assert.match(html,/Phone navigation/);assert.match(html,/Clear all/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera'])assert.match(html,new RegExp('href="/app/'+slug+'"'));
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera','vault'])assert.match(html,new RegExp('href="/app/'+slug+'"'));
  const selected=document.nodes.find(n=>n.props.phonePart==='app-icon');
  const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:selected.id});
  assert.match(editor,/Select Adore/);assert.doesNotMatch(editor,/href="\/app\//);
  const inspector=render(Editor,{pageId:'test',siteId:'site',initialDocument:document});assert.match(inspector,/iPhone home screen/);assert.match(inspector,/Select Wallpaper/);
 });
 
-test('iPhone home presents six destinations with Hotdial, Pardanasheen and Clicksara in both grid and dock, removes Android navigation and unnecessary copy',()=>{
+test('iPhone home presents seven destinations with Hotdial, Pardanasheen and Clicksara in both grid and dock, removes Android navigation and unnecessary copy',()=>{
  const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
  assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotdial','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','camera':'Clicksara'}[slug])+'"','g'))??[]).length,['hotline','camera','adventure'].includes(slug)?2:1);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera','vault'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotdial','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','camera':'Clicksara','vault':'Vault'}[slug])+'"','g'))??[]).length,['hotline','camera','adventure'].includes(slug)?2:1);
 });
 
 test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
