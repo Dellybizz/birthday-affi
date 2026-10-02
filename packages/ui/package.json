@@ -14,7 +14,8 @@
     "./page-layout": "./src/page-layout.tsx",
     "./notification-shade": "./src/notification-shade.tsx",
     "./puzzle-app": "./src/puzzle-app.tsx",
-    "./archive-navigation": "./src/archive-navigation.tsx"
+    "./archive-navigation": "./src/archive-navigation.tsx",
+    "./public-page-shell": "./src/public-page-shell.tsx"
   },
   "peerDependencies": {
     "react": "^19.0.0"
