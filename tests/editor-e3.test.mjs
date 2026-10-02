@@ -31,22 +31,27 @@ test('E3 treats external navigation separately so the admin shell can remain mou
  assert.equal(resolvePreviewNavigation('mailto:hello@example.com',pages,'home').kind,'external');
 });
 
-test('E3.1 source follows the supplied Shopify visual-editor reference',()=>{
+test('E3.1/P1 source follows the supplied Shopify visual-editor reference with an isolated canvas',()=>{
  const source=fs.readFileSync('apps/admin/app/editor/[slug]/editor-client.tsx','utf8');
- for(const text of ['Theme settings','Sections','App embeds','Preview inspector on','Select a section or block','onClickCapture={interceptPreview}','wiffey:journey','data-editor-inspect','Add section before','Add section after'])assert.ok(source.includes(text),text);
+ const frame=fs.readFileSync('apps/admin/components/editor-live-frame.tsx','utf8');
+ const preview=fs.readFileSync('apps/admin/app/preview/[pageId]/preview-client.tsx','utf8');
+ for(const text of ['Theme settings','Sections','App embeds','Preview inspector on','Select a section or block','EditorLiveFrame'])assert.ok(source.includes(text),text);
  assert.equal(source.includes("['content','appearance','behavior','page']"),false);
  assert.match(source,/grid-cols-1 lg:grid-cols-\[292px_minmax\(0,1fr\)_312px\]/);
  assert.match(source,/h-\[50px\]/);
- assert.match(source,/device==='desktop'\?'w-full'/);
- assert.match(source,/border-2 border-\[#1677ff\]/);
+ assert.match(frame,/data-editor-preview-stage/);
+ assert.match(frame,/transform:`scale\(\$\{scale\}\)`/);
+ assert.match(preview,/Add section before/);
+ assert.match(preview,/Add section after/);
  assert.doesNotMatch(source,/desktop preview<\/span>|Unsaved changes<\/span>/);
 });
 
-test('E3.1 inspector mode quiets media and uses independent canvas overlays',()=>{
+test('P1 moves inspect-mode media pausing and selection overlays inside the isolated preview',()=>{
  const source=fs.readFileSync('apps/admin/app/editor/[slug]/editor-client.tsx','utf8');
- assert.match(source,/querySelectorAll(?:<HTMLMediaElement>)?\('audio,video'\).*pause/);
- assert.match(source,/scrollIntoView\(\{behavior:'smooth',block:'center'\}\)/);
- assert.match(source,/animation-play-state:paused/);
- assert.match(source,/setSelectionBox\(measureTarget/);
- assert.match(source,/setHoverBox\(measureTarget/);
+ const preview=fs.readFileSync('apps/admin/app/preview/[pageId]/preview-client.tsx','utf8');
+ assert.doesNotMatch(source,/querySelectorAll(?:<HTMLMediaElement>)?\('audio,video'\)/);
+ assert.match(preview,/querySelectorAll<HTMLMediaElement>\('audio,video'\).*pause/);
+ assert.match(preview,/scrollIntoView\(\{block:'nearest'\}\)/);
+ assert.match(preview,/animation-play-state:paused/);
+ assert.match(preview,/border-2 border-\[#1677ff\]/);
 });
