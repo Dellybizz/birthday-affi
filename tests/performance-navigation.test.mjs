@@ -47,6 +47,20 @@ test('P1 fixed logical viewports scale to fit without changing preview breakpoin
  assert.match(frame,/visualViewport/);
 });
 
+test('P3 offers real device presets and a manually resizable logical viewport',()=>{
+ const frame=read('apps/admin/components/editor-live-frame.tsx');
+ assert.match(frame,/'large-phone':\{width:430,height:932\}/);
+ assert.match(frame,/type PreviewMode=Device\|'large-phone'\|'responsive'/);
+ assert.match(frame,/Responsive · custom viewport/);
+ assert.match(frame,/data-logical-width=\{viewport\.width\}/);
+ assert.match(frame,/data-logical-height=\{viewport\.height\}/);
+ assert.match(frame,/Resize responsive preview/);
+ assert.match(frame,/current\.width\+\(event\.clientX-current\.x\)\/Math\.max\(scale,\.01\)/);
+ assert.match(frame,/deviceForWidth\(viewport\.width\)/);
+ assert.match(frame,/width:clamp\([^\n]+,320,1600\)/);
+ assert.match(frame,/height:clamp\([^\n]+,568,1200\)/);
+});
+
 test('admin Supabase client is reused within a server request',()=>{
  const source=read('apps/admin/lib/supabase.ts');
  assert.match(source,/import \{ cache \} from 'react'/);
