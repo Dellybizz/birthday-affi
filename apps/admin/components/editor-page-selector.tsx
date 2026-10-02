@@ -9,7 +9,7 @@ export function EditorPageSelector({pages,currentSlug,busy,onSelect}:{pages:Edit
  const filtered=useMemo(()=>{const needle=query.trim().toLowerCase();return needle?pages.filter(page=>[page.title,page.sourceTitle,page.slug,page.badge].some(value=>value?.toLowerCase().includes(needle))):pages},[pages,query]);
  return <details ref={details} data-editor-context="Inspector" className="relative">
   <summary className="flex h-8 min-w-[150px] max-w-[240px] cursor-pointer list-none items-center gap-2 rounded-md px-2 text-[13px] font-medium text-[#303030] hover:bg-[#f1f1f1] marker:hidden">
-   <span aria-hidden className="text-[14px]">⌂</span><span className="min-w-0 flex-1 truncate">{current?.title??currentSlug||'Home page'}</span><span aria-hidden className="text-[10px] text-[#6d7175]">⌄</span>
+   <span aria-hidden className="text-[14px]">⌂</span><span className="min-w-0 flex-1 truncate">{current?.title??(currentSlug||'Home page')}</span><span aria-hidden className="text-[10px] text-[#6d7175]">⌄</span>
   </summary>
   <div className="absolute left-1/2 z-50 mt-1 w-[min(390px,92vw)] -translate-x-1/2 overflow-hidden rounded-lg border border-[#c9cccf] bg-white shadow-[0_8px_30px_rgba(0,0,0,.16)]">
    <div className="border-b border-[#e1e3e5] p-2"><label className="sr-only" htmlFor="editor-page-search">Find a page</label><input id="editor-page-search" autoFocus className="h-9 w-full rounded-md border border-[#8c9196] bg-white px-3 text-sm outline-none focus:border-[#005bd3] focus:ring-1 focus:ring-[#005bd3]" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')details.current?.removeAttribute('open')}} placeholder="Search pages and apps"/></div>
