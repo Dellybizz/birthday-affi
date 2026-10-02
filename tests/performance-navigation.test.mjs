@@ -48,9 +48,13 @@ test('P5 morphs apps from their real icon origin and reverses toward the remembe
  assert.match(motion,/sessionStorage\.setItem\(STORAGE,JSON\.stringify\(origin\)\)/);
  assert.match(motion,/pathname==='\/home'&&item\.path\.startsWith\('\/app\/'\)/);
  assert.match(motion,/pathname\.startsWith\('\/app\/'\)&&item\.path==='\/home'/);
- assert.match(motion,/cubic-bezier\(\.2,\.8,\.2,1\)/);
- assert.match(motion,/OPEN_MS=260,CLOSE_MS=230,REVEAL_MS=90/);
+ assert.match(motion,/IOS_EASE='cubic-bezier\(\.32,\.72,0,1\)'/);
+ assert.match(motion,/OPEN_MS=360,CLOSE_MS=320,REVEAL_MS=120/);
+ assert.match(motion,/artwork:icon\.innerHTML/);
+ assert.match(motion,/scale\(\.965\)/);
+ assert.match(motion,/borderRadius:'0px'/);
  assert.match(motion,/if\(reducedMotion\|\|active\.current\)return/);
+ assert.match(css,/phone-app-transition-artwork/);
  assert.match(css,/will-change:transform,border-radius,opacity,background-color/);
  assert.match(css,/transform-origin:0 0/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
