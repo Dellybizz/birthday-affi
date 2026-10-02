@@ -74,12 +74,40 @@ test('editor page selector prefetches and switches with client routing',()=>{
  assert.doesNotMatch(editor,/window\.location\.assign/);
 });
 
-test('editor avoids full-document and pointer geometry work on every pointer movement',()=>{
+test('editor avoids full-document and pointer geometry work on every interaction',()=>{
  const editor=read('apps/admin/app/editor/[slug]/editor-client.tsx');
  const preview=read('apps/admin/app/preview/[pageId]/preview-client.tsx');
- assert.match(editor,/serializedDoc=useMemo\(\(\)=>JSON\.stringify\(doc\),\[doc\]\)/);
+ assert.doesNotMatch(editor,/serializedDoc=useMemo\(\(\)=>JSON\.stringify\(doc\)/);
+ assert.match(editor,/dirty=!saver\.isSaved\(doc\)/);
  assert.doesNotMatch(editor,/onMouseMoveCapture=\{hoverPreview\}/);
  assert.match(preview,/if\(target===hovered\.current\)return/);
+ assert.match(preview,/scheduleMeasure/);
+});
+
+test('P6 keeps editor typing, autosave and iframe updates off the hot path',()=>{
+ const editor=read('apps/admin/app/editor/[slug]/editor-client.tsx');
+ const inspector=read('apps/admin/components/editor-inspector-fields.tsx');
+ const frame=read('apps/admin/components/editor-live-frame.tsx');
+ const preview=read('apps/admin/app/preview/[pageId]/preview-client.tsx');
+ const autosave=read('packages/content/src/autosave.ts');
+ const stage=autosave.slice(autosave.indexOf('stage(document'),autosave.indexOf('flush():'));
+ assert.doesNotMatch(stage,/JSON\.stringify/);
+ assert.match(autosave,/latestVersion/);
+ assert.match(autosave,/isSaved=\(document:PageDocument\)/);
+ assert.match(editor,/nodeById=useMemo\(\(\)=>new Map/);
+ assert.match(editor,/searchResults=useMemo/);
+ assert.match(editor,/allCapabilities=\{currentCapabilities\}/);
+ assert.match(inspector,/Layer name<input[^>]+defaultValue=/);
+ assert.match(inspector,/Layer name<input[^>]+onBlur=/);
+ assert.match(inspector,/Horizontal %<input[^>]+defaultValue=\{x\}[^>]+onBlur=/);
+ assert.match(inspector,/allCapabilities\?:InspectorCapability\[\]/);
+ assert.match(frame,/type:'state'/);
+ assert.match(frame,/pendingDocument/);
+ assert.match(frame,/requestAnimationFrame/);
+ assert.match(frame,/pendingCustom/);
+ assert.match(preview,/startTransition/);
+ assert.match(preview,/message\.type==='state'/);
+ assert.doesNotMatch(preview,/parsePageDocument/);
 });
 
 test('P1 fixed logical viewports scale to fit without changing preview breakpoints',()=>{
