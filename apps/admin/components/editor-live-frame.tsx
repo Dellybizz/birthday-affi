@@ -9,7 +9,7 @@ type PreviewMessage=
  | {source:'wiffey-editor';type:'update';document:PageDocument;device:Device;selectedId:string|null;interactive:boolean}
  | {source:'wiffey-preview';type:'ready'|'select'|'navigate'|'insert';id?:string;href?:string;direction?:'before'|'after'};
 
-const PRESETS:Record<Exclude<PreviewMode,'responsive'>,Viewport>={
+const VIEWPORTS:Record<Exclude<PreviewMode,'responsive'>,Viewport>={
  mobile:{width:390,height:830},
  'large-phone':{width:430,height:932},
  tablet:{width:768,height:1024},
@@ -29,7 +29,7 @@ export default function EditorLiveFrame({pageId,document,device,selectedId,inter
  const frame=useRef<HTMLIFrameElement>(null),fitArea=useRef<HTMLDivElement>(null),drag=useRef<{x:number;y:number;width:number;height:number}|null>(null);
  const [ready,setReady]=useState(false),[scale,setScale]=useState(1),[mode,setMode]=useState<PreviewMode>(device),[custom,setCustom]=useState<Viewport>({width:1024,height:768});
  useEffect(()=>setMode(device),[device]);
- const viewport=mode==='responsive'?custom:PRESETS[mode];
+ const viewport=mode==='responsive'?custom:VIEWPORTS[mode];
  const resolvedDevice=deviceForWidth(viewport.width);
  const src=useMemo(()=>'/preview/'+encodeURIComponent(pageId)+'?embed=1',[pageId]);
  const firstRoot=document.rootIds[0]??null;
