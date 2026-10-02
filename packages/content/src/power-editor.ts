@@ -32,7 +32,7 @@ export function compareDocuments(before:PageDocument,after:PageDocument):Revisio
  if(JSON.stringify(before.rootIds)!==JSON.stringify(after.rootIds))changes.push({id:'order',label:'Section order',kind:'changed',fields:['rootIds']});
  return changes;
 }
-export const pageTemplates=[{id:'greeting',label:'Birthday greeting'},{id:'photo-story',label:'Photo story'},{id:'app-home',label:'App home'}, {id:'reasons',label:'Adore'}, {id:'hotline',label:'Birthday Hotline'}, {id:'adventure',label:'Our Next Adventure'}, {id:'movie',label:'Our Birthday Movie'}, {id:'kiss-shop',label:'The Kiss Shop'}, {id:'radio',label:'Birthday Radio'}, {id:'final-reveal',label:'Final reveal'}] as const;
+export const pageTemplates=[{id:'greeting',label:'Birthday greeting'},{id:'photo-story',label:'Photo story'},{id:'app-home',label:'App home'}, {id:'reasons',label:'Adore'}, {id:'hotline',label:'Birthday Hotline'}, {id:'adventure',label:'Pardanasheen'}, {id:'movie',label:'Our Birthday Movie'}, {id:'kiss-shop',label:'The Kiss Shop'}, {id:'radio',label:'Birthday Radio'}, {id:'final-reveal',label:'Final reveal'}] as const;
 export function appendTemplate(document:PageDocument,template:string,newId:()=>string):PageDocument{
  if(!pageTemplates.some(t=>t.id===template))throw new Error('Unknown template');
  const next=structuredClone(document),section:CMSNode=createNode('section',newId());section.label=pageTemplates.find(t=>t.id===template)!.label;
@@ -44,7 +44,7 @@ export function appendTemplate(document:PageDocument,template:string,newId:()=>s
  const layouts:Record<string,{component:Parameters<typeof createNode>[0];titles:string[]}>={
   reasons:{component:'reason',titles:['A little habit I love','The way you make me feel','My most heartfelt reason']},
   hotline:{component:'hotline-message',titles:['Your birthday greeting','Press 1 for a compliment','Press 2 for emergency affection']},
-  adventure:{component:'adventure-choice',titles:['A cosy date','An adventurous outing','An evening together']},
+  adventure:{component:'image',titles:['Fit check','Another favourite look']},
   movie:{component:'movie-scene',titles:['Opening credits','Our favourite memories','Your birthday ending']},
   'kiss-shop':{component:'kiss-gift',titles:['Movie night','A long hug','Breakfast together','A handwritten letter']},
   radio:{component:'radio-track',titles:['Birthday dedication','A song that reminds me of you','Our favourite song']},

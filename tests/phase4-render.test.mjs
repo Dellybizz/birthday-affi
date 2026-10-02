@@ -38,7 +38,7 @@ test('published app blocks render interactive experiences in hierarchy order',()
 
 const {builtinPages,createDefaultPage,updateNode:edit,installDefaultLayout}=load(path.join(root,'packages/content/src/index.ts'));
 test('complete default pages render the same real layout in selection and interactive modes',()=>{
- const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Choose an atmosphere',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
+ const checks={welcome:'Open your birthday world',home:'Birthday Hotline',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'Our Birthday Movie','kiss-shop':'Your bag',radio:'Choose a station'};
  for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
@@ -65,7 +65,7 @@ test('Android home renders wallpaper, six full icon links, notification shade an
 test('iPhone home presents six destinations once, removes Android navigation and unnecessary copy',()=>{
  const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
  assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotline','adventure':'Adventure','movie':'Movie','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','radio'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotline','adventure':'Pardanasheen','movie':'Movie','kiss-shop':'Kiss Shop','radio':'Radio'}[slug])+'"','g'))??[]).length,1);
 });
 
 test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
@@ -74,3 +74,12 @@ test('live Hotline keeps editable section labels and a disabled editor call prev
  const live=render(CMSRenderer,{document});assert.match(live,/My private priority line/);assert.match(live,/Zaid/);assert.match(live,/Call Zaid/);assert.doesNotMatch(live,/Open your private link/);
  const preview=render(CMSRenderer,{document,onSelect:()=>{}});assert.match(preview,/One tap away/);assert.match(preview,/disabled=""[^>]*><span[^>]*>☎<\/span> Call Zaid/);
 });
+
+ test('Pardanasheen retains editable photo/video layers and shows only supplied public media',()=>{
+ let document=createDefaultPage('adventure');const image=document.nodes.find(n=>n.component==='image'),video=document.nodes.find(n=>n.component==='video');
+ assert.match(render(CMSRenderer,{document}),/Your fit-check collection/);
+ document=edit(document,image.id,{props:{src:'https://example.com/fit.jpg',title:'Evening look',album:'Evenings'}});document=edit(document,video.id,{props:{src:'https://example.com/fit.mp4',title:'In motion'}});
+ const publicHtml=render(CMSRenderer,{document});assert.match(publicHtml,/fit.jpg/);assert.match(publicHtml,/fit.mp4/);assert.match(publicHtml,/Open Evening look/);assert.doesNotMatch(publicHtml,/Choose an atmosphere|It’s a date/);
+ const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:image.id});assert.ok(editor.includes('data-layout-node-id="'+image.id+'"'));assert.match(editor,/Select First fit check/);
+ document=edit(document,image.parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document}),/fit.jpg|fit.mp4/);
+ });

@@ -1,7 +1,8 @@
-export const sectionKinds=['startup-greeting','welcome-hero','enter-action','keepsake-note','birthday-heading','date-widget','app-launcher','recent-app','intro','reason-deck','heartfelt-card','incoming-call','birthday-message','affection-keypad','text-versions','choice-group','invitation-reveal','movie-credits','movie-player','movie-chapters','birthday-ending','product-collection','gift-bag','gift-checkout','gift-receipt','redemption-note','station-selector','radio-player','dedication','track-list'] as const;
+export const sectionKinds=['photo-library','startup-greeting','welcome-hero','enter-action','keepsake-note','birthday-heading','date-widget','app-launcher','recent-app','intro','reason-deck','heartfelt-card','incoming-call','birthday-message','affection-keypad','text-versions','choice-group','invitation-reveal','movie-credits','movie-player','movie-chapters','birthday-ending','product-collection','gift-bag','gift-checkout','gift-receipt','redemption-note','station-selector','radio-player','dedication','track-list'] as const;
 export type SectionKind=typeof sectionKinds[number];
 export const layoutSingletons=['incoming-call','birthday-message','affection-keypad','invitation-reveal','movie-player','movie-chapters','product-collection','gift-bag','gift-checkout','gift-receipt','station-selector','radio-player','track-list'] as const;
 export const sectionBlocks:Record<string,string[]>={
+ 'photo-library':['image','video'],
  'startup-greeting':['text'],'welcome-hero':['heading','text'],'enter-action':['action'],'keepsake-note':['text'],
  'birthday-heading':['heading','text'],'date-widget':['text'],'app-launcher':['app-grid'],'recent-app':['text'],'intro':['heading','text'],
  'reason-deck':['reason'],'heartfelt-card':['heading','text'],'incoming-call':[],'birthday-message':['hotline-message'],

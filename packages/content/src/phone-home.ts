@@ -38,7 +38,7 @@ export function installPhoneHome(input:PageDocument):PageDocument{
  let grid=doc.nodes.find(n=>n.parentId===launcher!.id&&n.component==='app-grid');
  if(!grid){let id='phone-grid-'+ ++counter;while(used.has(id))id+='-new';used.add(id);grid=createNode('app-grid',id,launcher.id);doc.nodes.push(grid);launcher.children.push(grid.id);}
  grid.props.columns=3;grid.props.gap=18;
- for(const [slug,label,icon,color] of [['reasons','Adore','💗','#f3a8c8'],['hotline','Hotline','☎️','#b8e1b3'],['adventure','Adventure','🧭','#a7d7e8'],['movie','Movie','🎬','#c4b5ef'],['kiss-shop','Kiss Shop','💋','#ffc4ac'],['radio','Radio','📻','#f5d592']])add('image','app-icon',label,launcher,{text:label,pageSlug:slug,icon,iconBackground:color,src:''});
+ for(const [slug,label,icon,color] of [['reasons','Adore','💗','#f3a8c8'],['hotline','Hotline','☎️','#b8e1b3'],['adventure','Pardanasheen','🌸','#a7d7e8'],['movie','Movie','🎬','#c4b5ef'],['kiss-shop','Kiss Shop','💋','#ffc4ac'],['radio','Radio','📻','#f5d592']])add('image','app-icon',label,launcher,{text:label,pageSlug:slug,icon,iconBackground:color,src:''});
  add('section','navigation','Android navigation bar',home);
  doc.rootIds=[home.id];return refinePhoneHome(doc);
 }

@@ -38,10 +38,9 @@ export function createDefaultPage(slug:BuiltinPage):PageDocument{
   for(const [digit,title,body] of [['1','A compliment','You make ordinary moments feel worth remembering.'],['2','Emergency affection','A little reminder: you are loved on the quiet days too.'],['3','One more birthday wish','Here is to a year full of gentle days and happy surprises.']])block(keypad,'hotline-message',title,{digit,title,body,src:''});
   text(section('text-versions','Text versions'),'Text version label','Every message is here to read, even without sound.');
  }else if(slug==='adventure'){
-  intro('Our Next Adventure','Two little choices, one invitation. You can also jump straight to the invitation.');
-  const mood=section('choice-group','Choose an atmosphere');for(const [title,body] of [['Cosy','A favourite meal and a film together.'],['Adventurous','A walk, a new café and a little exploring.']])block(mood,'adventure-choice',title,{title,body,invitation:''});
-  const time=section('choice-group','Choose a time');for(const [title,body] of [['Daytime','A slow afternoon with room to wander.'],['Evening','A relaxed evening with nowhere else to rush.']])block(time,'adventure-choice',title,{title,body,invitation:''});
-  block(section('invitation-reveal','Your invitation',{directLabel:'See your invitation',backLabel:'Change my choices'}),'invitation','Date invitation',{title:'It’s a date',body:'You, me, and some time just for us. These example choices can be changed to a plan we can really arrange.',date:'To be confirmed',time:'We will choose together',place:'Our favourite place'});
+  const library=section('photo-library','Fit-check library',{title:'Pardanasheen',subtitle:'Every look, beautifully you.'});
+  block(library,'image','First fit check',{src:'',alt:'',title:'Fit check',album:'Fit checks',date:'',body:''});
+  block(library,'video','First fit-check video',{src:'',alt:'',title:'In motion',album:'Fit checks',date:'',body:''});
  }else if(slug==='movie'){
   const credits=section('movie-credits','Opening credits');heading(credits,'Our Birthday Movie');text(credits,'Dedication','Starring my favourite person. A little story about us.');
   const player=section('movie-player','Movie player');for(const [title,body] of [['The beginning','A place for the first little moments you want to remember.'],['Our favourite memories','Add your favourite clips or photos and tell their story here.'],['Your birthday ending','Here is to all the memories still to come. Happy birthday.']])block(player,'movie-scene',title,{title,body,src:'',alt:title});

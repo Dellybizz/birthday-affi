@@ -43,3 +43,7 @@ for(const [kind,keys] of Object.entries({
  'radio-player':['title','previousLabel','nextLabel']
 }))sectionContentFields[kind]=keys.map(key=>({key,label:key.replace(/([A-Z])/g,' $1'),type:'text'}));
 sectionContentFields['date-widget']=[{key:'dateMode',label:'Date display',type:'select',options:['current','birthday']}];
+
+for(const kind of ['image','video'])componentFields[kind].push({key:'title',label:'Media title',type:'text'},{key:'album',label:'Album',type:'text'},{key:'date',label:'Date (YYYY-MM-DD)',type:'text'},{key:'body',label:'Caption',type:'textarea'});
+
+sectionContentFields['photo-library']=[{key:'title',label:'App heading',type:'text'},{key:'subtitle',label:'Library message',type:'text'}];
