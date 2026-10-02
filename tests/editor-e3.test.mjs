@@ -31,16 +31,22 @@ test('E3 treats external navigation separately so the admin shell can remain mou
  assert.equal(resolvePreviewNavigation('mailto:hello@example.com',pages,'home').kind,'external');
 });
 
-test('E3 source follows the Shopify editor shell rather than four competing inspector tabs',()=>{
+test('E3.1 source follows the supplied Shopify visual-editor reference',()=>{
  const source=fs.readFileSync('apps/admin/app/editor/[slug]/editor-client.tsx','utf8');
- for(const text of ['Theme settings','Sections','Preview inspector on','Select a section or block','onClickCapture={interceptPreview}','wiffey:journey','data-editor-inspect'])assert.ok(source.includes(text),text);
+ for(const text of ['Theme settings','Sections','App embeds','Preview inspector on','Select a section or block','onClickCapture={interceptPreview}','wiffey:journey','data-editor-inspect','Add section before','Add section after'])assert.ok(source.includes(text),text);
  assert.equal(source.includes("['content','appearance','behavior','page']"),false);
- assert.match(source,/grid-cols-1 lg:grid-cols-\[280px_minmax\(0,1fr\)_320px\]/);
+ assert.match(source,/grid-cols-1 lg:grid-cols-\[292px_minmax\(0,1fr\)_312px\]/);
+ assert.match(source,/h-\[50px\]/);
+ assert.match(source,/device==='desktop'\?'w-full'/);
+ assert.match(source,/border-2 border-\[#1677ff\]/);
+ assert.doesNotMatch(source,/desktop preview<\/span>|Unsaved changes<\/span>/);
 });
 
-test('E3 inspect mode quiets media and reveals the selected preview element',()=>{
+test('E3.1 inspector mode quiets media and uses independent canvas overlays',()=>{
  const source=fs.readFileSync('apps/admin/app/editor/[slug]/editor-client.tsx','utf8');
  assert.match(source,/querySelectorAll(?:<HTMLMediaElement>)?\('audio,video'\).*pause/);
  assert.match(source,/scrollIntoView\(\{behavior:'smooth',block:'center'\}\)/);
  assert.match(source,/animation-play-state:paused/);
+ assert.match(source,/setSelectionBox\(measureTarget/);
+ assert.match(source,/setHoverBox\(measureTarget/);
 });
