@@ -8,7 +8,7 @@ import MediaLibrary from './media-library';
 const button='rounded-md border border-[#c9cccf] bg-white px-3 py-2 text-[13px] font-medium text-[#303030] hover:bg-[#f6f6f7] disabled:cursor-not-allowed disabled:opacity-40';
 const input='mt-1.5 h-9 w-full rounded-md border border-[#8c9196] bg-white px-3 text-[13px] text-[#303030] outline-none focus:border-[#005bd3] focus:ring-1 focus:ring-[#005bd3]';
 const sectionTitle='text-[13px] font-semibold text-[#303030]';
-type SettingsSection='Content'|'Image'|'Position'|'Typography'|'Colours'|'Layout'|'Padding'|'Margin'|'Border & shadow'|'Effects'|'Playback'|'Navigation'|'Animation'|'Visibility & behavior'|'Advanced';
+type SettingsSection='Content'|'Image'|'Media'|'Position'|'Typography'|'Colours'|'Layout'|'Padding'|'Margin'|'Border & shadow'|'Effects'|'Playback'|'Navigation'|'Animation'|'Visibility & behavior'|'Advanced';
 const fontKeys=new Set(['fontFamily','size','weight','align','lineHeight','letterSpacing','titleItalic','titleTracking','controlTextSize']);
 const paddingKeys=new Set(['padding','paddingTop','paddingRight','paddingBottom','paddingLeft','popupPadding','controlPadding','mobileHeroTopPadding']);
 const marginKeys=new Set(['margin','marginTop','marginRight','marginBottom','marginLeft']);
@@ -21,7 +21,10 @@ const playbackKeys=new Set(['loop','initialVolume','captions','voiceSrc','introS
 const navigationKeys=new Set(['href','openInNewTab','pageSlug','placement','archiveBackLabel','transitionText']);
 function settingSection(cap:InspectorCapability,group:InspectorGroup):SettingsSection{
  const key=cap.field.key;
- if(cap.media||imageKeys.has(key))return ['focalX','focalY'].includes(key)?'Position':'Image';
+ if(cap.media?.kind==='audio')return 'Playback';
+ if(cap.media?.kind==='video')return 'Media';
+ if(cap.media?.kind==='image')return ['focalX','focalY'].includes(key)?'Position':'Image';
+ if(imageKeys.has(key))return ['focalX','focalY'].includes(key)?'Position':'Image';
  if(fontKeys.has(key))return 'Typography';
  if(paddingKeys.has(key))return 'Padding';
  if(marginKeys.has(key))return 'Margin';
@@ -40,11 +43,11 @@ function friendlyLabel(field:InspectorField,section:SettingsSection){
  const edge:Record<string,string>={padding:'All sides',paddingTop:'Top',paddingRight:'Right',paddingBottom:'Bottom',paddingLeft:'Left',margin:'All sides',marginTop:'Top',marginRight:'Right',marginBottom:'Bottom',marginLeft:'Left'};
  if(edge[field.key])return edge[field.key];
  if(field.key==='background')return 'Background';if(field.key==='color')return 'Text colour';if(field.key==='radius')return 'Corner radius';if(field.key==='borderColor')return 'Border colour';if(field.key==='borderWidth')return 'Border width';
- if(field.key==='src')return 'Image';if(field.key==='alt')return 'Alt text';if(field.key==='objectFit')return 'Image fit';if(field.key==='displayHeight')return 'Height';if(field.key==='maxWidth')return section==='Image'?'Maximum image width':'Maximum width';
+ if(field.key==='src')return section==='Image'?'Image':section==='Media'?'Video':'Media';if(field.key==='alt')return section==='Image'?'Alt text':'Description';if(field.key==='objectFit')return 'Image fit';if(field.key==='displayHeight')return 'Height';if(field.key==='maxWidth')return section==='Image'?'Maximum image width':'Maximum width';
  return field.label.replace(/^padding /i,'').replace(/^margin /i,'');
 }
 function optionLabel(field:InspectorField,option:string){
- if(field.key==='objectFit')return option==='cover'?'Fill area (crop)':option==='contain'?'Fit inside':option;
+ if(field.key==='objectFit')return option==='cover'?'Fill area (crop)':option==='contain'?'Fit inside':option==='fill'?'Stretch to fill':option==='scale-down'?'Scale down only':option;
  if(option==='true')return 'On';if(option==='false')return 'Off';
  return option.charAt(0).toUpperCase()+option.slice(1).replaceAll('-',' ');
 }
