@@ -12,6 +12,7 @@ export async function POST(request:Request){
   const decoder=new TextDecoder();let body='',size=0;
   for(;;){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>1024){await reader.cancel();return Response.json({error:'Keep your answer short.'},{status:413,headers})}body+=decoder.decode(value,{stream:true})}body+=decoder.decode();
   const data=JSON.parse(body);if(!matchesVaultAnswer(data?.answer))return Response.json({error:'That’s not quite the memory. Think of a little moment we shared, and try again.'},{status:401,headers});
-  return Response.json({story:getVaultStory()},{headers});
+  try{return Response.json({story:await getVaultStory(data.answer)},{headers})}
+  catch{return Response.json({error:'Our story is taking a moment. Please try again.'},{status:503,headers})}
  }catch{return Response.json({error:'Vault couldn’t open. Please try again.'},{status:400,headers})}
 }
