@@ -26,7 +26,7 @@ export function createDefaultPage(slug:BuiltinPage):PageDocument{
   text(section('recent-app','Recently opened app'),'Resume label','Continue exploring');
   text(section('keepsake-note','Keepsake note'),'Note','A little world, just for you.');
  }else if(slug==='reasons'){
-  intro('Adore','Little things, big feelings. Swipe through a few reasons you are so loved.');
+  intro('Adore','A few little things. A whole lot of love.');
   const deck=section('reason-deck','Reason cards',{previousLabel:'Previous',nextLabel:'Next',favoriteLabel:'Save favourite'});
   const reasons=[['Your smile','The smile you try to hide is one of my favourite things.'],['Your little expressions','The tiny expressions that say so much without a word.'],['Your kindness','The care you bring to the people around you.'],['Your laugh','A laugh that can turn an ordinary moment into a good memory.'],['The way you listen','You make the little stories feel worth telling.'],['Our ordinary moments','Even a quiet day feels special with you in it.'],['Your excitement','The way your eyes light up about something you love.'],['Your thoughtful gestures','The small things that say “I remembered.”'],['Being yourself','You do not have to perform to be my favourite person.'],['The days ahead','There are still so many lovely moments for us to make.']];
   for(const [title,body] of reasons)block(deck,'reason',title,{title,body,category:'Little things',src:'',alt:''});

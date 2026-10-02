@@ -83,3 +83,10 @@ test('live Hotline keeps editable section labels and a disabled editor call prev
  const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:image.id});assert.ok(editor.includes('data-layout-node-id="'+image.id+'"'));assert.match(editor,/Select First fit check/);
  document=edit(document,image.parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document}),/fit.jpg|fit.mp4/);
  });
+
+test('Adore journal keeps voice notes and selected reason and letter layers editable',()=>{
+ let document=createDefaultPage('reasons');const reason=document.nodes.find(n=>n.component==='reason');document=edit(document,reason.id,{props:{voiceSrc:'https://example.com/love.mp3',transcript:'My spoken words'}});
+ const live=render(CMSRenderer,{document});assert.match(live,/love.mp3/);assert.match(live,/My spoken words/);assert.match(live,/Treasured/);
+ const second=document.nodes.filter(n=>n.component==='reason')[1];assert.match(render(CMSRenderer,{document,onSelect:()=>{},selectedId:second.id}),/Your little expressions/);
+ const letter=document.nodes.find(n=>n.props.sectionKind==='heartfelt-card');const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:letter.id});assert.match(editor,/And my favourite reason/);assert.match(editor,/Select Heartfelt message/);
+});

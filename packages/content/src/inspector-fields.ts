@@ -47,3 +47,6 @@ sectionContentFields['date-widget']=[{key:'dateMode',label:'Date display',type:'
 for(const kind of ['image','video'])componentFields[kind].push({key:'title',label:'Media title',type:'text'},{key:'album',label:'Album',type:'text'},{key:'date',label:'Date (YYYY-MM-DD)',type:'text'},{key:'body',label:'Caption',type:'textarea'});
 
 sectionContentFields['photo-library']=[{key:'title',label:'App heading',type:'text'},{key:'subtitle',label:'Library message',type:'text'}];
+
+componentFields.reason.push({key:'voiceSrc',label:'Voice note URL',type:'text'},{key:'transcript',label:'Voice transcript',type:'textarea'});
+sectionContentFields['heartfelt-card']=[{key:'sealedTitle',label:'Envelope title',type:'text'},{key:'openLabel',label:'Open letter button',type:'text'}];
