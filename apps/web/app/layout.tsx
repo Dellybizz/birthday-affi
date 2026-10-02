@@ -8,9 +8,9 @@ export const metadata = {
 };
 
 import {SiteNavigationProvider} from '@wiffeyyyy/ui/navigation';
-import {getPublicNavigation,getPublishedSiteConfiguration} from "../lib/cms";
+import {getPublicNavigation,getPublishedSiteConfiguration,getPublishedDocument} from "../lib/cms";
 export const dynamic="force-dynamic";
 export default async function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
-  const [settings,navigation]=await Promise.all([getPublishedSiteConfiguration(),getPublicNavigation()]);
-  return <html lang="en"><body><SiteNavigationProvider value={navigation}><OSProvider settings={settings}>{children}</OSProvider></SiteNavigationProvider></body></html>;
+  const [settings,navigation,home]=await Promise.all([getPublishedSiteConfiguration(),getPublicNavigation(),getPublishedDocument("home")]);
+  return <html lang="en"><body><SiteNavigationProvider value={navigation}><OSProvider settings={settings} homeDocument={home}>{children}</OSProvider></SiteNavigationProvider></body></html>;
 }

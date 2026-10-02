@@ -90,3 +90,11 @@ test('Adore journal keeps voice notes and selected reason and letter layers edit
  const second=document.nodes.filter(n=>n.component==='reason')[1];assert.match(render(CMSRenderer,{document,onSelect:()=>{},selectedId:second.id}),/Your little expressions/);
  const letter=document.nodes.find(n=>n.props.sectionKind==='heartfelt-card');const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:letter.id});assert.match(editor,/And my favourite reason/);assert.match(editor,/Select Heartfelt message/);
 });
+
+test('shared notifications expose an app trigger and reuse home editable messages without duplicate shades',()=>{
+ const {NotificationShade}=load(path.join(root,'packages/ui/src/notification-shade.tsx'));
+ const document=load(path.join(root,'packages/content/src/index.ts')).installPhoneHome(createDefaultPage('home'));
+ const notifications=[{id:'custom',title:'An edited notification',body:'My personal copy',href:'/app/reasons',icon:'♡'}];
+ const html=render(NotificationShade,{notifications,app:true,children:createElement(CMSRenderer,{document})});
+ assert.match(html,/My personal copy/);assert.match(html,/href="\/app\/reasons"/);assert.match(html,/Open notification shade, 1 notifications/);assert.equal((html.match(/<dialog/g)??[]).length,1);
+});
