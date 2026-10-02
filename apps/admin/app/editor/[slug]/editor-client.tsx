@@ -3,8 +3,11 @@ import { useEffect, useRef, useReducer, useState, useSyncExternalStore } from 'r
 import { CMSRenderer } from '@wiffeyyyy/ui/cms-renderer';
 import { addPhoneItem, phoneFields, searchNodes, compareDocuments, pageTemplates, appendTemplate, exportSection, importSection, resetResponsive, responsiveFields, DraftSaveQueue, componentMediaKind, nodeMediaKind, componentRegistry, componentFields, sectionBlocks, sectionContentFields, heartFields, designFields, insertNode, updateNode, deleteNode, duplicateNode, moveNode, editorReducer, type PageDocument, type ComponentName, type CMSNode, type CMSField, type InspectorField } from '@wiffeyyyy/content';
 import MediaLibrary from '../../../components/media-library';
+import { EditorPageSelector } from '../../../components/editor-page-selector';
 import { saveDraft, publishPage, rollbackPage, getVersionHistory, getVersionDocument } from '../../../lib/site-actions';
-const button='rounded-lg border px-3 py-2 text-sm disabled:opacity-40';
+import { buildPublicHref, type EditorPageItem } from '../../../lib/editor-pages';
+import { saveBeforeEditorSwitch } from '../../../lib/editor-navigation';
+const button='rounded-lg border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40';
 const input='mt-1 w-full rounded-lg border bg-white p-2 text-sm';
 function Field({field,value,onApply}:{field:InspectorField;value:CMSField|undefined;onApply:(value:CMSField)=>void}) {
  const apply=(raw:string)=>onApply(field.type==='number'?Number(raw):raw);
@@ -21,7 +24,7 @@ function Navigator({document,selected,onSelect,onToggle}:{document:PageDocument;
  {!collapsed.has(id)&&node.children.length>0&&<ul className="ml-4 border-l pl-2">{node.children.map(render)}</ul>}</li>};
  return <ul className="mt-3 space-y-1">{document.rootIds.map(render)}</ul>;
 }
-export default function Editor({pageId,siteId,initialDocument,initialRevision=0,canWrite=true,canPublish=true}:{pageId:string;siteId?:string;initialDocument:PageDocument;initialRevision?:number;canWrite?:boolean;canPublish?:boolean}) {
+export default function Editor({pageId,siteId,siteSlug,currentSlug,pages,publicSiteUrl,initialDocument,initialRevision=0,canWrite=true,canPublish=true}:{pageId:string;siteId?:string;siteSlug:string;currentSlug:string;pages:EditorPageItem[];publicSiteUrl:string;initialDocument:PageDocument;initialRevision?:number;canWrite?:boolean;canPublish?:boolean}) {
  const [state,dispatch]=useReducer(editorReducer,{document:initialDocument,selectedId:initialDocument.rootIds[0]??null,past:[],future:[]});
  const [saver]=useState(()=>new DraftSaveQueue(initialDocument,initialRevision,(document,revision)=>saveDraft(pageId,document,revision)));
  const saveState=useSyncExternalStore(saver.subscribe,saver.getSnapshot,saver.getSnapshot);
@@ -30,13 +33,8 @@ export default function Editor({pageId,siteId,initialDocument,initialRevision=0,
  const [query,setQuery]=useState(''),[designScope,setDesignScope]=useState<'base'|'mobile'|'tablet'|'desktop'>('base');
  const [comparison,setComparison]=useState<ReturnType<typeof compareDocuments>|null>(null);
  const importInput=useRef<HTMLInputElement>(null);
- const exportCurrent=()=>{if(!current)return;try{const section=exportSection(doc,current.id);const url=URL.createObjectURL(new Blob([JSON.stringify(section,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='reusable-section.json';a.click();URL.revokeObjectURL(url)}catch(e){setError(e instanceof Error?e.message:'Unable to export')}};
- const importFile=async(file:File)=>{try{if(file.size>1000000)throw new Error('Section file must be under 1 MB');const value=JSON.parse(await file.text());act(()=>importSection(doc,value,()=>crypto.randomUUID()));setNotice('Reusable section added as an independent copy.')}catch(e){setError(e instanceof Error?e.message:'Unable to import section')}};
- const compare=async(id:string)=>{try{setComparison(compareDocuments(await getVersionDocument(pageId,id),doc))}catch(e){setError(e instanceof Error?e.message:'Unable to compare')}};
-
  const mediaDialog=useRef<HTMLDialogElement>(null);
  const [mediaTarget,setMediaTarget]=useState<string|null>(null);
- useEffect(()=>{if(mediaTarget)mediaDialog.current?.showModal()},[mediaTarget]);
  const [notice,setNotice]=useState('');
  const [error,setError]=useState('');const [busy,setBusy]=useState(false);
  const [interactive,setInteractive]=useState(false);
@@ -45,7 +43,13 @@ export default function Editor({pageId,siteId,initialDocument,initialRevision=0,
  const [tab,setTab]=useState<'content'|'design'|'page'>('content');
  const [component,setComponent]=useState<ComponentName>('text');
  const doc=state.document;const current=doc.nodes.find(n=>n.id===state.selectedId);
+ const currentPage=pages.find(page=>page.slug===currentSlug);
+ const liveHref=buildPublicHref(publicSiteUrl,currentPage?.livePath??null);
  const dirty=JSON.stringify(doc)!==saveState.saved;
+ const exportCurrent=()=>{if(!current)return;try{const section=exportSection(doc,current.id);const url=URL.createObjectURL(new Blob([JSON.stringify(section,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='reusable-section.json';a.click();URL.revokeObjectURL(url)}catch(e){setError(e instanceof Error?e.message:'Unable to export')}};
+ const importFile=async(file:File)=>{try{if(file.size>1000000)throw new Error('Section file must be under 1 MB');const value=JSON.parse(await file.text());act(()=>importSection(doc,value,()=>crypto.randomUUID()));setNotice('Reusable section added as an independent copy.')}catch(e){setError(e instanceof Error?e.message:'Unable to import section')}};
+ const compare=async(id:string)=>{try{setComparison(compareDocuments(await getVersionDocument(pageId,id),doc))}catch(e){setError(e instanceof Error?e.message:'Unable to compare')}};
+ useEffect(()=>{if(mediaTarget)mediaDialog.current?.showModal()},[mediaTarget]);
  useEffect(()=>{
   if(!canWrite)return;saver.stage(doc);
   if(busy||saver.getSnapshot().status==='conflict'||saver.getSnapshot().status==='error')return;
@@ -63,12 +67,17 @@ export default function Editor({pageId,siteId,initialDocument,initialRevision=0,
  const patch=(props:Record<string,CMSField>)=>current&&act(()=>updateNode(doc,current.id,{props}));
  const add=(kind:ComponentName,parent:string|null)=>{const id=crypto.randomUUID();act(()=>({document:insertNode(doc,kind,id,parent),selectedId:id}));setPanel('settings')};
  const persist=async(publish=false)=>{if(busy)return;setBusy(true);setError('');setNotice('');try{saver.stage(doc);await saver.flush();if(publish){const result=await publishPage(pageId,saver.getSnapshot().revision);setNotice('Published version '+result.version)}if(showVersions)await refreshVersions()}catch(e){setError(e instanceof Error?e.message:'Unable to save')}finally{setBusy(false)}};
+ const switchPage=async(target:EditorPageItem)=>{if(busy||target.slug===currentSlug)return;setBusy(true);setError('');setNotice('');const result=await saveBeforeEditorSwitch({targetHref:target.editorHref,canWrite,saveStatus:saver.getSnapshot().status,flush:async()=>{saver.stage(doc);await saver.flush()},navigate:href=>window.location.assign(href)});if(!result.ok){setError(result.message);setBusy(false)}};
  const restore=async(versionId:string)=>{if(busy||!canWrite)return;setBusy(true);setError('');try{const document=await getVersionDocument(pageId,versionId);dispatch({type:'commit',document,selectedId:document.rootIds[0]??null});setNotice('Restored to draft. The live page is unchanged.')}catch(e){setError(e instanceof Error?e.message:'Unable to restore')}finally{setBusy(false)}};
  const rollback=async(versionId:string)=>{if(busy||!canPublish)return;setBusy(true);setError('');try{saver.stage(doc);await saver.flush();const result=await rollbackPage(pageId,versionId,saver.getSnapshot().revision);setNotice('Live page rolled back as version '+result.version+'. Your draft is unchanged.');await refreshVersions()}catch(e){setError(e instanceof Error?e.message:'Unable to roll back')}finally{setBusy(false)}};
  const siblings=current?(current.parentId?doc.nodes.find(n=>n.id===current.parentId)!.children:doc.rootIds):[];
  const position=current?siblings.indexOf(current.id):-1;
  return <main className="flex h-screen flex-col overflow-hidden bg-[#f4f2f0] text-[#302927]">
- <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-white p-3"><div className="flex items-center gap-3"><a href="/" aria-label="Back to pages" className={button}>←</a><strong>Wiffeyyyy Editor</strong><span role="status" className="text-xs">{busy?'Working…':saveState.status==='saving'?'Autosaving…':saveState.status==='conflict'?'Conflict':saveState.status==='error'?'Save failed':dirty?'Waiting to save…':'Saved'}</span></div><div className="flex gap-2"><button className={button} aria-label="Undo" disabled={!canWrite||busy||!state.past.length} onClick={()=>dispatch({type:'undo'})}>Undo</button><button className={button} aria-label="Redo" disabled={!canWrite||busy||!state.future.length} onClick={()=>dispatch({type:'redo'})}>Redo</button><button className={button} onClick={()=>{setShowVersions(x=>!x);refreshVersions()}}>Versions</button><a className={button} href={"/preview/"+pageId} target="_blank" rel="noreferrer">Saved draft preview</a><button className={button} disabled={!canWrite||busy||!dirty||saveState.status==='conflict'} onClick={()=>persist()}>Save</button><button className={button+' bg-[#d86f91] text-white'} disabled={!canPublish||busy||saveState.status==='conflict'} onClick={()=>persist(true)}>Publish</button></div></header>
+ <header className="flex shrink-0 flex-wrap items-center gap-2 border-b bg-white p-3">
+  <div className="flex min-w-fit items-center gap-2"><a href="/" aria-label="Back to dashboard" className={button}>←</a><div className="hidden sm:block"><strong className="block text-sm">Wiffeyyyy Editor</strong><span className="block text-[10px] text-[#81736d]">{siteSlug}</span></div></div>
+  <div className="order-3 flex w-full justify-center px-1 md:order-none md:w-auto md:min-w-[280px] md:flex-1"><EditorPageSelector pages={pages} currentSlug={currentSlug} busy={busy} onSelect={switchPage}/></div>
+  <div className="ml-auto flex flex-wrap items-center justify-end gap-2"><span role="status" className={'rounded-full px-2 py-1 text-[11px] '+(saveState.status==='error'||saveState.status==='conflict'?'bg-red-50 text-red-700':dirty||saveState.status==='saving'?'bg-amber-50 text-amber-700':'bg-green-50 text-green-700')}>{busy?'Working…':saveState.status==='saving'?'Autosaving…':saveState.status==='conflict'?'Conflict':saveState.status==='error'?'Save failed':dirty?'Waiting to save…':'Saved'}</span><button className={button} aria-label="Undo" disabled={!canWrite||busy||!state.past.length} onClick={()=>dispatch({type:'undo'})}>Undo</button><button className={button} aria-label="Redo" disabled={!canWrite||busy||!state.future.length} onClick={()=>dispatch({type:'redo'})}>Redo</button><button className={button} onClick={()=>{setShowVersions(x=>!x);refreshVersions()}}>Versions</button><a className={button} href={"/preview/"+pageId} target="_blank" rel="noreferrer">Preview draft</a>{liveHref?<a className={button} href={liveHref} target="_blank" rel="noreferrer">View live ↗</a>:<button className={button} disabled title={currentPage?.livePath?'Set NEXT_PUBLIC_WEB_URL to enable the public site link.':'This page has no active public route.'}>View live ↗</button>}<button className={button} disabled={!canWrite||busy||!dirty||saveState.status==='conflict'} onClick={()=>persist()}>Save</button><button className={button+' bg-[#d86f91] text-white'} disabled={!canPublish||busy||saveState.status==='conflict'} onClick={()=>persist(true)}>Publish</button></div>
+ </header>
  {(error||saveState.message)&&<div role="alert" className="bg-red-50 p-3 text-sm text-red-800"><p>{error||saveState.message}</p><button className={button+' mt-2'} onClick={downloadDraft}>Download local draft</button>{saveState.status==='conflict'?<button className={button+' ml-2'} onClick={()=>location.reload()}>Reload latest (discards local edits)</button>:<button className={button+' ml-2'} disabled={busy||!canWrite} onClick={()=>persist()}>Retry save</button>}</div>}
  {notice&&<p role="status" className="bg-green-50 p-3 text-sm">{notice}</p>}
  {showVersions&&<section aria-label="Version history" className="max-h-64 shrink-0 overflow-auto border-b bg-white p-3"><div className="flex justify-between"><h2 className="font-semibold">Version history</h2><button className={button} onClick={refreshVersions}>Refresh versions</button></div><p className="my-2 text-xs">Restore creates a draft edit. Rollback changes the live page and retains your draft. Latest 50 snapshots.</p>{!versions.length&&<p className="text-sm">No saved versions yet.</p>}<ul className="space-y-2">{versions.map(v=><li key={v.id} className="flex flex-wrap items-center gap-2 text-sm"><span>Version {v.version_number} · {v.status} · {v.created_at.slice(0,19).replace('T',' ')} UTC</span><button className={button} onClick={()=>compare(v.id)}>Compare with draft</button><a className={button} href={'/preview/'+pageId+'?version='+v.id} target="_blank" rel="noreferrer">Preview</a><button className={button} disabled={!canWrite||busy} onClick={()=>restore(v.id)}>Restore to draft</button>{v.status==='published'&&<button className={button} disabled={!canPublish||busy} onClick={()=>rollback(v.id)}>Rollback live</button>}</li>)}</ul></section>}

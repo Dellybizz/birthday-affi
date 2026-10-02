@@ -8,7 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
+    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
@@ -21,7 +21,8 @@
     "test:phase8": "node --test tests/phase8.test.mjs tests/phase8-sql.test.mjs",
     "test:c0": "node --test tests/c0-contracts.test.mjs",
     "test:c1": "node --test tests/c1-sql.test.mjs tests/c1-settings.test.mjs",
-    "test:c2": "node --test tests/c2-page-settings.test.mjs tests/c2-navigation.test.mjs tests/c2-completion-sql.test.mjs"
+    "test:c2": "node --test tests/c2-page-settings.test.mjs tests/c2-navigation.test.mjs tests/c2-completion-sql.test.mjs",
+    "test:e1": "node --test tests/editor-e1.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
