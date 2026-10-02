@@ -13,7 +13,8 @@
     "./live-hotline": "./src/live-hotline.tsx",
     "./page-layout": "./src/page-layout.tsx",
     "./notification-shade": "./src/notification-shade.tsx",
-    "./puzzle-app": "./src/puzzle-app.tsx"
+    "./puzzle-app": "./src/puzzle-app.tsx",
+    "./archive-navigation": "./src/archive-navigation.tsx"
   },
   "peerDependencies": {
     "react": "^19.0.0"

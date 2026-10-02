@@ -1,4 +1,5 @@
 'use client';
+import {useArchiveNavigation} from './archive-navigation';
 import {useContext,useEffect,useRef,useState,type CSSProperties,type ReactNode,type PointerEvent} from 'react';
 import {getPublicApp,safeMediaUrl,phoneSwipeCloses,type CMSNode,type PageDocument} from '@wiffeyyyy/content';
 import {DocumentSettingsContext} from './page-layout';
@@ -16,6 +17,7 @@ function Glyph({kind,level=100}:{kind:'wifi'|'signal'|'battery'|'back'|'home'|'r
  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[kind]}</svg>;
 }
 export function PhoneHome({document,onSelect,selectedId,persist=false,contained=false,renderNode}:{document:PageDocument;onSelect?:(id:string)=>void;selectedId?:string;persist?:boolean;contained?:boolean;renderNode?:(id:string)=>ReactNode}){
+ const archiveNavigation=useArchiveNavigation();
  const settings=useContext(DocumentSettingsContext),navigation=useSiteNavigation(),editing=!!onSelect;
  const byId=new Map(document.nodes.map(n=>[n.id,n]));const root=document.nodes.find(n=>n.parentId===null&&n.props.phonePart==='home')!;
  const nodes=root.children.map(id=>byId.get(id)!).filter(n=>n.visible);
@@ -67,6 +69,7 @@ export function PhoneHome({document,onSelect,selectedId,persist=false,contained=
   {root.visible&&<>
   {wallpaper&&mark(wallpaper,<>{src&&!imageFailed&&<img className="phone-wallpaper-image" src={src} alt={text(wallpaper,'alt')} fetchPriority="high" onError={()=>setImageFailed(true)} style={{objectFit:text(wallpaper,'objectFit','cover') as CSSProperties['objectFit'],objectPosition:`${wallpaper.props.focalX??50}% ${wallpaper.props.focalY??50}%`}}/>}<div className="phone-wallpaper-dim" style={{background:`rgba(0,0,0,${wallpaper.props.dim??0.15})`}}/></>,'phone-wallpaper')}
   <div className="phone-surface">
+   <a className="phone-archive-back" href={editing?undefined:'/'} aria-label="Return to Memories Archive" tabIndex={editing?-1:undefined}>{archiveNavigation.backLabel}</a>
    {status&&mark(status,<button className="phone-status-button" aria-label={`Open notification shade, ${sharedCount??active.length} notifications`} aria-expanded={sharedExpanded??open} onClick={()=>setOpen(true)} style={{touchAction:'none'}} onPointerDown={e=>{gesture.current={x:e.clientX,y:e.clientY,id:e.pointerId,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{const start=gesture.current;gesture.current=null;if(start&&e.clientY-start.y>35&&Math.abs(e.clientX-start.x)<100)setOpen(true)}} onPointerCancel={()=>{gesture.current=null}}><span className="phone-status-time">{clock.replace(/\s?(AM|PM)$/,'')}</span><span className="phone-island" aria-hidden="true"><i/></span><span className="phone-status-right"><Glyph kind="signal"/><Glyph kind="wifi"/><Glyph kind="battery" level={Number(status.props.battery??100)}/></span></button>,'phone-status')}
    <div className="phone-content">{nodes.filter(n=>!['wallpaper','status','notifications','navigation'].includes(text(n,'phonePart'))).map(n=>{
     if(n.props.phonePart==='launcher')return launcher(n);

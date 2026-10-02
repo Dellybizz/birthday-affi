@@ -69,3 +69,5 @@ componentFields.image.push({key:'emptyLabel',label:'Empty photo message',type:'t
 componentFields.text.push({key:'weight',label:'Font weight',type:'number',min:100,max:900,step:100});
 
 componentFields.section.push({key:'visualEffects',label:'Archive glow and floating hearts',type:'select',options:['true','false']},{key:'decorNote',label:'Archive heart dedication',type:'text'});
+
+componentFields.section.push({key:'transitionEnabled',label:'Archive ↔ phone animation',type:'select',options:['true','false']},{key:'transitionDuration',label:'Transition duration (milliseconds)',type:'number',min:300,max:1800,step:50},{key:'transitionColor',label:'Transition heart color',type:'color'},{key:'transitionText',label:'Transition message',type:'text'},{key:'archiveBackLabel',label:'Phone back button label',type:'text'});
