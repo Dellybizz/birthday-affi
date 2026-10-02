@@ -1,5 +1,6 @@
 import "@wiffeyyyy/ui/styles";
 import "./os.css";
+import "./navigation-performance.css";
 import {ArchiveJourney} from "../components/archive-journey";
 import { OSProvider } from "../components/os-provider";
 
