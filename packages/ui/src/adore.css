@@ -25,3 +25,12 @@
 .adore-content section.bg-gradient-to-br{padding:22px!important;border-radius:24px;background:#f6dfe9!important}
 .adore-home{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:126px;height:5px;border-radius:6px;background:#342931}
 @media(prefers-reduced-motion:reduce){.adore-app *{scroll-behavior:auto}}
+.adore-reason>div:first-child{display:grid;place-items:center;background:linear-gradient(140deg,#f9dce9,#fff3e9);border-radius:18px;color:#b14e75;font-size:54px;margin-bottom:18px;height:155px}
+.adore-reason h3{margin:8px 0}
+.adore-reason button{padding:12px 18px;margin-top:16px;font-size:14px;font-weight:600}
+.adore-deck>div:last-child{display:flex;justify-content:space-between;gap:12px;margin-top:16px}
+.adore-deck>div:last-child button{padding:12px 22px;font-size:14px;font-weight:600}
+.adore-deck>div:last-child button:disabled{opacity:.4}
+.adore-count{margin:12px 0}
+.adore-reason p{margin:0}
+.adore-content section.bg-gradient-to-br{border:1px solid #eed4e0}
