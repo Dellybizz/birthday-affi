@@ -18,6 +18,8 @@ export default function EditorLiveFrame({pageId,document,device,selectedId,inter
  const [ready,setReady]=useState(false),[scale,setScale]=useState(1);
  const viewport=VIEWPORTS[device];
  const src=useMemo(()=>'/preview/'+encodeURIComponent(pageId)+'?embed=1',[pageId]);
+ const firstRoot=document.rootIds[0]??null,firstLayer=document.nodes.find(node=>node.parentId===firstRoot);
+ const previewTitle='Exact live draft preview'+(firstLayer?' · Select '+(firstLayer.label??firstLayer.component):'');
  const send=()=>frame.current?.contentWindow?.postMessage({source:'wiffey-editor',type:'update',document,device,selectedId,interactive} satisfies PreviewMessage,window.location.origin);
  useEffect(()=>{setReady(false)},[src]);
  useEffect(()=>{if(!ready)return;send()},[ready,document,device,selectedId,interactive]);
@@ -26,7 +28,7 @@ export default function EditorLiveFrame({pageId,document,device,selectedId,inter
  const visualWidth=Math.max(1,Math.round(viewport.width*scale)),visualHeight=Math.max(1,Math.round(viewport.height*scale));
  return <div ref={stage} data-editor-preview-stage data-preview-device={device} className="flex h-full min-h-[520px] w-full items-start justify-center overflow-auto p-3">
   <div data-editor-preview-viewport className="relative shrink-0 bg-white shadow-sm" style={{width:visualWidth,height:visualHeight}}>
-   <iframe ref={frame} src={src} title="Exact live draft preview" className="absolute left-0 top-0 border-0 bg-white" style={{width:viewport.width,height:viewport.height,transform:`scale(${scale})`,transformOrigin:'top left'}} onLoad={()=>setReady(false)}/>
+   <iframe ref={frame} src={src} title={previewTitle} className="absolute left-0 top-0 border-0 bg-white" style={{width:viewport.width,height:viewport.height,transform:`scale(${scale})`,transformOrigin:'top left'}} onLoad={()=>setReady(false)}/>
    {!ready&&<div className="pointer-events-none absolute inset-0 grid place-items-center bg-white/80 text-[12px] text-[#6d7175]">Loading live preview…</div>}
   </div>
  </div>;
