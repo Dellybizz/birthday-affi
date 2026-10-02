@@ -62,10 +62,10 @@ test('Android home renders wallpaper, six full icon links, notification shade an
  const inspector=render(Editor,{pageId:'test',siteId:'site',initialDocument:document});assert.match(inspector,/iPhone home screen/);assert.match(inspector,/Select Wallpaper/);
 });
 
-test('iPhone home presents six destinations with Hotdial and Clicksara in both grid and dock, removes Android navigation and unnecessary copy',()=>{
+test('iPhone home presents six destinations with Hotdial, Pardanasheen and Clicksara in both grid and dock, removes Android navigation and unnecessary copy',()=>{
  const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));const document=installPhoneHome(createDefaultPage('home')),html=render(CMSRenderer,{document});
  assert.match(html,/phone-island/);assert.match(html,/phone-dock/);assert.match(html,/phone-home-indicator/);assert.doesNotMatch(html.split('<dialog')[0],/aria-label="Back"|href="\/home"|Six little places|A little world, just for you|Your birthday edition|phone-folder-link/);
- for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotdial','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','camera':'Clicksara'}[slug])+'"','g'))??[]).length,['hotline','camera'].includes(slug)?2:1);
+ for(const slug of ['reasons','hotline','adventure','movie','kiss-shop','camera'])assert.equal((html.match(new RegExp('aria-label="Open '+({'reasons':'Adore','hotline':'Hotdial','adventure':'Pardanasheen','movie':'Saragram','kiss-shop':'Kiss Shop','camera':'Clicksara'}[slug])+'"','g'))??[]).length,['hotline','camera','adventure'].includes(slug)?2:1);
 });
 
 test('live Hotline keeps editable section labels and a disabled editor call preview',()=>{
