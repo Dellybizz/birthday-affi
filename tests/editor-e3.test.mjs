@@ -40,7 +40,7 @@ test('E3 source follows the Shopify editor shell rather than four competing insp
 
 test('E3 inspect mode quiets media and reveals the selected preview element',()=>{
  const source=fs.readFileSync('apps/admin/app/editor/[slug]/editor-client.tsx','utf8');
- assert.match(source,/querySelectorAll\('audio,video'\).*pause/);
+ assert.match(source,/querySelectorAll(?:<HTMLMediaElement>)?\('audio,video'\).*pause/);
  assert.match(source,/scrollIntoView\(\{behavior:'smooth',block:'center'\}\)/);
  assert.match(source,/animation-play-state:paused/);
 });
