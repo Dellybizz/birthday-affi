@@ -111,7 +111,8 @@ test('P6 keeps editor typing, autosave and iframe updates off the hot path',()=>
  assert.match(editor,/allCapabilities=\{currentCapabilities\}/);
  assert.match(inspector,/Layer name<input[^>]+defaultValue=/);
  assert.match(inspector,/Layer name<input[^>]+onBlur=/);
- assert.match(inspector,/Horizontal %<input[^>]+defaultValue=\{x\}[^>]+onBlur=/);
+ assert.match(inspector,/Horizontal<input[^>]+defaultValue=\{x\}[^>]+onBlur=/);
+ assert.match(inspector,/Vertical<input[^>]+defaultValue=\{y\}[^>]+onBlur=/);
  assert.match(inspector,/allCapabilities\?:InspectorCapability\[\]/);
  assert.match(frame,/type:'state'/);
  assert.match(frame,/pendingDocument/);
@@ -140,7 +141,7 @@ test('P3 offers real device presets and a manually resizable logical viewport',(
  assert.match(frame,/data-logical-width=\{viewport\.width\}/);
  assert.match(frame,/data-logical-height=\{viewport\.height\}/);
  assert.match(frame,/Resize responsive preview/);
- assert.match(frame,/current\.width\+\(event\.clientX-current\.x\)\/Math\.max\(scale,\.01\)/);
+ assert.match(frame,/current\.width\+\(event\.clientX-current\.x\)\/Math\.max\(scale,.01\)/);
  assert.match(frame,/deviceForWidth\(viewport\.width\)/);
  assert.match(frame,/width:clamp\([^\n]+,320,1600\)/);
  assert.match(frame,/height:clamp\([^\n]+,568,1200\)/);
