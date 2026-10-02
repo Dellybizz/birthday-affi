@@ -69,9 +69,11 @@ test('P2 Archive and Heart preview reuse the same public non-phone shell without
 
 test('inspector exposes Shopify-style semantic settings groups and full image controls',()=>{
  for(const heading of ['Typography','Colours','Layout','Padding','Margin','Border & shadow','Image','Position','Playback','Navigation','Animation'])assert.ok(inspector.includes("'"+heading+"'"),heading);
- for(const position of ['Top left','Top','Top right','Left','Centre','Right','Bottom left','Bottom','Bottom right'])assert.ok(inspector.includes("'"+position+"'"),position);
- assert.match(inspector,/Add '\+capability\.media\?\.label\.toLowerCase\(\)/);
- assert.match(inspector,/Replace '\+capability\.media\?\.label\.toLowerCase\(\)/);
+ for(const position of ['Top left','Top','Top right','Left','Centre','Right','Bottom left','Bottom','Bottom right'])assert.ok(inspector.includes("['"+position+"'"),position);
+ assert.match(inspector,/current\?'Replace':'Add'/);
+ assert.match(inspector,/>Remove<\/button>/);
  assert.match(inspector,/All sides/);
+ assert.match(inspector,/function SpacingEditor/);
+ assert.match(inspector,/function SettingsCard/);
  assert.match(fields,/options:\['cover','contain','fill','scale-down'\]/);
 });
