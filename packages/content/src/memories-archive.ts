@@ -6,8 +6,8 @@ const memoryTitles=['A moment worth keeping','My favourite kind of ordinary','A 
 const memoryStories=['Some photographs hold more than a moment. They hold the way my heart feels about you.','With you, even the little things become memories I want to keep forever.','If I could keep one feeling close, it would be the peace of being near you.'];
 
 function appendMemory(d:PageDocument,parent:CMSNode,index:number,newId:()=>string){
- const card=createNode('section',newId(),parent.id);card.label='Memory '+index+' · frame';card.props={...card.props,archivePart:'memory',columns:2,'mobile:columns':1,padding:24,paddingBottom:24,background:'#281532',radius:28,borderColor:'#794463',borderWidth:1,shadow:'deep',gap:24,imageSide:'auto',mobileImageHeight:330};parent.children.push(card.id);d.nodes.push(card);
- const add=(kind:ComponentName,label:string,props:Record<string,CMSField>)=>{const node=createNode(kind,newId(),card.id);node.label=label;node.props={...node.props,...props};card.children.push(node.id);d.nodes.push(node);return node};
+ const card:CMSNode=createNode('section',newId(),parent.id);card.label='Memory '+index+' · frame';card.props={...card.props,archivePart:'memory',columns:2,'mobile:columns':1,padding:24,paddingBottom:24,background:'#281532',radius:28,borderColor:'#794463',borderWidth:1,shadow:'deep',gap:24,imageSide:'auto',mobileImageHeight:330};parent.children.push(card.id);d.nodes.push(card);
+ const add=(kind:ComponentName,label:string,props:Record<string,CMSField>)=>{const node:CMSNode=createNode(kind,newId(),card.id);node.label=label;node.props={...node.props,...props};card.children.push(node.id);d.nodes.push(node);return node};
  add('image','Memory '+index+' · photo',{src:'',alt:'A favourite photograph',objectFit:'cover',displayHeight:420,radius:20,emptyLabel:'A memory belongs here'});
  add('text','Memory '+index+' · event and date',{text:'MEMORY '+String(index).padStart(2,'0')+' · CLOSE TO MY HEART',size:11,color:'#ff78b4',letterSpacing:2});
  add('heading','Memory '+index+' · title',{text:memoryTitles[index-1]??'A memory waiting for us',size:27,weight:400,fontFamily:'Georgia',color:'#fff0f7'});
