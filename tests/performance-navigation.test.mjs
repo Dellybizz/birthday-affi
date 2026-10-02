@@ -16,9 +16,25 @@ test('public CMS uses shared short-lived server cache and avoids force-dynamic p
 
 test('public same-origin navigation uses Next router instead of document reloads',()=>{
  const journey=read('apps/web/components/archive-journey.tsx');
- assert.match(journey,/router\.push\(href\)/);
- assert.match(journey,/router\.prefetch\(href\)/);
+ assert.match(journey,/router\.push\(item\.href\)/);
+ assert.match(journey,/router\.prefetch\(item\.href\)/);
  assert.doesNotMatch(journey,/location\.(assign|href)/);
+});
+
+test('P4 starts route navigation immediately and uses animation as a cover instead of a delay',()=>{
+ const journey=read('apps/web/components/archive-journey.tsx');
+ const css=read('apps/web/app/navigation-performance.css');
+ const appLoading=read('apps/web/app/app/[slug]/loading.tsx');
+ const homeLoading=read('apps/web/app/home/loading.tsx');
+ assert.match(journey,/setPhase\('closing'\);\s*router\.push\(target\)/);
+ assert.doesNotMatch(journey,/setTimeout\(\(\)=>\{router\.push\(target\)/);
+ assert.match(journey,/onPointerDownCapture=\{event=>press\(event\.target\)\}/);
+ assert.match(journey,/onPointerOverCapture=\{event=>warm\(event\.target\)\}/);
+ for(const route of ['/app/hotline','/app/reasons','/app/adventure','/app/movie','/app/kiss-shop','/app/camera','/app/vault','/app/pieces'])assert.ok(journey.includes("'"+route+"'"),route);
+ assert.match(css,/data-nav-press="true"/);
+ assert.match(css,/phone-app-link:active/);
+ assert.match(appLoading,/Opening…/);
+ assert.match(homeLoading,/Opening home…/);
 });
 
 test('editor page selector prefetches and switches with client routing',()=>{
