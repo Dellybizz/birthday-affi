@@ -40,3 +40,12 @@ test('admin Supabase client is reused within a server request',()=>{
  assert.match(source,/import \{ cache \} from 'react'/);
  assert.match(source,/adminDb=cache/);
 });
+
+test('P0 keeps Shopify editor sidebars beside the live canvas across browser zoom',()=>{
+ const css=read('apps/admin/app/admin-preview-isolation.css');
+ assert.match(css,/min-width:1160px/);
+ assert.match(css,/grid-template-columns:292px minmax\(540px,1fr\) 312px!important/);
+ assert.match(css,/nav\[aria-label="Editor panels"\]\{display:none!important\}/);
+ assert.match(css,/section\[aria-label="Live canvas"\]\{display:block!important\}/);
+ assert.match(css,/overflow-x:auto/);
+});
