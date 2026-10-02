@@ -7,7 +7,7 @@ test('all eight canonical layouts are nonempty, deterministic and contain their 
  for(const slug of builtinPages){const document=createDefaultPage(slug);assert.ok(document.nodes.length>=3);assert.equal(document.layout.page,slug);assert.deepEqual(document,createDefaultPage(slug));for(const kind of required[slug])assert.ok(document.nodes.some(n=>n.props.sectionKind===kind),slug+': '+kind);assert.ok(!document.nodes.some(n=>n.props.src));}
  assert.equal(createDefaultPage('reasons').nodes.filter(n=>n.component==='reason').length,10);
  assert.equal(createDefaultPage('radio').nodes.filter(n=>n.component==='radio-track').length,6);
- assert.equal(createDefaultPage('kiss-shop').nodes.filter(n=>n.component==='kiss-gift').length,4);
+ assert.equal(createDefaultPage('kiss-shop').nodes.filter(n=>n.component==='kiss-gift').length,11);
 });
 test('installation is idempotent and preserves existing content, IDs, theme and order including colliding IDs',()=>{
  const defaults=createDefaultPage('adventure');const original={schemaVersion:2,theme:{background:'#123456'},rootIds:[defaults.rootIds[0]],nodes:[{id:defaults.rootIds[0],type:'section',component:'section',parentId:null,props:{padding:8},children:['my-text'],visible:false},{id:'my-text',type:'block',component:'text',parentId:defaults.rootIds[0],props:{text:'My edited content'},children:[],visible:true}]};

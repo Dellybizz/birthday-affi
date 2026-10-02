@@ -48,7 +48,19 @@ export function createDefaultPage(slug:BuiltinPage):PageDocument{
   const ending=section('birthday-ending','Birthday ending');heading(ending,'To all our next chapters');text(ending,'Ending message','Happy birthday, wiffeyyyy. You deserve a whole world of lovely things.');
  }else if(slug==='kiss-shop'){
   intro('The Kiss Shop','Little gifts and promises. Prices are affectionate jokes — redeem your gifts freely.');
-  const products=section('product-collection','Gifts and promises',{addLabel:'Add to bag',detailsLabel:'Gift details'});for(const [title,body,price] of [['Movie night','You choose the film. I will bring the snacks.','1 kiss'],['A long hug','Whenever you need one, for as long as you like.','2 kisses'],['Breakfast together','A slow morning and something delicious.','1 sleepy kiss'],['A handwritten letter','An old-school promise, written just for you.','3 kisses']])block(products,'kiss-gift',title,{title,body,price,src:'',alt:'',available:true});
+  const products=section('product-collection','Gifts and promises',{addLabel:'Add to bag',detailsLabel:'Gift details'});for(const [title,body,price,category] of [
+   ['Five more minutes','A little longer in my arms before we say goodbye.','1 kiss','Little moments'],
+   ['Your hand, please','A slow walk, with your hand in mine.','2 kisses','Little moments'],
+   ['The shawl treatment','A cosy moment, wrapped up together.','3 kisses','Cozy together'],
+   ['Passenger princess','A ride with me and your favourite snacks.','4 kisses','Our next date'],
+   ['Date curator','A date planned around the things you love.','5 kisses','Our next date'],
+   ['A handwritten love letter','An old-school letter, written just for you.','7 kisses','Little keepsakes'],
+   ['A cozy evening','Your favourite film, snacks, and time together.','6 kisses','Cozy together'],
+   ['Birthday special','A little surprise, from me to you.','On the house ♡','Birthday'],
+   ['A hug, just because','Whenever you need one. No occasion required.','Free ♡','Just because'],
+   ['A little reassurance','A reminder that you are loved, on every kind of day.','Free ♡','Just because'],
+   ['I’m listening','My time, my attention, and space for whatever is on your mind.','Free ♡','Just because']
+  ])block(products,'kiss-gift',title,{title,body,price,category,src:'',alt:'',available:true});
   section('gift-bag','Your gift bag',{title:'Your bag',emptyMessage:'Your bag is waiting for a little promise.',removeLabel:'Remove'});
   section('gift-checkout','Gift checkout',{title:'Ready for a little promise?',checkoutLabel:'Create my gift receipt'});
   section('gift-receipt','Your gift receipt',{title:'A little promise, just for you',note:'No expiry date. Show me this receipt whenever you are ready.',downloadLabel:'Save receipt'});

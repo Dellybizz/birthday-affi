@@ -38,7 +38,7 @@ test('published app blocks render interactive experiences in hierarchy order',()
 
 const {builtinPages,createDefaultPage,updateNode:edit,installDefaultLayout}=load(path.join(root,'packages/content/src/index.ts'));
 test('complete default pages render the same real layout in selection and interactive modes',()=>{
- const checks={welcome:'Open your birthday world',home:'Hotdial',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'saragram','kiss-shop':'Your bag',radio:'Choose a station'};
+ const checks={welcome:'Open your birthday world',home:'Hotdial',reasons:'1 / 10 reasons',hotline:'Your future husband',adventure:'Pardanasheen',movie:'saragram','kiss-shop':'Made for you.',radio:'Choose a station'};
  for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
@@ -130,4 +130,9 @@ test('Pardanasheen includes every saved camera photo/video in its library',()=>{
  {id:'camera-three',kind:'video',url:'blob:camera-three',createdAt:'2026-10-02T05:02:00Z',mimeType:'video/webm'}
  ]});
  try{const html=render(CMSRenderer,{document:createDefaultPage('adventure'),persistProgress:true});assert.match(html,/blob:camera-one/);assert.match(html,/blob:camera-two/);assert.match(html,/blob:camera-three/);assert.match(html,/2 Photos, 1 Videos/);assert.match(html,/Captured with Clicksara/)}finally{hook.useCameraRoll=original}
+});
+
+test('KissShop renders eight boutique gifts and three free treats with editable products',()=>{
+ let document=createDefaultPage('kiss-shop');const gift=document.nodes.find(n=>n.component==='kiss-gift');document=edit(document,gift.id,{props:{title:'Personal cozy gift',body:'Our custom promise',price:'8 kisses',src:'https://example.com/gift.jpg'}});
+ const html=render(CMSRenderer,{document,onSelect:()=>{},selectedId:gift.id});assert.match(html,/Personal cozy gift/);assert.match(html,/Our custom promise/);assert.match(html,/8 kisses/);assert.match(html,/gift.jpg/);assert.match(html,/Select Personal cozy gift/);assert.match(html,/Just because you/);assert.match(html,/Our little plans/);
 });
