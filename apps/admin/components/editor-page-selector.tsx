@@ -7,7 +7,7 @@ export function EditorPageSelector({pages,currentSlug,busy,onSelect}:{pages:Edit
  const details=useRef<HTMLDetailsElement>(null);const [query,setQuery]=useState('');
  const current=pages.find(page=>page.slug===currentSlug);
  const filtered=useMemo(()=>{const needle=query.trim().toLowerCase();return needle?pages.filter(page=>[page.title,page.sourceTitle,page.slug,page.badge].some(value=>value?.toLowerCase().includes(needle))):pages},[pages,query]);
- return <details ref={details} className="relative min-w-[260px] max-w-[420px] flex-1">
+ return <details ref={details} data-editor-context="Inspector" className="relative min-w-[260px] max-w-[420px] flex-1">
   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl border bg-white px-3 py-2 text-sm shadow-sm marker:hidden">
    <span className="min-w-0"><span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#81736d]">Page</span><span className="block truncate font-semibold">{current?.title??currentSlug}</span></span>
    <span className="shrink-0 rounded-full bg-[#f7f5f3] px-2 py-1 text-[10px] text-[#6f625d]">{current?.badge??'Draft'}</span><span aria-hidden>⌄</span>
