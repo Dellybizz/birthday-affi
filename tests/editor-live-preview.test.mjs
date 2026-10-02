@@ -4,19 +4,22 @@ import fs from 'node:fs';
 
 const renderer=fs.readFileSync(new URL('../packages/ui/src/cms-renderer.tsx',import.meta.url),'utf8');
 const inspector=fs.readFileSync(new URL('../apps/admin/components/editor-inspector-fields.tsx',import.meta.url),'utf8');
+const fields=fs.readFileSync(new URL('../packages/content/src/inspector-fields.ts',import.meta.url),'utf8');
 const adminLayout=fs.readFileSync(new URL('../apps/admin/app/layout.tsx',import.meta.url),'utf8');
 const editorPage=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/page.tsx',import.meta.url),'utf8');
 
-test('editor preview uses live app renderers instead of editor substitutes',()=>{
- assert.match(renderer,/const group=groups\.find/);
+test('real editor opts into exact live renderers while legacy selection contracts remain isolated',()=>{
+ assert.match(renderer,/LiveEditorPreviewContext/);
+ assert.match(renderer,/exactLivePreview/);
+ assert.match(editorPage,/LiveEditorPreviewProvider/);
  assert.doesNotMatch(renderer,/const group=!onSelect/);
  assert.match(renderer,/<KissShop document=\{valid\} persist=\{persistProgress\}/);
  assert.match(renderer,/<Saragram document=\{valid\} persist=\{persistProgress\}/);
  assert.match(renderer,/<AdoreJournal document=\{valid\} persist=\{persistProgress\}/);
  assert.match(renderer,/<PhotoLibrary document=\{valid\} persist=\{persistProgress\}/);
  assert.match(renderer,/PageLayoutProvider persist=\{persistProgress\} document=\{valid\} editing=\{false\}/);
- assert.match(renderer,/ArchiveFrame enabled=\{!!archiveRoot\} editing=\{false\}/);
- assert.match(renderer,/<Block node=\{n\} editing=\{false\}/);
+ assert.match(renderer,/ArchiveFrame enabled=\{!!archiveRoot\}/);
+ assert.match(renderer,/<Block node=\{n\} editing=\{legacyEditing\}/);
 });
 
 test('admin preview loads live OS styling and draft site settings',()=>{
@@ -26,10 +29,11 @@ test('admin preview loads live OS styling and draft site settings',()=>{
  assert.match(editorPage,/AudioDefaultsProvider value=\{\{volume:settings\.defaultVolume,muted:settings\.defaultMuted\}\}/);
 });
 
-test('inspector exposes Shopify-style semantic settings groups',()=>{
+test('inspector exposes Shopify-style semantic settings groups and full image controls',()=>{
  for(const heading of ['Typography','Colours','Layout','Padding','Margin','Border & shadow','Image','Position','Playback','Navigation','Animation'])assert.ok(inspector.includes("'"+heading+"'"),heading);
  for(const position of ['Top left','Top','Top right','Left','Centre','Right','Bottom left','Bottom','Bottom right'])assert.ok(inspector.includes("'"+position+"'"),position);
  assert.match(inspector,/Add '\+capability\.media\?\.label\.toLowerCase\(\)/);
  assert.match(inspector,/Replace '\+capability\.media\?\.label\.toLowerCase\(\)/);
  assert.match(inspector,/All sides/);
+ assert.match(fields,/options:\['cover','contain','fill','scale-down'\]/);
 });
