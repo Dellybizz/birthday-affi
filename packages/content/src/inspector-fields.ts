@@ -67,3 +67,5 @@ componentFields.audio.push({key:'loop',label:'Repeat soundtrack',type:'select',o
 componentFields.image.push({key:'emptyLabel',label:'Empty photo message',type:'text'});
 
 componentFields.text.push({key:'weight',label:'Font weight',type:'number',min:100,max:900,step:100});
+
+componentFields.section.push({key:'visualEffects',label:'Archive glow and floating hearts',type:'select',options:['true','false']},{key:'decorNote',label:'Archive heart dedication',type:'text'});

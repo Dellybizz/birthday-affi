@@ -22,3 +22,5 @@ body:has(.birthday-os-phone){min-height:100dvh;display:grid;place-items:center;b
 .os-adore-page:has(.saragram-app){padding:0;max-width:none}.birthday-os-phone:has(.saragram-app) .os-shade-trigger{left:calc(50% - 188px);right:auto;width:376px;top:0;border-radius:37px 37px 0 0}
 
 .birthday-os:has(.os-archive-page){max-width:none;box-shadow:none;background:#f8f1e7}.os-archive-page{width:100%;margin:auto}.birthday-os:has(.os-archive-page) .os-topbar-inner,.birthday-os:has(.os-archive-page) .os-footer{max-width:1100px}.os-archive-page h1{margin:0;letter-spacing:-.035em;line-height:1.1}
+
+.birthday-os:has(.archive-experience){background:#160c20}.birthday-os:has(.archive-experience)>.os-topbar,.birthday-os:has(.archive-experience) .os-topbar,.birthday-os:has(.archive-experience) .os-footer{display:none}
