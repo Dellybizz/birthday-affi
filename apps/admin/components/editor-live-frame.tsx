@@ -1,13 +1,13 @@
 'use client';
-import {useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import type {PageDocument} from '@wiffeyyyy/content';
 
 type Device='mobile'|'tablet'|'desktop';
 type PreviewMode=Device|'large-phone'|'responsive';
 type Viewport={width:number;height:number};
-type PreviewMessage=
- | {source:'wiffey-editor';type:'update';document:PageDocument;device:Device;selectedId:string|null;interactive:boolean}
- | {source:'wiffey-preview';type:'ready'|'select'|'navigate'|'insert';id?:string;href?:string;direction?:'before'|'after'};
+type EditorDocumentMessage={source:'wiffey-editor';type:'update';document:PageDocument;device:Device};
+type EditorStateMessage={source:'wiffey-editor';type:'state';selectedId:string|null;interactive:boolean};
+type PreviewMessage=EditorDocumentMessage|EditorStateMessage|{source:'wiffey-preview';type:'ready'|'select'|'navigate'|'insert';id?:string;href?:string;direction?:'before'|'after'};
 
 const VIEWPORTS:Record<Exclude<PreviewMode,'responsive'>,Viewport>={
  mobile:{width:390,height:830},
@@ -27,6 +27,7 @@ const deviceForWidth=(width:number):Device=>width<600?'mobile':width<960?'tablet
 
 export default function EditorLiveFrame({pageId,document,device,selectedId,interactive,onSelect,onNavigate,onInsert}:{pageId:string;document:PageDocument;device:Device;selectedId:string|null;interactive:boolean;onSelect:(id:string)=>void;onNavigate:(href:string)=>void;onInsert:(direction:'before'|'after')=>void}){
  const frame=useRef<HTMLIFrameElement>(null),fitArea=useRef<HTMLDivElement>(null),drag=useRef<{x:number;y:number;width:number;height:number}|null>(null);
+ const documentFrame=useRef<number|null>(null),fitFrame=useRef<number|null>(null),resizeFrame=useRef<number|null>(null),pendingDocument=useRef<{document:PageDocument;device:Device}|null>(null),pendingCustom=useRef<Viewport|null>(null);
  const [ready,setReady]=useState(false),[scale,setScale]=useState(1),[mode,setMode]=useState<PreviewMode>(device),[custom,setCustom]=useState<Viewport>({width:1024,height:768});
  useEffect(()=>setMode(device),[device]);
  const viewport=mode==='responsive'?custom:VIEWPORTS[mode];
@@ -36,15 +37,18 @@ export default function EditorLiveFrame({pageId,document,device,selectedId,inter
  const firstLayer=document.nodes.find(node=>node.props.phonePart==='wallpaper')??document.nodes.find(node=>node.parentId===firstRoot);
  const firstLayerLabel=firstLayer?.label??firstLayer?.component??'';
  const previewTitle='Exact live draft preview'+(firstLayerLabel?' · Select '+firstLayerLabel:'');
- const send=()=>frame.current?.contentWindow?.postMessage({source:'wiffey-editor',type:'update',document,device:resolvedDevice,selectedId,interactive} satisfies PreviewMessage,window.location.origin);
+ const postDocument=useCallback((nextDocument:PageDocument,nextDevice:Device)=>{pendingDocument.current={document:nextDocument,device:nextDevice};if(documentFrame.current!==null)return;documentFrame.current=requestAnimationFrame(()=>{documentFrame.current=null;const pending=pendingDocument.current;pendingDocument.current=null;if(!pending)return;frame.current?.contentWindow?.postMessage({source:'wiffey-editor',type:'update',document:pending.document,device:pending.device} satisfies EditorDocumentMessage,window.location.origin)})},[]);
+ const postState=useCallback((nextSelected:string|null,nextInteractive:boolean)=>{frame.current?.contentWindow?.postMessage({source:'wiffey-editor',type:'state',selectedId:nextSelected,interactive:nextInteractive} satisfies EditorStateMessage,window.location.origin)},[]);
  useEffect(()=>{setReady(false)},[src]);
- useEffect(()=>{if(!ready)return;send()},[ready,document,resolvedDevice,selectedId,interactive]);
+ useEffect(()=>{if(!ready)return;postDocument(document,resolvedDevice)},[ready,document,resolvedDevice,postDocument]);
+ useEffect(()=>{if(!ready)return;postState(selectedId,interactive)},[ready,selectedId,interactive,postState]);
+ useEffect(()=>()=>{if(documentFrame.current!==null)cancelAnimationFrame(documentFrame.current);if(fitFrame.current!==null)cancelAnimationFrame(fitFrame.current);if(resizeFrame.current!==null)cancelAnimationFrame(resizeFrame.current)},[]);
  useEffect(()=>{const receive=(event:MessageEvent<PreviewMessage>)=>{if(event.origin!==window.location.origin||event.source!==frame.current?.contentWindow)return;const message=event.data;if(!message||message.source!=='wiffey-preview')return;if(message.type==='ready'){setReady(true);return}if(message.type==='select'&&message.id){onSelect(message.id);return}if(message.type==='navigate'&&message.href){onNavigate(message.href);return}if(message.type==='insert'&&message.direction)onInsert(message.direction)};window.addEventListener('message',receive);return()=>window.removeEventListener('message',receive)},[onSelect,onNavigate,onInsert]);
- useEffect(()=>{const host=fitArea.current;if(!host)return;const fit=()=>{const box=host.getBoundingClientRect(),padding=24;const width=Math.max(1,box.width-padding),height=Math.max(1,box.height-padding);setScale(Math.min(1,width/viewport.width,height/viewport.height))};fit();const observer=new ResizeObserver(fit);observer.observe(host);window.visualViewport?.addEventListener('resize',fit);return()=>{observer.disconnect();window.visualViewport?.removeEventListener('resize',fit)}},[viewport.width,viewport.height]);
+ useEffect(()=>{const host=fitArea.current;if(!host)return;const fit=()=>{fitFrame.current=null;const box=host.getBoundingClientRect(),padding=24,width=Math.max(1,box.width-padding),height=Math.max(1,box.height-padding),next=Math.min(1,width/viewport.width,height/viewport.height);setScale(current=>Math.abs(current-next)<.001?current:next)};const schedule=()=>{if(fitFrame.current!==null)return;fitFrame.current=requestAnimationFrame(fit)};schedule();const observer=new ResizeObserver(schedule);observer.observe(host);window.visualViewport?.addEventListener('resize',schedule);return()=>{observer.disconnect();window.visualViewport?.removeEventListener('resize',schedule);if(fitFrame.current!==null){cancelAnimationFrame(fitFrame.current);fitFrame.current=null}}},[viewport.width,viewport.height]);
  const visualWidth=Math.max(1,Math.round(viewport.width*scale)),visualHeight=Math.max(1,Math.round(viewport.height*scale));
  const startResize=(event:ReactPointerEvent<HTMLButtonElement>)=>{if(mode!=='responsive')return;drag.current={x:event.clientX,y:event.clientY,width:custom.width,height:custom.height};event.currentTarget.setPointerCapture(event.pointerId)};
- const resize=(event:ReactPointerEvent<HTMLButtonElement>)=>{const current=drag.current;if(!current)return;setCustom({width:clamp(current.width+(event.clientX-current.x)/Math.max(scale,.01),320,1600),height:clamp(current.height+(event.clientY-current.y)/Math.max(scale,.01),568,1200)})};
- const endResize=(event:ReactPointerEvent<HTMLButtonElement>)=>{drag.current=null;if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)};
+ const resize=(event:ReactPointerEvent<HTMLButtonElement>)=>{const current=drag.current;if(!current)return;pendingCustom.current={width:clamp(current.width+(event.clientX-current.x)/Math.max(scale,.01),320,1600),height:clamp(current.height+(event.clientY-current.y)/Math.max(scale,.01),568,1200)};if(resizeFrame.current!==null)return;resizeFrame.current=requestAnimationFrame(()=>{resizeFrame.current=null;const next=pendingCustom.current;pendingCustom.current=null;if(next)setCustom(previous=>previous.width===next.width&&previous.height===next.height?previous:next)})};
+ const endResize=(event:ReactPointerEvent<HTMLButtonElement>)=>{drag.current=null;if(pendingCustom.current){const next=pendingCustom.current;pendingCustom.current=null;setCustom(previous=>previous.width===next.width&&previous.height===next.height?previous:next)}if(resizeFrame.current!==null){cancelAnimationFrame(resizeFrame.current);resizeFrame.current=null}if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)};
  return <div data-editor-preview-stage data-preview-device={resolvedDevice} data-preview-mode={mode} className="flex h-full min-h-[520px] w-full flex-col overflow-hidden">
   <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-[#d2d5d8] bg-[#f6f6f7] px-3 text-[12px] text-[#616161]">
    <div className="flex min-w-0 items-center gap-1" role="group" aria-label="Preview viewport">
