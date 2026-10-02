@@ -41,8 +41,11 @@ test('P1 isolates the live preview in an iframe and streams unsaved drafts throu
  assert.match(frame,/VIEWPORTS/);
  assert.match(frame,/1440/);assert.match(frame,/390/);assert.match(frame,/768/);
  assert.match(frame,/postMessage\(\{source:'wiffey-editor'/);
+ assert.match(frame,/type:'state'/);
  assert.match(preview,/source!=='wiffey-editor'/);
- assert.match(preview,/parsePageDocument\(message\.document\)/);
+ assert.doesNotMatch(preview,/parsePageDocument\(message\.document\)/);
+ assert.match(preview,/message\.type==='update'/);
+ assert.match(preview,/message\.type==='state'/);
  assert.match(preview,/data-isolated-live-preview/);
 });
 
