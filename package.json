@@ -12,7 +12,7 @@
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
-    "test:phase4": "node --test tests/phase4.test.mjs tests/phase4-render.test.mjs tests/camera-roll.test.mjs tests/vault.test.mjs tests/kiss-shop.test.mjs tests/puzzle.test.mjs",
+    "test:phase4": "node --require ./tests/setup-next-router.cjs --test tests/phase4.test.mjs tests/phase4-render.test.mjs tests/camera-roll.test.mjs tests/vault.test.mjs tests/kiss-shop.test.mjs tests/puzzle.test.mjs",
     "test:phase5": "node --test tests/phase5.test.mjs tests/phase5-autosave.test.mjs",
     "test:phase6": "node --test tests/phase6.test.mjs tests/phase6-policy.test.mjs",
     "test:phase7": "node --test tests/phase7.test.mjs",
