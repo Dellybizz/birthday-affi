@@ -1,4 +1,5 @@
 "use client";
+import {AdoreFrame} from './adore-frame';
 import {PhoneHome} from './phone-home';
 import {PageLayoutProvider,LayoutSection} from './page-layout';
 import {HomeNavigation,useSiteNavigation} from './navigation';
@@ -7,7 +8,7 @@ import {MediaPlayer} from './media-player';
 import {AppExperience} from './app-experience';
 import {useEffect,useRef,useState,useMemo} from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-const apps=[['💗','Reasons I’m Obsessed','reasons'],['☎️','Birthday Hotline','hotline'],['🧭','Our Next Adventure','adventure'],['🎬','Our Birthday Movie','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
+const apps=[['💗','Adore','reasons'],['☎️','Birthday Hotline','hotline'],['🧭','Our Next Adventure','adventure'],['🎬','Our Birthday Movie','movie'],['💋','The Kiss Shop','kiss-shop'],['📻','Birthday Radio','radio']];
 function style(node:CMSNode):CSSProperties {
   const p=node.props;
   return {background:p.background as string|undefined,color:p.color as string|undefined,padding:p.padding as number|undefined,margin:p.margin as number|undefined,borderRadius:p.radius as number|undefined,opacity:p.opacity as number|undefined,fontSize:p.size as number|undefined,fontWeight:p.weight as number|undefined,textAlign:p.align as CSSProperties['textAlign'],'--section-radius':String(p.radius??24)+'px'} as CSSProperties;
@@ -47,5 +48,5 @@ export function CMSRenderer({document,onSelect,selectedId,embedded=false,preview
     return <div key={id} data-node-id={id} role={onSelect?'button':undefined} tabIndex={onSelect?0:undefined} aria-label={onSelect?'Select '+(n.label??n.component):undefined} onKeyDown={onSelect?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onSelect(id)}}:undefined} onClick={onSelect?e=>{e.preventDefault();e.stopPropagation();onSelect(id)}:undefined} style={{...(n.type==='section'?style(n):{}),outline:selectedId===id?'2px solid #d86f91':undefined}} className={n.type==='section'?'space-y-4':''}>{n.type==='block'&&<Block node={n} editing={!!onSelect}/>} {n.children.map(render)}</div>;
   };
   if(valid.nodes.some(n=>n.parentId===null&&n.props.phonePart==='home'))return <PageLayoutProvider persist={persistProgress} document={valid} editing={!!onSelect} selectedId={selectedId}><PhoneHome document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress} contained={!!previewDevice} renderNode={render}/></PageLayoutProvider>;
-  return <PageLayoutProvider persist={persistProgress} document={valid} editing={!!onSelect} selectedId={selectedId}><div ref={container} className={embedded?'space-y-8':'min-h-screen px-5 py-8'} style={{background:String(valid.theme?.background??'#fbf5ef'),color:String(valid.theme?.text??'#302927'),'--w-accent':String(valid.theme?.primary??'#d86f91'),'--w-surface':String(valid.theme?.surface??'#ffffff'),'--w-muted':String(valid.theme?.muted??'#81736d'),'--w-radius':String(valid.theme?.radius??24)+'px'} as CSSProperties}><div className="mx-auto max-w-2xl space-y-8">{valid.rootIds.map(render)}</div></div></PageLayoutProvider>;
+  return <PageLayoutProvider persist={persistProgress} document={valid} editing={!!onSelect} selectedId={selectedId}><AdoreFrame enabled={valid.layout?.page==='reasons'}><div ref={container} className={embedded?'space-y-8':'min-h-screen px-5 py-8'} style={{background:String(valid.theme?.background??'#fbf5ef'),color:String(valid.theme?.text??'#302927'),'--w-accent':String(valid.theme?.primary??'#d86f91'),'--w-surface':String(valid.theme?.surface??'#ffffff'),'--w-muted':String(valid.theme?.muted??'#81736d'),'--w-radius':String(valid.theme?.radius??24)+'px'} as CSSProperties}><div className="mx-auto max-w-2xl space-y-8">{valid.rootIds.map(render)}</div></div></AdoreFrame></PageLayoutProvider>;
 }
