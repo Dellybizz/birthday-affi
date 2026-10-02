@@ -12,7 +12,8 @@
     "./navigation": "./src/navigation.tsx",
     "./live-hotline": "./src/live-hotline.tsx",
     "./page-layout": "./src/page-layout.tsx",
-    "./notification-shade": "./src/notification-shade.tsx"
+    "./notification-shade": "./src/notification-shade.tsx",
+    "./puzzle-app": "./src/puzzle-app.tsx"
   },
   "peerDependencies": {
     "react": "^19.0.0"
