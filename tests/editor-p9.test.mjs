@@ -32,9 +32,11 @@ const ACTIVE=[
 
 test('P9 active-page matrix keeps all eight live/editor experiences addressable',()=>{
  for(const [slug,title,path] of ACTIVE){
-  assert.ok(pages.includes("'"+slug+"':{title:'"+title+"',livePath:'"+path+"'"),slug);
-  assert.ok(pages.includes("editorHref:'/editor/'+page.slug"),slug);
+  const escaped=slug.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const key=new RegExp(`(?:'${escaped}'|${escaped.replace(/-/g,'\\-')}):\\{title:'${title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}',livePath:'${path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}'`);
+  assert.match(pages,key,slug);
  }
+ assert.match(pages,/editorHref:'\/editor\/'\+page\.slug/);
  assert.match(rootPage,/getPublishedDocument\('memories-archive'\)/);
  assert.match(rootPage,/className="os-archive-page"/);
  assert.match(customPage,/slug==='in-my-heart'\?'os-heart-page'/);
