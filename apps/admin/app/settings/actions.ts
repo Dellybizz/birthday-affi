@@ -51,34 +51,16 @@ export async function changeUsername(form: FormData) {
 }
 
 export async function changePassword(form: FormData) {
-  const admin = await requireAdmin();
+  await requireAdmin();
 
-  const currentPassword = String(form.get('currentPassword') ?? '');
   const newPassword = String(form.get('newPassword') ?? '');
   const confirmPassword = String(form.get('confirmPassword') ?? '');
 
-  if (!currentPassword || !newPassword || !confirmPassword) {
-    redirect('/settings?passwordError=invalid');
-  }
+  if (!newPassword || !confirmPassword) redirect('/settings?passwordError=invalid');
   if (newPassword !== confirmPassword) redirect('/settings?passwordError=mismatch');
   if (newPassword.length < 8 || newPassword.length > 128) redirect('/settings?passwordError=weak');
-  if (newPassword === currentPassword) redirect('/settings?passwordError=same');
-  if (!admin.email) redirect('/settings?passwordError=reauth');
 
   const db = await adminDb();
-  const { error: verifyError } = await db.auth.signInWithPassword({
-    email: admin.email,
-    password: currentPassword,
-  });
-  if (verifyError) {
-    console.error('Admin current-password verification failed', {
-      code: verifyError.code,
-      status: verifyError.status,
-      name: verifyError.name,
-    });
-    redirect('/settings?passwordError=current');
-  }
-
   const { error } = await db.auth.updateUser({ password: newPassword });
 
   if (error) {
