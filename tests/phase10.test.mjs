@@ -51,9 +51,9 @@ test('revision comparison reports additions, removals, settings and ordering cha
 });
 
 test('all six app layouts expose editable content and preserve existing sections',()=>{
- for(const [slug,component] of Object.entries({reasons:'reason',hotline:'hotline-message',adventure:'adventure-choice',movie:'movie-scene','kiss-shop':'kiss-gift',radio:'radio-track'})){
+ for(const [slug,component] of Object.entries({reasons:'reason',hotline:'hotline-message',adventure:'image',movie:'movie-scene','kiss-shop':'kiss-gift',radio:'radio-track'})){
  const original=appendTemplate(empty(),'greeting',id),next=appendTemplate(original,slug,id);
- assert.equal(next.rootIds.length,2);assert.ok(next.nodes.filter(n=>n.component===component).length>=3);
+ assert.equal(next.rootIds.length,2);assert.ok(next.nodes.filter(n=>n.component===component).length>=(slug==='adventure'?2:3));
  assert.deepEqual(next.nodes.slice(0,original.nodes.length),original.nodes);parsePageDocument(next);
  }
 });

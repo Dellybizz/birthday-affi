@@ -93,6 +93,15 @@ test('live installer aborts atomically on conflicts, backs up drafts and preserv
  }finally{rmSync(directory,{recursive:true,force:true})}
 });
 
+test('photo libraries reject incompatible blocks at the database boundary',async()=>{
+ await run(owner,async()=>{
+  const document=layoutContent.createDefaultPage('adventure');
+  const item=document.nodes.find(n=>n.component==='image');
+  item.component='text';item.props={text:'Not a library photo'};
+  await rejects(()=>save(document),/Incompatible section block/);
+ });
+});
+
 test('Android home saves and publishes through the existing SQL schema with wallpaper media and app icons',async()=>{
  await run(owner,async()=>{
   const document=phone.installPhoneHome(layoutContent.createDefaultPage('home'));
