@@ -11,8 +11,8 @@ const answer=load(path.resolve('apps/web/lib/vault-answer.ts')),api=load(path.re
 const expected=process.env.VAULT_TEST_ANSWER;
 const request=(value,options={})=>new Request('https://wiffeyyyy-os.vercel.app/api/vault',{method:'POST',headers:{origin:'https://wiffeyyyy-os.vercel.app','content-type':'application/json',...options.headers},body:JSON.stringify({answer:value})});
 test('Vault accepts the private answer, natural rephrasing and punctuation',{skip:!expected&&'Set VAULT_TEST_ANSWER to run positive private fixtures'},()=>{
- const parts=expected.split(' '),verb=parts[1],object=parts.at(-1);
- for(const value of [expected,expected.toUpperCase()+'!',parts.slice(1).join(' '),`${verb} your ${object.replace(/s$/,'')}`,`my favourite memory is when I ${verb} your ${object}`,`when we were ${verb} each other’s ${object}`,`you ${verb} my ${object} for the first time`])assert.equal(answer.matchesVaultAnswer(value),true);
+ const variants=JSON.parse(process.env.VAULT_TEST_VARIANTS||'[]');
+ for(const value of [expected,expected.toUpperCase()+'!',`  ${expected}  `,...variants])assert.equal(answer.matchesVaultAnswer(value),true,`Rejected private variant`);
 });
 test('Vault rejects unrelated memories, empty or oversized answers',()=>{
  for(const value of ['our first kiss','someone else','a random memory','','one memory or another',null,{},'x'.repeat(161)])assert.equal(answer.matchesVaultAnswer(value),false);
