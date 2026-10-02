@@ -3,6 +3,7 @@ import {useContext,useEffect,useRef,useState,type CSSProperties,type ReactNode,t
 import {getPublicApp,safeMediaUrl,phoneSwipeCloses,type CMSNode,type PageDocument} from '@wiffeyyyy/content';
 import {DocumentSettingsContext} from './page-layout';
 import {PhoneAppIcon,CameraAppIcon} from './camera-app';
+import {KissShopLogo} from './kiss-shop-logo';
 import {VaultIcon} from './vault-icon';
 import {SaragramLogo} from './saragram-icon';
 import {useNotificationShade,useNotificationCount,useNotificationExpanded} from './notification-shade';
@@ -53,7 +54,7 @@ export function PhoneHome({document,onSelect,selectedId,persist=false,contained=
   if(target&&!visibleParent(target.parentId))return null;
   const appLabel=slug==='vault'?'Vault':slug==='camera'?'Clicksara':slug==='hotline'?'Hotdial':slug==='movie'?'Saragram':slug==='adventure'?'Pardanasheen':slug==='reasons'&&['Reasons','Reasons I’m Obsessed'].includes(text(n,'text',target?.label??slug))?'Adore':text(n,'text',target?.label??slug);
   const custom=text(n,'src'),icon=slug==='reasons'?'♡':slug==='adventure'?'🌸':text(n,'icon',target?.icon??'♡');
-  return mark(n,<a className="phone-app-link" href={editing?undefined:target?.href??route(slug)} tabIndex={editing?-1:undefined} aria-label={'Open '+appLabel}><span className="phone-icon" style={{background:slug==='reasons'&&['#f3a8c8','#e8b4d0'].includes(text(n,'iconBackground','#e8b4d0'))?'#75263e':text(n,'iconBackground','#e8b4d0'),borderRadius:Number(n.props.radius??14)}}>{slug==='vault'?<VaultIcon/>:slug==='hotline'?<PhoneAppIcon/>:slug==='camera'?<CameraAppIcon/>:slug==='movie'?<SaragramLogo size={60}/>:custom&&safeMediaUrl(custom)?<img src={custom} alt="" loading="lazy"/>:<span aria-hidden="true">{icon}</span>}</span><span className="phone-icon-label">{appLabel}</span></a>,'phone-app');
+  return mark(n,<a className="phone-app-link" href={editing?undefined:target?.href??route(slug)} tabIndex={editing?-1:undefined} aria-label={'Open '+appLabel}><span className="phone-icon" style={{background:slug==='reasons'&&['#f3a8c8','#e8b4d0'].includes(text(n,'iconBackground','#e8b4d0'))?'#75263e':text(n,'iconBackground','#e8b4d0'),borderRadius:Number(n.props.radius??14)}}>{slug==='kiss-shop'?<KissShopLogo/>:slug==='vault'?<VaultIcon/>:slug==='hotline'?<PhoneAppIcon/>:slug==='camera'?<CameraAppIcon/>:slug==='movie'?<SaragramLogo size={60}/>:custom&&safeMediaUrl(custom)?<img src={custom} alt="" loading="lazy"/>:<span aria-hidden="true">{icon}</span>}</span><span className="phone-icon-label">{appLabel}</span></a>,'phone-app');
  };
  const launcher=(node:CMSNode,dock=false)=>{const children=node.children.map(id=>byId.get(id)!).filter(n=>n.visible),grid=children.find(n=>n.component==='app-grid'),icons=children.filter(n=>n.props.phonePart==='app-icon'&&n.props.pageSlug!=='radio');
   if(!icons.some(n=>n.props.pageSlug==='camera'))icons.push({...node,id:node.id+'-camera',component:'image',children:[],props:{phonePart:'app-icon',pageSlug:'camera',text:'Clicksara',placement:'dock'}});
