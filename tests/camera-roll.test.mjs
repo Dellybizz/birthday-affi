@@ -44,3 +44,15 @@ test('Frame readiness resolves only after new camera data and removes listeners'
  const stream={id:'new'},frame=camera.waitForCameraFrame(video,stream);assert.equal(video.srcObject,stream);
  video.dispatchEvent(new Event('loadeddata'));await frame;
 });
+
+test('Deleting one capture persists without affecting others, and Undo restores its identity',async()=>{
+ globalThis.indexedDB=new IDBFactory();
+ const a=await store.saveCameraCapture(new Blob(['photo-a'],{type:'image/jpeg'}),'image');
+ const b=await store.saveCameraCapture(new Blob(['photo-b'],{type:'image/jpeg'}),'image');
+ await store.deleteCameraCapture(a.id);
+ const remaining=await store.listCameraCaptures();assert.deepEqual(remaining.map(c=>c.id),[b.id]);
+ await store.saveCameraCapture(a.blob,a.kind,a);
+ const restored=(await store.listCameraCaptures()).find(c=>c.id===a.id);
+ assert.equal(restored.createdAt,a.createdAt);assert.equal(await restored.blob.text(),'photo-a');
+ await store.deleteCameraCapture('missing-id');assert.equal((await store.listCameraCaptures()).length,2);
+});

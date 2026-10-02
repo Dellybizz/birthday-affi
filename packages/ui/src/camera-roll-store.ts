@@ -20,10 +20,19 @@ export async function saveCameraCapture(blob:Blob,kind:CameraCapture['kind'],ide
  const record:CameraCapture={id:identity?.id??'camera-'+crypto.randomUUID(),blob,kind,createdAt:identity?.createdAt??new Date().toISOString(),mimeType:blob.type|| (kind==='image'?'image/jpeg':'video/webm')};
  const db=await openDatabase();
  await new Promise<void>((resolve,reject)=>{const transaction=db.transaction(STORE,'readwrite');transaction.objectStore(STORE).add(record);transaction.oncomplete=()=>{db.close();resolve()};transaction.onabort=transaction.onerror=()=>{db.close();reject(transaction.error??new Error('Could not save this capture. Check available device storage.'))}});
+ notifyCameraRollChange();
+ return record;
+}
+export const captureFilename=(capture:Pick<CameraCapture,'id'|'kind'|'mimeType'>)=>'clicksara-'+capture.id.replace('camera-','')+(capture.kind==='image'?'.jpg':capture.mimeType.includes('mp4')?'.mp4':'.webm');
+
+function notifyCameraRollChange(){
  if(typeof window!=='undefined'){
   window.dispatchEvent(new Event(CAMERA_ROLL_EVENT));
   try{const channel=new BroadcastChannel(CAMERA_ROLL_EVENT);channel.postMessage('changed');channel.close()}catch{}
  }
- return record;
 }
-export const captureFilename=(capture:Pick<CameraCapture,'id'|'kind'|'mimeType'>)=>'clicksara-'+capture.id.replace('camera-','')+(capture.kind==='image'?'.jpg':capture.mimeType.includes('mp4')?'.mp4':'.webm');
+export async function deleteCameraCapture(id:string):Promise<void>{
+ const db=await openDatabase();
+ await new Promise<void>((resolve,reject)=>{const transaction=db.transaction(STORE,'readwrite');transaction.objectStore(STORE).delete(id);transaction.oncomplete=()=>{db.close();resolve()};transaction.onabort=transaction.onerror=()=>{db.close();reject(transaction.error??new Error('Could not delete this capture. Please try again.'))}});
+ notifyCameraRollChange();
+}
