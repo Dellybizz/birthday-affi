@@ -18,7 +18,7 @@ export default async function Settings({searchParams}:{searchParams:Promise<{use
  const {data:config,error:configError}=await db.from('site_configurations').select('draft,revision').eq('site_id',site.id).single();if(configError)throw new Error('Settings unavailable');
  const currentUsername=admin.email?.toLowerCase().endsWith(LOGIN_DOMAIN)?admin.email.slice(0,-LOGIN_DOMAIN.length):'';
  const usernameMessage=usernameError==='invalid'?'Use 3–32 characters: lowercase letters, numbers, underscores or hyphens.':usernameError==='taken'?'That username is already in use. Choose another one.':usernameError==='same'?'That is already your current username.':usernameError?'Username could not be changed. Please try again.':null;
- const passwordMessage=passwordError==='current'?'Your current password is incorrect.':passwordError==='mismatch'?'The new password and confirmation do not match.':passwordError==='same'?'Choose a new password that is different from your current password.':passwordError==='weak'?'Use a stronger password with at least 8 characters.':passwordError==='reauth'?'For security, sign out and sign back in before changing your password.':passwordError==='invalid'?'Complete all password fields.':passwordError?'Password could not be changed. Please try again.':null;
+ const passwordMessage=passwordError==='mismatch'?'The new password and confirmation do not match.':passwordError==='same'?'Choose a password that is different from the existing password.':passwordError==='weak'?'Use a stronger password with at least 8 characters.':passwordError==='reauth'?'Your session is too old to change the password. Sign out and sign back in, then try again.':passwordError==='invalid'?'Enter and confirm the new password.':passwordError?'Password could not be changed. Please try again.':null;
  return <main className="min-h-screen bg-[#f7f5f3] p-6 text-[#302a28]">
   <Link href="/">← Pages</Link>
   <h1 className="my-6 text-2xl font-semibold">Personalization, theme and audio</h1>
@@ -40,11 +40,8 @@ export default async function Settings({searchParams}:{searchParams:Promise<{use
    <div className="my-6 border-t border-black/10" />
 
    <h2 className="text-lg font-semibold">Change password</h2>
-   <p className="mt-1 text-sm text-[#6f625d]">Confirm your current password, then choose a new one. A successful change signs this admin account out on all devices.</p>
+   <p className="mt-1 text-sm text-[#6f625d]">Choose a new password and confirm it. Your current password is not required. A successful change signs this admin account out on all devices.</p>
    <form action={changePassword} className="mt-4 space-y-3">
-    <label className="block text-sm font-medium">Current password
-     <input className="mt-1 w-full rounded-xl border border-black/15 bg-white p-3 outline-none focus:border-[#d86f91]" name="currentPassword" type="password" autoComplete="current-password" maxLength={1024} required />
-    </label>
     <label className="block text-sm font-medium">New password
      <input className="mt-1 w-full rounded-xl border border-black/15 bg-white p-3 outline-none focus:border-[#d86f91]" name="newPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required />
     </label>
