@@ -70,4 +70,21 @@ componentFields.text.push({key:'weight',label:'Font weight',type:'number',min:10
 
 componentFields.section.push({key:'visualEffects',label:'Archive glow and floating hearts',type:'select',options:['true','false']},{key:'decorNote',label:'Archive heart dedication',type:'text'});
 
-componentFields.section.push({key:'transitionEnabled',label:'Archive ↔ phone animation',type:'select',options:['true','false']},{key:'transitionDuration',label:'Transition duration (milliseconds)',type:'number',min:300,max:1800,step:50},{key:'transitionColor',label:'Transition heart color',type:'color'},{key:'transitionText',label:'Transition message',type:'text'},{key:'archiveBackLabel',label:'Phone back button label',type:'text'});
+componentFields.section.push({key:'transitionEnabled',label:'Chapter navigation animation',type:'select',options:['true','false']},{key:'transitionDuration',label:'Transition duration (milliseconds)',type:'number',min:300,max:1800,step:50},{key:'transitionColor',label:'Transition heart color',type:'color'},{key:'transitionText',label:'Transition message',type:'text'},{key:'archiveBackLabel',label:'Phone back button label',type:'text'});
+
+// Heart controls follow the original page's hierarchy rather than appearing on unrelated sections.
+export const heartFields:Record<string,InspectorField[]>={
+ page:[{key:'customCss',label:'Advanced heart CSS (every selector is available)',type:'textarea'}],
+ intro:[{key:'showIntro',label:'Show opening screen',type:'select',options:['true','false']}],
+ scene:[{key:'defaultPov',label:'Starting perspective',type:'select',options:['overview','core']}],
+ appearance:[],
+ memory:[{key:'offsetX',label:'3D horizontal offset',type:'number',min:-1000,max:1000},{key:'offsetY',label:'3D vertical offset',type:'number',min:-1000,max:1000},{key:'offsetZ',label:'3D depth offset',type:'number',min:-1000,max:1000},{key:'cardScale',label:'Individual card scale',type:'number',min:.1,max:3,step:.05}],
+};
+for(const [key,label] of Object.entries({drifting:'Automatic drifting',heartbeat:'Visual heartbeat',showMesh:'Connecting memory lines',showOutline:'Heart outline',showCenter:'Central heart',showParticles:'Twinkling particles',showFloatingHearts:'Floating hearts',showGrain:'Film grain',showVignette:'Edge vignette'}))heartFields.scene.push({key,label,type:'select',options:['true','false']});
+for(const [key,label,min,max,step]of [
+ ['driftSpeed','Drifting speed',0,.01,.0001],['heartScale','Desktop heart size',1,80,.5],['mobileHeartScale','Mobile heart size',1,60,.5],['heartDepth','Desktop 3D depth',0,300,1],['mobileHeartDepth','Mobile 3D depth',0,200,1],['shells','Depth layers',1,12,1],['initialZoom','Starting zoom',.42,2.4,.05],['openSpread','Open heart spread',.2,3,.05],['closeSpread','Hold close spread',.2,3,.05],['zoomSpeed','Zoom responsiveness',.1,8,.1],['perspective','Card perspective',100,2000,10],['heartbeatDuration','Heartbeat period (seconds)',.2,10,.05]
+ ]as const)heartFields.scene.push({key,label,type:'number',min,max,step});
+for(const key of ['bg','bg2','bg3','text','muted','pink','rose','blush','violet','line','glass','border'])heartFields.appearance.push({key,label:key+' color',type:'color'});
+for(const key of ['mutedAlpha','softAlpha','lineAlpha','glassAlpha','borderAlpha','grainOpacity','vignetteStrength','outlineOpacity','centerOpacity'])heartFields.appearance.push({key,label:key.replace(/([A-Z])/g,' $1'),type:'number',min:0,max:1,step:.01});
+for(const [key,min,max]of [['nodeWidth',32,400],['mobileNodeWidth',32,300],['nodeRadius',0,64],['mobileNodeRadius',0,64],['popupWidth',200,800],['mobilePopupWidth',180,600],['popupRadius',0,64],['popupPadding',0,96],['controlRadius',0,999],['controlPadding',0,96],['controlHeight',24,96],['controlTextSize',6,32],['povTop',0,200],['mobilePovTop',0,200],['hudInset',0,96]]as const)heartFields.appearance.push({key,label:key.replace(/([A-Z])/g,' $1'),type:'number',min,max});
+heartFields.appearance.push({key:'fontFamily',label:'Page font',type:'select',options:['Arial','Georgia','serif','sans-serif']});

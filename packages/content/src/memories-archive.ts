@@ -4,12 +4,12 @@ import type {CMSNode,PageDocument,CMSField} from './cms';
 export function createMemoriesArchive(newId:()=>string):PageDocument{
  const d:PageDocument={schemaVersion:2,nodes:[],rootIds:[],theme:{background:'#160c20',surface:'#281532',text:'#fff0f7',muted:'#d4b9ce',primary:'#ff78b4',radius:20}};
  const add=(kind:ComponentName,label:string,parent:CMSNode|null,props:Record<string,CMSField>)=>{const n:CMSNode=createNode(kind,newId(),parent?.id??null);n.label=label;n.props={...n.props,...props};d.nodes.push(n);if(parent)parent.children.push(n.id);else d.rootIds.push(n.id);return n};
- const root=add('section','Archive page · layout',null,{archivePart:'page',transitionEnabled:true,transitionDuration:800,transitionColor:'#ff78b4',transitionText:'A little world, just for you',archiveBackLabel:'‹ Memories Archive',visualEffects:true,decorNote:'for you, always',padding:28,gap:64,maxWidth:1200,background:'#160c20',radius:0});
+ const root=add('section','Archive page · layout',null,{archivePart:'page',transitionEnabled:true,transitionDuration:800,transitionColor:'#ff78b4',transitionText:'A little world, just for you',archiveBackLabel:'‹ In My Heart',visualEffects:true,decorNote:'for you, always',padding:28,gap:64,maxWidth:1200,background:'#160c20',radius:0});
  const cover=add('section','Archive introduction',root,{archivePart:'hero',padding:24,align:'center',background:'transparent',radius:0,gap:12});
  add('text','Small introduction',cover,{text:'A LITTLE UNIVERSE, MADE FOR YOU',size:11,color:'#ff78b4',letterSpacing:3,align:'center'});
  add('heading','Page title',cover,{text:'Memories\nArchive',size:72,weight:400,fontFamily:'Georgia',align:'center',color:'#fff0f7'});
  add('text','Romantic introduction',cover,{text:'Some moments pass. Some stay with us forever. This is a little place for the ones I never want to forget.',size:17,align:'center',color:'#d4b9ce',lineHeight:1.9});
- add('action','Enter Wiffeyyyy OS · hero button',cover,{title:'Enter Wiffeyyyy OS →',href:'/home',background:'#ff78b4',color:'#160c20',padding:18,radius:32});
+ add('action','Enter Wiffeyyyy OS · hero button',cover,{title:'Step into my heart →',href:'/pages/in-my-heart',background:'#ff78b4',color:'#160c20',padding:18,radius:32});
  const music=add('section','Archive soundtrack',root,{archivePart:'soundtrack',padding:24,background:'#30182d',radius:20,gap:10});
  add('heading','Soundtrack heading',music,{text:'A soundtrack for our memories',size:22,weight:400,fontFamily:'Georgia'});
  add('text','Soundtrack note',music,{text:'Press play and stay a little while.',size:13,color:'#d4b9ce'});
@@ -24,6 +24,6 @@ export function createMemoriesArchive(newId:()=>string):PageDocument{
  }
  const end=add('section','Closing note',root,{padding:26,align:'center',gap:12});
  add('text','Closing message',end,{text:'And there are still so many memories waiting for us. ♡',fontFamily:'Georgia',size:22,align:'center',color:'#ff78b4'});
- add('action','Enter the phone interface',end,{title:'Enter Wiffeyyyy OS →',href:'/home',padding:14,radius:20,color:'#fff0f7'});
+ add('action','Enter the phone interface',end,{title:'Step into my heart →',href:'/pages/in-my-heart',padding:14,radius:20,color:'#fff0f7'});
  return parsePageDocument(d);
 }

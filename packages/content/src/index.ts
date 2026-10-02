@@ -20,3 +20,5 @@ export {sectionBlocks} from './layout-contract';
 export * from './layout-progress';
 export * from './phone-home';
 export * from './memories-archive';
+
+export * from './heart-page';

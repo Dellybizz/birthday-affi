@@ -138,3 +138,20 @@ test('KissShop renders eight boutique gifts and three free treats with editable 
 });
 
 test('Memories Archive edits flow to both public and editor rendering, with responsive collection and independent memories',()=>{const {createMemoriesArchive,duplicateNode,resolveResponsive}=load(path.join(root,'packages/content/src/index.ts'));let i=0;let doc=createMemoriesArchive(()=> 'archive-'+(++i));assert.equal(doc.nodes.filter(n=>n.props.archivePart==='memory').length,5);const card=doc.nodes.find(n=>n.props.archivePart==='memory');doc=updateNode(doc,card.id,{props:{paddingLeft:7,paddingRight:31,radius:14}});const photo=doc.nodes.find(n=>n.parentId===card.id&&n.component==='image');doc=updateNode(doc,photo.id,{props:{src:'/puzzles/level-one.jpg',alt:'An edited memory'}});const text=doc.nodes.find(n=>n.parentId===card.id&&n.component==='text');doc=updateNode(doc,text.id,{props:{text:'Our edited event'}});const html=render(CMSRenderer,{document:doc});assert.match(html,/Memories\s+Archive/);assert.match(html,/Our edited event/);assert.match(html,/padding-left:7px/);assert.match(html,/padding-right:31px/);assert.match(html,/An edited memory/);const grid=doc.nodes.find(n=>n.props.archivePart==='collection');assert.equal(resolveResponsive(grid,'mobile').props.columns,1);const editor=render(CMSRenderer,{document:doc,onSelect:()=>{}});assert.match(editor,/Select Memory 1 · photo/);doc=updateNode(doc,card.id,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document:doc}),/Our edited event/)});
+
+test('Original heart experience preserves the engine, editor hierarchy and safe three-page journey',()=>{
+ const {createHeartPage,createMemoriesArchive,heartFields,HEART_ROUTE,duplicateNode}=load(path.join(root,'packages/content/src/index.ts'));
+ let i=0,doc=createHeartPage(()=> 'heart-'+(++i));
+ const collection=doc.nodes.find(n=>n.props.heartPart==='memories');assert.equal(collection.children.length,20);
+ const memory=doc.nodes.find(n=>n.id===collection.children[0]);
+ doc=updateNode(doc,memory.id,{props:{title:'My edited memory',body:'My own romantic words',src:'/puzzles/our-moment.jpg',offsetZ:12,paddingLeft:7}});
+ const copy=duplicateNode(doc,memory.id,()=> 'copy-'+(++i)).document;assert.equal(copy.nodes.find(n=>n.props.heartPart==='memories').children.length,21);
+ assert.ok(heartFields.scene.some(f=>f.key==='defaultPov'));assert.ok(heartFields.appearance.some(f=>f.key==='popupPadding'));
+ assert.ok(render(CMSRenderer,{document:doc,onSelect:()=>{},selectedId:memory.id}).includes('title="From My Heart · In My Heart"'));
+ const page=doc.nodes.find(n=>n.props.heartPart==='page');assert.equal(render(CMSRenderer,{document:updateNode(doc,page.id,{visible:false})}),'');
+ i=0;const archive=createMemoriesArchive(()=> 'archive-'+(++i));assert.ok(archive.nodes.filter(n=>n.component==='action').every(n=>n.props.href===HEART_ROUTE));
+ const {HEART_ENGINE,HEART_SHELL}=load(path.join(root,'packages/ui/src/heart-source.ts')),{HEART_BRIDGE}=load(path.join(root,'packages/ui/src/heart-bridge.ts'));
+ assert.ok(HEART_ENGINE.includes('16 * Math.pow(Math.sin(t),3)'));assert.ok(HEART_SHELL.includes('from my heart'));assert.ok(HEART_SHELL.includes('in my heart'));assert.ok(HEART_SHELL.includes('corner-popup'));
+ assert.doesNotMatch(HEART_ENGINE,/SITE_CONFIG|BDAY|supabase/);assert.doesNotMatch(HEART_ENGINE,/item\.title\}\s*<\/div>/);
+ const vm= req('node:vm');assert.doesNotThrow(()=>new vm.Script(HEART_BRIDGE+'\n'+HEART_ENGINE));
+});

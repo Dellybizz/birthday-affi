@@ -67,7 +67,7 @@ export function parsePageDocument(input: unknown): PageDocument {
    const props=record(raw.props)?raw.props:{};
    if(props.sectionKind!==undefined&&(raw.type!=='section'||!sectionKinds.includes(props.sectionKind as never)))fail(String(raw.id)+': invalid section kind');
    if(props.sectionKind!==undefined&&Array.isArray(raw.children)&&sectionBlocks[String(props.sectionKind)])for(const child of raw.children)if(!sectionBlocks[String(props.sectionKind)].includes(String(nodes.get(String(child))?.component)))fail(String(raw.id)+': incompatible block');
-   if(raw.component==='action'&&!['/home','/'].includes(String(props.href)))fail(String(raw.id)+': invalid action destination');
+   if(raw.component==='action'&&!['/home','/','/pages/in-my-heart'].includes(String(props.href)))fail(String(raw.id)+': invalid action destination');
    for(const [key,component] of [['sceneId','movie-scene'],['stationId','station']] as const)if(props[key]!==undefined&&props[key]!==''&&(!nodes.has(String(props[key]))||nodes.get(String(props[key]))?.component!==component))fail(String(raw.id)+': missing '+key+' reference');
    if(props.introSrc!==undefined&&!safeMediaUrl(props.introSrc))fail(String(raw.id)+': unsafe intro URL');
    if(props.digit!==undefined&&!/^[0-9]$/.test(String(props.digit)))fail(String(raw.id)+': invalid keypad digit');

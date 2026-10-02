@@ -1,6 +1,7 @@
 import type { CMSNode, PageDocument } from './cms';
 import { parsePageDocument } from './validate';
 import { createNode } from './registry';
+import {createHeartPage} from './heart-page';
 import {createMemoriesArchive} from './memories-archive';
 export type Breakpoint='mobile'|'tablet'|'desktop';
 export const responsiveFields=['background','color','padding','margin','radius','opacity','size','weight','align','columns','gap','objectFit','focalX','focalY','displayHeight'] as const;
@@ -33,9 +34,10 @@ export function compareDocuments(before:PageDocument,after:PageDocument):Revisio
  if(JSON.stringify(before.rootIds)!==JSON.stringify(after.rootIds))changes.push({id:'order',label:'Section order',kind:'changed',fields:['rootIds']});
  return changes;
 }
-export const pageTemplates=[{id:'memories-archive',label:'Memories Archive'},{id:'greeting',label:'Birthday greeting'},{id:'photo-story',label:'Photo story'},{id:'app-home',label:'App home'}, {id:'reasons',label:'Adore'}, {id:'hotline',label:'Birthday Hotline'}, {id:'adventure',label:'Pardanasheen'}, {id:'movie',label:'Saragram'}, {id:'kiss-shop',label:'The Kiss Shop'}, {id:'radio',label:'Birthday Radio'}, {id:'final-reveal',label:'Final reveal'}] as const;
+export const pageTemplates=[{id:'in-my-heart',label:'In My Heart · 3D memories'},{id:'memories-archive',label:'Memories Archive'},{id:'greeting',label:'Birthday greeting'},{id:'photo-story',label:'Photo story'},{id:'app-home',label:'App home'}, {id:'reasons',label:'Adore'}, {id:'hotline',label:'Birthday Hotline'}, {id:'adventure',label:'Pardanasheen'}, {id:'movie',label:'Saragram'}, {id:'kiss-shop',label:'The Kiss Shop'}, {id:'radio',label:'Birthday Radio'}, {id:'final-reveal',label:'Final reveal'}] as const;
 export function appendTemplate(document:PageDocument,template:string,newId:()=>string):PageDocument{
  if(!pageTemplates.some(t=>t.id===template))throw new Error('Unknown template');
+ if(template==='in-my-heart'){const heart=createHeartPage(newId);return parsePageDocument({...structuredClone(document),theme:heart.theme,nodes:[...document.nodes,...heart.nodes],rootIds:[...document.rootIds,...heart.rootIds]})}
  if(template==='memories-archive'){const archive=createMemoriesArchive(newId);return parsePageDocument({...structuredClone(document),theme:archive.theme,nodes:[...document.nodes,...archive.nodes],rootIds:[...document.rootIds,...archive.rootIds]})}
  const next=structuredClone(document),section:CMSNode=createNode('section',newId());section.label=pageTemplates.find(t=>t.id===template)!.label;
  const heading=createNode('heading',newId(),section.id);heading.props.text=template==='app-home'?'Your birthday home':'Happy birthday, favourite person.';

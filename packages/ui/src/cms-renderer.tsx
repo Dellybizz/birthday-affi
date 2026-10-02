@@ -1,4 +1,5 @@
 "use client";
+import {HeartPage} from './heart-page';
 import {ArchiveFrame} from './archive-frame';
 import {KissShop} from './kiss-shop';
 import {Saragram} from './saragram';
@@ -52,6 +53,7 @@ export function CMSRenderer({document,onSelect,selectedId,embedded=false,preview
     if(group)return group.items[0]?.id===id?<AppExperience key={id} app={group.app} items={group.items} embedded/>:null;
     return <div key={id} data-node-id={id} role={onSelect?'button':undefined} tabIndex={onSelect?0:undefined} aria-label={onSelect?'Select '+(n.label??n.component):undefined} onKeyDown={onSelect?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onSelect(id)}}:undefined} onClick={onSelect?e=>{e.preventDefault();e.stopPropagation();onSelect(id)}:undefined} style={{...(n.type==='section'?style(n):{}),outline:selectedId===id?'2px solid #d86f91':undefined}} data-archive-part={String(n.props.archivePart??'')||undefined}>{n.type==='block'&&<Block node={n} editing={!!onSelect}/>} {n.children.map(render)}</div>;
   };
+  if(valid.nodes.some(n=>n.props.heartPart==='page'&&n.parentId===null))return <HeartPage document={valid} onSelect={onSelect} selectedId={selectedId} contained={!!previewDevice}/>;
   if(valid.layout?.page==='kiss-shop')return <KissShop document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
   if(valid.layout?.page==='movie')return <Saragram document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
   if(valid.layout?.page==='reasons')return <AdoreJournal document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;
