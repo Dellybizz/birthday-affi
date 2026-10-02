@@ -1,0 +1,8 @@
+/* P4: immediate tap feedback and a lightweight route-loading surface. */
+.archive-journey a[data-nav-press="true"]{transform:scale(.965);opacity:.84;transition:transform 70ms ease-out,opacity 70ms ease-out}
+.phone-app-link:active,.phone-archive-back:active,.os-primary:active,.os-back:active{transform:scale(.965);opacity:.84;transition:transform 70ms ease-out,opacity 70ms ease-out}
+.os-app-loading{height:var(--phone-height,830px);width:100%;max-width:none!important;margin:0!important;padding:0!important;display:grid;place-items:center;align-content:center;gap:12px;background:linear-gradient(145deg,#5f4968,#3f2d4a);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.os-app-loading-mark{display:grid;place-items:center;width:58px;height:58px;border-radius:18px;background:#ffffff1c;font:42px/1 Georgia,serif;animation:os-loading-pop .42s cubic-bezier(.2,.8,.2,1) both}
+.os-app-loading p{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;opacity:.8}
+@keyframes os-loading-pop{from{transform:scale(.86);opacity:.25}to{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.os-app-loading-mark{animation:none}.archive-journey a[data-nav-press="true"],.phone-app-link:active,.phone-archive-back:active,.os-primary:active,.os-back:active{transition:none}}
