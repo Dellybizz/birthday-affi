@@ -25,7 +25,7 @@
     "test:e1": "node --test tests/editor-e1.test.mjs",
     "test:e2": "node --test tests/editor-e2.test.mjs",
     "test:e3": "node --test tests/editor-e3.test.mjs",
-    "test:perf": "node --test tests/performance-navigation.test.mjs",
+    "test:perf": "node --test tests/performance-navigation.test.mjs tests/editor-p7.test.mjs",
     "test:editor-live": "node --test tests/editor-live-preview.test.mjs"
   },
   "devDependencies": {
