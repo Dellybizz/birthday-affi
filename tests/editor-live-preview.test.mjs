@@ -7,6 +7,9 @@ const inspector=fs.readFileSync(new URL('../apps/admin/components/editor-inspect
 const fields=fs.readFileSync(new URL('../packages/content/src/inspector-fields.ts',import.meta.url),'utf8');
 const adminLayout=fs.readFileSync(new URL('../apps/admin/app/layout.tsx',import.meta.url),'utf8');
 const editorPage=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/page.tsx',import.meta.url),'utf8');
+const editor=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/editor-client.tsx',import.meta.url),'utf8');
+const frame=fs.readFileSync(new URL('../apps/admin/components/editor-live-frame.tsx',import.meta.url),'utf8');
+const preview=fs.readFileSync(new URL('../apps/admin/app/preview/[pageId]/preview-client.tsx',import.meta.url),'utf8');
 
 test('real editor opts into exact live renderers while legacy selection contracts remain isolated',()=>{
  assert.match(renderer,/LiveEditorPreviewContext/);
@@ -27,6 +30,17 @@ test('admin preview loads live OS styling and draft site settings',()=>{
  assert.match(editorPage,/site_configurations/);
  assert.match(editorPage,/DocumentSettingsProvider value=\{settings\}/);
  assert.match(editorPage,/AudioDefaultsProvider value=\{\{volume:settings\.defaultVolume,muted:settings\.defaultMuted\}\}/);
+});
+
+test('P1 isolates the live preview in an iframe and streams unsaved drafts through postMessage',()=>{
+ assert.match(editor,/EditorLiveFrame/);
+ assert.doesNotMatch(editor,/<CMSRenderer document=\{doc\}/);
+ assert.match(frame,/VIEWPORTS/);
+ assert.match(frame,/1440/);assert.match(frame,/390/);assert.match(frame,/768/);
+ assert.match(frame,/postMessage\(\{source:'wiffey-editor'/);
+ assert.match(preview,/source!=='wiffey-editor'/);
+ assert.match(preview,/parsePageDocument\(message\.document\)/);
+ assert.match(preview,/data-isolated-live-preview/);
 });
 
 test('inspector exposes Shopify-style semantic settings groups and full image controls',()=>{
