@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { defaultSiteDocument, installPhoneHome, parsePageDocument, parseSiteDocument } from '@wiffeyyyy/content';
 import { DocumentSettingsProvider } from '@wiffeyyyy/ui/page-layout';
 import { AudioDefaultsProvider } from '@wiffeyyyy/ui/media-player';
+import { LiveEditorPreviewProvider } from '@wiffeyyyy/ui/cms-renderer';
 import { adminDb } from '../../../lib/supabase';
 import { can } from '../../../lib/permissions';
 import { requireAdmin } from '../../../lib/auth';
@@ -25,5 +26,5 @@ export default async function EditorPage({params}:{params:Promise<{slug:string}>
   if(configurationError) throw new Error('Unable to load site settings');
   if(!page || page.settings?.archived===true) notFound();
   const settings=parseSiteDocument(configuration?.draft??defaultSiteDocument);
-  return <DocumentSettingsProvider value={settings}><AudioDefaultsProvider value={{volume:settings.defaultVolume,muted:settings.defaultMuted}}><Editor key={page.id} pageId={page.id} siteId={site.id} siteSlug={siteSlug} currentSlug={page.slug} pages={buildEditorPageCatalog(pages??[])} publicSiteUrl={normalizePublicSiteUrl(process.env.NEXT_PUBLIC_WEB_URL??process.env.NEXT_PUBLIC_SITE_URL)} initialRevision={Number(page.draft_revision)} initialDocument={slug==='home'?installPhoneHome(page.draft_document):parsePageDocument(page.draft_document)} canWrite={can(admin.role,"site:write")} canPublish={can(admin.role,"site:publish")}/></AudioDefaultsProvider></DocumentSettingsProvider>;
+  return <DocumentSettingsProvider value={settings}><AudioDefaultsProvider value={{volume:settings.defaultVolume,muted:settings.defaultMuted}}><LiveEditorPreviewProvider><Editor key={page.id} pageId={page.id} siteId={site.id} siteSlug={siteSlug} currentSlug={page.slug} pages={buildEditorPageCatalog(pages??[])} publicSiteUrl={normalizePublicSiteUrl(process.env.NEXT_PUBLIC_WEB_URL??process.env.NEXT_PUBLIC_SITE_URL)} initialRevision={Number(page.draft_revision)} initialDocument={slug==='home'?installPhoneHome(page.draft_document):parsePageDocument(page.draft_document)} canWrite={can(admin.role,"site:write")} canPublish={can(admin.role,"site:publish")}/></LiveEditorPreviewProvider></AudioDefaultsProvider></DocumentSettingsProvider>;
 }
