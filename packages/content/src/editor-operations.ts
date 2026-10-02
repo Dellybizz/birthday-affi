@@ -2,9 +2,13 @@ import type { CMSField, PageDocument } from './cms';
 import { createNode, type ComponentName } from './registry';
 import { parsePageDocument } from './validate';
 export type EditorState = { document: PageDocument; selectedId: string | null; past: PageDocument[]; future: PageDocument[] };
-export type EditorAction = { type: 'commit'; document: PageDocument; selectedId?: string | null } | { type: 'select'; id: string | null } | { type: 'undo' | 'redo' };
+export type EditorAction = { type: 'commit'; document: PageDocument; selectedId?: string | null } | { type: 'reset'; document: PageDocument; selectedId?: string | null } | { type: 'select'; id: string | null } | { type: 'undo' | 'redo' };
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
   if(action.type==='select')return {...state,selectedId:action.id};
+  if(action.type==='reset'){
+    const document=parsePageDocument(action.document);
+    return {document,selectedId:action.selectedId===undefined?document.rootIds[0]??null:action.selectedId,past:[],future:[]};
+  }
   if(action.type==='commit') {
     const document=parsePageDocument(action.document);
     if(JSON.stringify(document)===JSON.stringify(state.document))return state;
