@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode,
 import { playbackCoordinator, parsePlayback, resumeTime, parseCaptions } from '../../audio/src/controller';
 const AudioDefaults=createContext({volume:1,muted:false});
 export function AudioDefaultsProvider({value,children}:{value:{volume:number;muted:boolean};children:ReactNode}){return <AudioDefaults.Provider value={value}>{children}</AudioDefaults.Provider>;}
-export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean}) {
+export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false,poster,autoPlay=false}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean;poster?:string;autoPlay?:boolean}) {
  const defaults=useContext(AudioDefaults);
  const media=useRef<HTMLMediaElement|null>(null);
  const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0),[storageWarning,setStorageWarning]=useState(false),[caption,setCaption]=useState('');
@@ -50,7 +50,7 @@ export function MediaPlayer({src,kind,title,identity,captions='',style,className
  const ref=(element:HTMLMediaElement|null)=>{media.current=element};
  let transcript='';try{transcript=parseCaptions(captions).map(c=>c.text).join('\n')}catch{}
  const props={src,controls:!disabled,style,className,'aria-label':title};
- return <div className="space-y-3">{kind==='audio'?<audio key={attempt+src} ref={ref} {...props} preload="metadata"/>:<video key={attempt+src} ref={ref} {...props} playsInline preload="metadata"/>}
+ return <div className="space-y-3">{kind==='audio'?<audio key={attempt+src} ref={ref} {...props} preload="metadata"/>:<video key={attempt+src} ref={ref} {...props} playsInline poster={poster} autoPlay={autoPlay&&!disabled} preload="metadata"/>}
  {restored&&<p className="text-xs text-[var(--w-muted)]">Your saved position is ready. Press play to continue.</p>}
  {kind==='audio'&&captions&&<p aria-label="Current caption" className="min-h-7 text-sm">{caption}</p>}
  {transcript&&<details><summary className="cursor-pointer py-3">Read transcript</summary><p className="whitespace-pre-line leading-7">{transcript}</p></details>}

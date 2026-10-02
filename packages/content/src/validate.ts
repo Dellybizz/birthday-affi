@@ -42,6 +42,8 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (['background','color'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
       if (key === 'phonePart' && !['home','wallpaper','status','notifications','notification','widget','launcher','app-icon','navigation'].includes(String(value))) fail(raw.id + ': invalid phone part');
       if (key === 'pageSlug' && (typeof value !== 'string' || !/^[a-z0-9][a-z0-9-]{0,99}$/.test(value))) fail(raw.id + ': invalid page slug');
+      if (key === 'collection' && !['film','bonus'].includes(String(value))) fail(raw.id + ': invalid movie collection');
+      if (key === 'accent' && !color(value)) fail(raw.id + ': invalid accent color');
       if (key === 'iconBackground' && !color(value)) fail(raw.id + ': invalid icon color');
       if (key === 'dim' && (typeof value !== 'number' || value < 0 || value > 0.8)) fail(raw.id + ': invalid wallpaper dimming');
       if (key === 'battery' && (typeof value !== 'number' || value < 0 || value > 100)) fail(raw.id + ': invalid battery');
@@ -51,7 +53,7 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (['mediaWidth','mediaHeight'].includes(key) && value !== null && (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 20000)) fail(raw.id + ': invalid media dimensions');
       if (key === 'variantWidths' && (typeof value !== 'string' || !/^(|480|960|1600|480,960|480,1600|960,1600|480,960,1600)$/.test(value))) fail(raw.id + ': invalid image variants');
       if (key === 'captions') {try {if(typeof value!=='string')throw new Error();parseCaptions(value)}catch{fail(raw.id + ': invalid timed captions')}}
-      if (key === 'src' && !safeMediaUrl(value)) fail(raw.id + ': unsafe image URL');
+      if (['src','poster'].includes(key) && !safeMediaUrl(value)) fail(raw.id + ': unsafe image URL');
       if (['text','alt','className','title','body','category','price','invitation'].includes(key) && typeof value !== 'string') fail(raw.id + ': invalid ' + key);
     }
     if(raw.props.mediaAssetId && raw.props.src !== '/media/'+raw.props.mediaAssetId) fail(raw.id + ': media source must match asset');

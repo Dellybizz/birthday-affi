@@ -98,3 +98,13 @@ test('shared notifications expose an app trigger and reuse home editable message
  const html=render(NotificationShade,{notifications,app:true,children:createElement(CMSRenderer,{document})});
  assert.match(html,/My personal copy/);assert.match(html,/href="\/app\/reasons"/);assert.match(html,/Open notification shade, 1 notifications/);assert.equal((html.match(/<dialog/g)??[]).length,1);
 });
+
+test('Cinema renders edited posters, isolates bonus clips, and keeps scene and credits editing usable',()=>{
+ let document=createDefaultPage('movie');const opening=document.nodes.find(n=>n.props.sectionKind==='movie-credits'),scenes=document.nodes.filter(n=>n.component==='movie-scene'),ending=document.nodes.find(n=>n.props.sectionKind==='birthday-ending');
+ document=edit(document,opening.id,{props:{poster:'https://example.com/poster.jpg',appTitle:'Our cinema'}});
+ document=edit(document,scenes[1].id,{props:{collection:'bonus',src:'https://example.com/bonus.mp4',poster:'https://example.com/bonus.jpg',captions:'0 | 2 | A birthday caption'}});
+ const live=render(CMSRenderer,{document});assert.match(live,/Our cinema/);assert.match(live,/poster.jpg/);assert.match(live,/2 chapters/);assert.doesNotMatch(live,/bonus.mp4/);
+ const preview=render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id});assert.match(preview,/Behind the scenes/);assert.match(preview,/bonus.mp4/);assert.match(preview,/poster="https:\/\/example.com\/bonus.jpg"/);assert.doesNotMatch(preview,/autoPlay/);assert.match(preview,/Select Our favourite memories/);
+ const credits=render(CMSRenderer,{document,onSelect:()=>{},selectedId:ending.id});assert.match(credits,/To all our next chapters/);assert.match(credits,/Watch again/);
+ document=edit(document,scenes[1].parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document,onSelect:()=>{},selectedId:scenes[1].id}),/bonus.mp4/);
+});

@@ -50,3 +50,9 @@ sectionContentFields['photo-library']=[{key:'title',label:'App heading',type:'te
 
 componentFields.reason.push({key:'voiceSrc',label:'Voice note URL',type:'text'},{key:'transcript',label:'Voice transcript',type:'textarea'});
 sectionContentFields['heartfelt-card']=[{key:'sealedTitle',label:'Envelope title',type:'text'},{key:'openLabel',label:'Open letter button',type:'text'}];
+
+componentFields['movie-scene'].push({key:'poster',label:'Chapter poster URL',type:'text'},{key:'collection',label:'Collection',type:'select',options:['film','bonus']});
+sectionContentFields['movie-credits']=[{key:'appTitle',label:'App name',type:'text'},{key:'title',label:'Film title (blank uses heading)',type:'text'},{key:'poster',label:'Film poster URL',type:'text'},{key:'posterAlt',label:'Poster description',type:'text'},{key:'badge',label:'Poster badge',type:'text'},{key:'accent',label:'Cinema accent',type:'color'},{key:'footer',label:'Footer dedication',type:'text'}];
+sectionContentFields['movie-player']=[{key:'playLabel',label:'Play button',type:'text'},{key:'continueLabel',label:'Continue button',type:'text'},{key:'emptyMessage',label:'Missing film message',type:'text'},{key:'extrasTitle',label:'Bonus clips heading',type:'text'}];
+sectionContentFields['movie-chapters']=[{key:'title',label:'Chapters heading',type:'text'}];
+sectionContentFields['birthday-ending']=[{key:'replayLabel',label:'Replay button',type:'text'}];
