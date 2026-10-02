@@ -6,6 +6,6 @@ const apps: AppDefinition[] = [
   { slug: 'adventure', kind: 'adventure', title: 'Pardanasheen', icon: '🌸' },
   { slug: 'movie', kind: 'movie', title: 'Saragram', icon: '📷' },
   { slug: 'kiss-shop', kind: 'shop', title: 'The Kiss Shop', icon: '💋' },
-  { slug: 'camera', kind: 'camera', title: 'Camera', icon: '📷' },
+  { slug: 'camera', kind: 'camera', title: 'Clicksara', icon: '📷' },
 ];
 export const getPublicApp = (slug: string) => apps.find(app => app.slug === slug);

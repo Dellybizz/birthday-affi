@@ -11,7 +11,7 @@ import {MediaPlayer} from './media-player';
 import {AppExperience} from './app-experience';
 import {useEffect,useRef,useState,useMemo} from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-const apps=[['💗','Adore','reasons'],['☎️','Hotdial','hotline'],['🌸','Pardanasheen','adventure'],['📷','Saragram','movie'],['💋','The Kiss Shop','kiss-shop'],['📷','Camera','camera']];
+const apps=[['💗','Adore','reasons'],['☎️','Hotdial','hotline'],['🌸','Pardanasheen','adventure'],['📷','Saragram','movie'],['💋','The Kiss Shop','kiss-shop'],['📷','Clicksara','camera']];
 function style(node:CMSNode):CSSProperties {
   const p=node.props;
   return {background:p.background as string|undefined,color:p.color as string|undefined,padding:p.padding as number|undefined,margin:p.margin as number|undefined,borderRadius:p.radius as number|undefined,opacity:p.opacity as number|undefined,fontSize:p.size as number|undefined,fontWeight:p.weight as number|undefined,textAlign:p.align as CSSProperties['textAlign'],'--section-radius':String(p.radius??24)+'px'} as CSSProperties;
