@@ -35,6 +35,7 @@ test('T2 does not release the overlay until the destination route is committed',
  assert.match(player,/setMode\('handoff'\)/);
  assert.match(player,/setMode\('leaving'\)/);
  assert.match(player,/window\.location\.assign\(config\.handoff\.destination\)/);
+ assert.doesNotMatch(css,/data-mode="leaving"\]\{opacity:0;pointer-events:none/);
 });
 
 test('T2 match-cut dimensions mirror the public phone bezel and screen',()=>{
@@ -45,11 +46,26 @@ test('T2 match-cut dimensions mirror the public phone bezel and screen',()=>{
  assert.match(css,/data-mode="handoff"/);
 });
 
-test('T2 supports layered score, unboxing and screen-wake audio cues',()=>{
+test('T2 real video keeps its authored frame unobstructed until handoff',()=>{
+ assert.match(player,/data-video=\{selectedVideo&&!videoFailed\?'true':'false'\}/);
+ assert.match(css,/data-video="true"\]\[data-mode="cinematic"\] \.heart-phone-sync-phone/);
+ assert.match(css,/animation:none;opacity:0/);
+ assert.match(css,/data-mode="handoff"\] \.heart-phone-sync-phone/);
+});
+
+test('T2 supports layered score, unboxing and screen-wake audio cues without replaying stale effects',()=>{
  assert.match(player,/config\.audio\.musicSrc/);
  assert.match(player,/config\.audio\.unboxingSrc/);
  assert.match(player,/config\.audio\.wakeSrc/);
  assert.match(player,/schedule\('top-down-open',unboxing\.current\)/);
  assert.match(player,/schedule\('screen-wake',wake\.current\)/);
  assert.match(player,/music\.current\.loop=true/);
+ assert.match(player,/seconds%duration/);
+ assert.match(player,/if\(delay<-250\)return/);
+});
+
+test('T2 reduced-motion and skip-to-home routes release immediately after destination commit',()=>{
+ assert.match(player,/instantRelease=useRef\(false\)/);
+ assert.match(player,/handoffImmediately/);
+ assert.match(player,/if\(instantRelease\.current\)\{setMode\('leaving'\);finish\(\);return\}/);
 });

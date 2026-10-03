@@ -20,7 +20,7 @@ const play=(node:HTMLAudioElement|null)=>{if(!node)return;node.currentTime=0;voi
 
 export function HeartPhoneTransition({config,onHandoff,onComplete,destinationReady,homeDocument,siteSettings}:{config:HeartToPhoneTransitionConfig;onHandoff:()=>void;onComplete:()=>void;destinationReady:boolean;homeDocument?:PageDocument|null;siteSettings:SiteDocument}){
  const shell=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),music=useRef<HTMLAudioElement>(null),unboxing=useRef<HTMLAudioElement>(null),wake=useRef<HTMLAudioElement>(null);
- const handoffDone=useRef(false),completeDone=useRef(false),handoffStarted=useRef(false),destinationReadyRef=useRef(destinationReady),fallbackTimer=useRef<ReturnType<typeof setTimeout>|null>(null),watchdog=useRef<ReturnType<typeof setTimeout>|null>(null),cueTimers=useRef<ReturnType<typeof setTimeout>[]>([]),startedAt=useRef(0);
+ const handoffDone=useRef(false),completeDone=useRef(false),handoffStarted=useRef(false),instantRelease=useRef(false),destinationReadyRef=useRef(destinationReady),fallbackTimer=useRef<ReturnType<typeof setTimeout>|null>(null),watchdog=useRef<ReturnType<typeof setTimeout>|null>(null),cueTimers=useRef<ReturnType<typeof setTimeout>[]>([]),startedAt=useRef(0);
  const [mode,setMode]=useState<TransitionMode>('cinematic'),[videoFailed,setVideoFailed]=useState(false),[soundEnabled,setSoundEnabled]=useState(false),[isMobile,setIsMobile]=useState(false),[phoneFit,setPhoneFit]=useState(1),[sceneLabel,setSceneLabel]=useState(config.scenes[0]?.label??'Opening gift');
  destinationReadyRef.current=destinationReady;
  const selectedVideo=useMemo(()=>isMobile&&config.media.mobileVideoSrc?config.media.mobileVideoSrc:config.media.videoSrc,[config.media.mobileVideoSrc,config.media.videoSrc,isMobile]);
@@ -29,23 +29,25 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
  const skipVisible=config.accessibility.alwaysAllowSkip||config.playback.showSkip;
  const finish=useCallback(()=>{if(completeDone.current)return;completeDone.current=true;onComplete()},[onComplete]);
  const handoff=useCallback(()=>{if(handoffDone.current)return;handoffDone.current=true;handoffStarted.current=true;setMode('handoff');onHandoff()},[onHandoff]);
+ const handoffImmediately=useCallback(()=>{instantRelease.current=true;handoff()},[handoff]);
  const skip=useCallback(()=>{handoff()},[handoff]);
 
  useEffect(()=>{const media=window.matchMedia('(max-width: 680px)'),sync=()=>setIsMobile(media.matches);sync();media.addEventListener('change',sync);return()=>media.removeEventListener('change',sync)},[]);
  useEffect(()=>{const fit=()=>setPhoneFit(computePhoneFit(window.innerWidth,window.innerHeight));fit();window.addEventListener('resize',fit);return()=>window.removeEventListener('resize',fit)},[]);
  useEffect(()=>{
   const previousOverflow=document.body.style.overflow,previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;document.body.style.overflow='hidden';startedAt.current=performance.now();
-  if(reducedMotionRequested()){handoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
+  if(reducedMotionRequested()){handoffImmediately();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
   if(slowConnection()){
-   if(config.performance.slowConnectionBehavior==='skip-to-home'||!config.media.posterSrc){handoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
+   if(config.performance.slowConnectionBehavior==='skip-to-home'||!config.media.posterSrc){handoffImmediately();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
    setMode('poster');fallbackTimer.current=setTimeout(handoff,650);
   }
   watchdog.current=setTimeout(()=>{if(!handoffDone.current)handoff();else if(!destinationReadyRef.current)window.location.assign(config.handoff.destination)},Math.max(config.playback.durationMs+4000,12500));
   return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus();if(fallbackTimer.current)clearTimeout(fallbackTimer.current);if(watchdog.current)clearTimeout(watchdog.current);cueTimers.current.forEach(clearTimeout);music.current?.pause()};
- },[config.handoff.destination,config.media.posterSrc,config.performance.slowConnectionBehavior,config.playback.durationMs,handoff]);
+ },[config.handoff.destination,config.media.posterSrc,config.performance.slowConnectionBehavior,config.playback.durationMs,handoff,handoffImmediately]);
 
  useEffect(()=>{
   if(!handoffStarted.current||!destinationReady||mode==='leaving')return;
+  if(instantRelease.current){setMode('leaving');finish();return}
   let release:ReturnType<typeof setTimeout>|null=null,second=0;const first=requestAnimationFrame(()=>{second=requestAnimationFrame(()=>{release=setTimeout(()=>{setMode('leaving');window.setTimeout(finish,Math.max(150,config.handoff.durationMs))},90)})});
   return()=>{cancelAnimationFrame(first);if(second)cancelAnimationFrame(second);if(release)clearTimeout(release)};
  },[config.handoff.durationMs,destinationReady,finish,mode]);
@@ -67,8 +69,8 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
  const queueAudioCues=()=>{
   cueTimers.current.forEach(clearTimeout);cueTimers.current=[];
   const elapsed=video.current?video.current.currentTime*1000:Math.max(0,performance.now()-startedAt.current);
-  if(config.audio.musicSrc&&music.current){music.current.volume=config.audio.volume;music.current.loop=true;void music.current.play().catch(()=>{})}
-  const schedule=(id:string,node:HTMLAudioElement|null)=>{const scene=config.scenes.find(item=>item.id===id);if(!scene||!node)return;node.volume=config.audio.volume;const delay=scene.startMs-elapsed;if(delay<=120)play(node);else cueTimers.current.push(setTimeout(()=>play(node),delay))};
+  if(config.audio.musicSrc&&music.current){music.current.volume=config.audio.volume;music.current.loop=true;try{const seconds=elapsed/1000,duration=music.current.duration;music.current.currentTime=Number.isFinite(duration)&&duration>0?seconds%duration:seconds}catch{}void music.current.play().catch(()=>{})}
+  const schedule=(id:string,node:HTMLAudioElement|null)=>{const scene=config.scenes.find(item=>item.id===id);if(!scene||!node)return;node.volume=config.audio.volume;const delay=scene.startMs-elapsed;if(delay<-250)return;if(delay<=120)play(node);else cueTimers.current.push(setTimeout(()=>play(node),delay))};
   schedule('top-down-open',unboxing.current);schedule('screen-wake',wake.current);
  };
  const enableSound=()=>{setSoundEnabled(true);if(video.current&&!layeredAudio)video.current.muted=false;queueAudioCues()};
@@ -77,7 +79,7 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
  const onKeyDown=(event:KeyboardEvent<HTMLDivElement>)=>{if(event.key==='Escape'&&skipVisible){event.preventDefault();skip();return}if(event.key!=='Tab')return;const controls=Array.from(shell.current?.querySelectorAll<HTMLButtonElement>('.heart-phone-transition-actions button:not([disabled])')??[]);if(!controls.length){event.preventDefault();return}const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}};
  const showPlaceholder=mode==='cinematic'&&(!selectedVideo||videoFailed);
  const style={'--transition-duration':config.playback.durationMs+'ms','--handoff-duration':config.handoff.durationMs+'ms','--phone-fit':phoneFit} as CSSProperties;
- return <div ref={shell} className="heart-phone-transition" data-mode={mode} style={style} role="dialog" aria-modal="true" aria-label="Opening your Wiffeyyyy OS gift" onKeyDown={onKeyDown}>
+ return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-video={selectedVideo&&!videoFailed?'true':'false'} style={style} role="dialog" aria-modal="true" aria-label="Opening your Wiffeyyyy OS gift" onKeyDown={onKeyDown}>
   <div className="heart-phone-transition-stage" aria-hidden="true" inert>
    {mode==='poster'&&config.media.posterSrc?<img className="heart-phone-transition-poster" src={config.media.posterSrc} alt=""/>:null}
    {mode==='cinematic'&&selectedVideo&&!videoFailed?<video ref={video} className="heart-phone-transition-video" src={selectedVideo} poster={config.media.posterSrc||undefined} preload={config.performance.preload} playsInline muted onTimeUpdate={onTime} onEnded={onEnded} onError={()=>setVideoFailed(true)}/>:null}
