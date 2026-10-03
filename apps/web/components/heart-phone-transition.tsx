@@ -20,8 +20,9 @@ const play=(node:HTMLAudioElement|null)=>{if(!node)return;node.currentTime=0;voi
 
 export function HeartPhoneTransition({config,onHandoff,onComplete,destinationReady,homeDocument,siteSettings}:{config:HeartToPhoneTransitionConfig;onHandoff:()=>void;onComplete:()=>void;destinationReady:boolean;homeDocument?:PageDocument|null;siteSettings:SiteDocument}){
  const shell=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),music=useRef<HTMLAudioElement>(null),unboxing=useRef<HTMLAudioElement>(null),wake=useRef<HTMLAudioElement>(null);
- const handoffDone=useRef(false),completeDone=useRef(false),handoffStarted=useRef(false),fallbackTimer=useRef<ReturnType<typeof setTimeout>|null>(null),watchdog=useRef<ReturnType<typeof setTimeout>|null>(null),cueTimers=useRef<ReturnType<typeof setTimeout>[]>([]),startedAt=useRef(0);
+ const handoffDone=useRef(false),completeDone=useRef(false),handoffStarted=useRef(false),destinationReadyRef=useRef(destinationReady),fallbackTimer=useRef<ReturnType<typeof setTimeout>|null>(null),watchdog=useRef<ReturnType<typeof setTimeout>|null>(null),cueTimers=useRef<ReturnType<typeof setTimeout>[]>([]),startedAt=useRef(0);
  const [mode,setMode]=useState<TransitionMode>('cinematic'),[videoFailed,setVideoFailed]=useState(false),[soundEnabled,setSoundEnabled]=useState(false),[isMobile,setIsMobile]=useState(false),[phoneFit,setPhoneFit]=useState(1),[sceneLabel,setSceneLabel]=useState(config.scenes[0]?.label??'Opening gift');
+ destinationReadyRef.current=destinationReady;
  const selectedVideo=useMemo(()=>isMobile&&config.media.mobileVideoSrc?config.media.mobileVideoSrc:config.media.videoSrc,[config.media.mobileVideoSrc,config.media.videoSrc,isMobile]);
  const home=useMemo(()=>installPhoneHome(homeDocument??createDefaultPage('home')),[homeDocument]);
  const layeredAudio=Boolean(config.audio.musicSrc||config.audio.unboxingSrc||config.audio.wakeSrc);
@@ -39,14 +40,14 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
    if(config.performance.slowConnectionBehavior==='skip-to-home'||!config.media.posterSrc){handoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
    setMode('poster');fallbackTimer.current=setTimeout(handoff,650);
   }
-  watchdog.current=setTimeout(()=>{if(!handoffDone.current)handoff();else if(!destinationReady)window.location.assign(config.handoff.destination)},Math.max(config.playback.durationMs+4000,12500));
+  watchdog.current=setTimeout(()=>{if(!handoffDone.current)handoff();else if(!destinationReadyRef.current)window.location.assign(config.handoff.destination)},Math.max(config.playback.durationMs+4000,12500));
   return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus();if(fallbackTimer.current)clearTimeout(fallbackTimer.current);if(watchdog.current)clearTimeout(watchdog.current);cueTimers.current.forEach(clearTimeout);music.current?.pause()};
- },[config.handoff.destination,config.media.posterSrc,config.performance.slowConnectionBehavior,config.playback.durationMs,destinationReady,handoff]);
+ },[config.handoff.destination,config.media.posterSrc,config.performance.slowConnectionBehavior,config.playback.durationMs,handoff]);
 
  useEffect(()=>{
   if(!handoffStarted.current||!destinationReady||mode==='leaving')return;
-  let second=0;const first=requestAnimationFrame(()=>{second=requestAnimationFrame(()=>{setMode('leaving');window.setTimeout(finish,Math.max(150,config.handoff.durationMs))})});
-  return()=>{cancelAnimationFrame(first);if(second)cancelAnimationFrame(second)};
+  let release:ReturnType<typeof setTimeout>|null=null,second=0;const first=requestAnimationFrame(()=>{second=requestAnimationFrame(()=>{release=setTimeout(()=>{setMode('leaving');window.setTimeout(finish,Math.max(150,config.handoff.durationMs))},90)})});
+  return()=>{cancelAnimationFrame(first);if(second)cancelAnimationFrame(second);if(release)clearTimeout(release)};
  },[config.handoff.durationMs,destinationReady,finish,mode]);
 
  useEffect(()=>{
