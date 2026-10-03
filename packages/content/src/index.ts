@@ -21,4 +21,5 @@ export * from './phone-home';
 export * from './inspector-fields';
 export * from './inspector-capabilities';
 export * from './heart-page';
+export * from './heart-to-phone-transition';
 export * from './memories-archive';
