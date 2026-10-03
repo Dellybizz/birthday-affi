@@ -86,11 +86,20 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
  const onKeyDown=(event:KeyboardEvent<HTMLDivElement>)=>{if(event.key==='Escape'&&skipVisible){event.preventDefault();skip();return}if(event.key!=='Tab')return;const controls=Array.from(shell.current?.querySelectorAll<HTMLButtonElement>('.heart-phone-transition-actions button:not([disabled])')??[]);if(!controls.length){event.preventDefault();return}const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}};
  const showPlaceholder=mode==='cinematic'&&(!selectedVideo||videoFailed);
  const style={'--transition-duration':config.playback.durationMs+'ms','--handoff-duration':config.handoff.durationMs+'ms','--phone-fit':phoneFit} as CSSProperties;
- return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-strategy={config.handoff.strategy} data-video={selectedVideo&&!videoFailed?'true':'false'} style={style} role="dialog" aria-modal="true" aria-label={config.trigger.ariaLabel} onKeyDown={onKeyDown}>
+ return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-strategy={config.handoff.strategy} data-video={selectedVideo&&!videoFailed?'true':'false'} data-fallback={showPlaceholder?'true':'false'} style={style} role="dialog" aria-modal="true" aria-label={config.trigger.ariaLabel} onKeyDown={onKeyDown}>
   <div key={replayToken} className="heart-phone-transition-stage" aria-hidden="true" inert>
    {mode==='poster'&&config.media.posterSrc?<img className="heart-phone-transition-poster" src={config.media.posterSrc} alt=""/>:null}
    {mode==='cinematic'&&selectedVideo&&!videoFailed?<video ref={video} className="heart-phone-transition-video" src={selectedVideo} poster={config.media.posterSrc||undefined} preload={config.performance.preload} playsInline muted onTimeUpdate={onTime} onEnded={onEnded} onError={()=>setVideoFailed(true)}/>:null}
-   {showPlaceholder?<div className="heart-phone-transition-placeholder"><div className="unbox-table"/><div className="unbox-box"><div className="unbox-lid"><span>Wiffeyyyy OS</span></div><div className="unbox-base"/></div><div className="unbox-glove unbox-glove-left"/><div className="unbox-glove unbox-glove-right"/></div>:null}
+   {showPlaceholder?<div className="heart-phone-transition-placeholder">
+    <div className="unbox-ambient"/><div className="unbox-beam"/>
+    <div className="unbox-table"><div className="unbox-table-glow"/></div>
+    <div className="unbox-box">
+     <div className="unbox-base"><div className="unbox-tray"/><div className="unbox-tray-well"/></div>
+     <div className="unbox-lid"><div className="unbox-lid-mark">Wiffeyyyy OS</div><div className="unbox-lid-edge"/></div>
+     <div className="unbox-package-shadow"/>
+    </div>
+    <div className="unbox-glove unbox-glove-left"/><div className="unbox-glove unbox-glove-right"/>
+   </div>:null}
    {config.handoff.strategy==='match-cut'&&config.handoff.matchWallpaper?<div className="heart-phone-sync-phone"><div className="heart-phone-sync-screen"><DocumentSettingsProvider value={siteSettings}><CMSRenderer document={home} embedded previewDevice="mobile"/></DocumentSettingsProvider></div></div>:null}
   </div>
   {config.audio.musicSrc?<audio ref={music} src={config.audio.musicSrc} preload="metadata"/>:null}{config.audio.unboxingSrc?<audio ref={unboxing} src={config.audio.unboxingSrc} preload="metadata"/>:null}{config.audio.wakeSrc?<audio ref={wake} src={config.audio.wakeSrc} preload="metadata"/>:null}
