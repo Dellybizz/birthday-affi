@@ -1,7 +1,18 @@
-import Link from 'next/link';
-import { requireAdmin } from '../../lib/auth';
-import { adminDb } from '../../lib/supabase';
-import { can } from '../../lib/permissions';
+import {requireAdmin} from '../../lib/auth';
+import {adminDb} from '../../lib/supabase';
+import {can} from '../../lib/permissions';
 import MediaLibrary from '../../components/media-library';
+import {AdminPageHeader,AdminPanel} from '../../components/admin-page-header';
+
 export const dynamic='force-dynamic';
-export default async function MediaPage(){const admin=await requireAdmin();const db=await adminDb();const {data:site,error}=await db.from('sites').select('id').eq('slug',process.env.NEXT_PUBLIC_SITE_SLUG??'wiffeyyyy-os').single();if(error||!site)throw new Error('Unable to load site');return <main className="min-h-screen bg-[#f7f5f3] p-5 text-[#302927] md:p-8"><div className="mx-auto max-w-6xl rounded-3xl border bg-white p-5 md:p-8"><Link className="mb-6 inline-block text-sm underline" href="/">← Back to pages</Link><MediaLibrary siteId={site.id} canWrite={can(admin.role,'media:write')}/></div></main>}
+
+export default async function MediaPage(){
+ const admin=await requireAdmin();
+ const db=await adminDb();
+ const {data:site,error}=await db.from('sites').select('id').eq('slug',process.env.NEXT_PUBLIC_SITE_SLUG??'wiffeyyyy-os').single();
+ if(error||!site)throw new Error('Unable to load site');
+ return <div>
+  <AdminPageHeader eyebrow="Assets" title="Media library" description="Upload and reuse images, videos and audio without duplicating files across pages. Media selection stays separate from visitor runtime state."/>
+  <AdminPanel className="p-4 md:p-6"><MediaLibrary siteId={site.id} canWrite={can(admin.role,'media:write')}/></AdminPanel>
+ </div>;
+}
