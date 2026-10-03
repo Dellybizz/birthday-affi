@@ -31,7 +31,7 @@ test('T2 final cinematic phone renders the real published Home document',()=>{
 
 test('T2 does not release the overlay until the destination route is committed',()=>{
  assert.match(journey,/destinationReady=\{pathname===heartTransition\.handoff\.destination\}/);
- assert.match(player,/handoffStarted\.current\|\|!destinationReady/);
+ assert.match(player,/!handoffStarted\.current\|\|!destinationReady/);
  assert.match(player,/setMode\('handoff'\)/);
  assert.match(player,/setMode\('leaving'\)/);
  assert.match(player,/window\.location\.assign\(config\.handoff\.destination\)/);
