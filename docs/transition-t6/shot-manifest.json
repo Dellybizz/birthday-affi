@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "transitionId": "heart-to-phone",
+  "masterDurationMs": 8300,
+  "handoffAtMs": 7500,
+  "desktop": {
+    "aspectRatio": "16:9",
+    "recommendedMaster": "1920x1080",
+    "maxEncodedBytes": 16000000
+  },
+  "mobile": {
+    "aspectRatio": "9:16",
+    "recommendedMaster": "1080x1920",
+    "maxEncodedBytes": 8000000
+  },
+  "continuity": {
+    "environment": "dark warm luxury product studio",
+    "surface": "dark walnut / smoked-brown matte tabletop",
+    "box": "matte charcoal-black rigid premium phone box with subtle Wiffeyyyy OS lid mark",
+    "phone": "modern premium black smartphone, portrait aspect, thin black bezel, centered dynamic-island-style top cutout, no external brand logo",
+    "hands": "two realistic fitted matte black presentation gloves, natural human proportions, no jewelry, no sleeves entering beyond wrists",
+    "lighting": "soft warm key from high front-left, very faint cool-neutral rim from rear-right, deep controlled shadows",
+    "camera": "cinematic product camera, smooth stabilized dolly/tilt only, no handheld shake, no speed ramps",
+    "lens": "normal-to-short-telephoto product-film perspective, avoid wide-angle distortion"
+  },
+  "shots": [
+    {
+      "id": "box-establishing",
+      "startMs": 0,
+      "endMs": 1200,
+      "durationMs": 1200,
+      "framing": "low three-quarter side view, box centered slightly below frame center",
+      "action": "hold on closed box; extremely subtle slow push-in; premium lighting reveals lid edges and material",
+      "camera": "slow dolly-in only",
+      "screenState": "not visible",
+      "mustEndWith": "box stable and centered; hands still outside frame"
+    },
+    {
+      "id": "gloves-enter",
+      "startMs": 1200,
+      "endMs": 2600,
+      "durationMs": 1400,
+      "framing": "same composition and lens as establishing shot",
+      "action": "two black-gloved hands enter naturally from lower left and lower right; fingertips contact opposite sides of the box and steady it",
+      "camera": "continue tiny push-in; no cut in apparent camera position",
+      "screenState": "not visible",
+      "mustEndWith": "both hands making believable contact with box; box has not shifted unnaturally"
+    },
+    {
+      "id": "top-down-open",
+      "startMs": 2600,
+      "endMs": 4400,
+      "durationMs": 1800,
+      "framing": "camera eases upward toward near top-down while keeping box centered",
+      "action": "one hand stabilizes box base while the other lifts lid slowly; tray and black-screen phone are revealed",
+      "camera": "smooth crane/tilt transition toward top-down; no sudden orbital move",
+      "screenState": "phone screen fully black",
+      "mustEndWith": "lid clear of phone; phone still seated flat in tray; hands remain anatomically believable"
+    },
+    {
+      "id": "phone-lift",
+      "startMs": 4400,
+      "endMs": 6100,
+      "durationMs": 1700,
+      "framing": "camera begins easing from top-down toward frontal product view",
+      "action": "gloved fingers grip phone by edges only and lift it smoothly from tray; phone rotates from tray angle toward upright portrait orientation",
+      "camera": "gentle synchronized dolly/tilt to keep phone centered and growing continuously in apparent size",
+      "screenState": "screen fully black with subtle glass reflections only",
+      "mustEndWith": "phone upright enough to face camera; box/lid beginning to fall into dark background; no fingers covering screen"
+    },
+    {
+      "id": "screen-wake",
+      "startMs": 6100,
+      "endMs": 7500,
+      "durationMs": 1400,
+      "framing": "front-facing centered hero view",
+      "action": "phone continues a small controlled move toward camera and settles; hands release and exit below/side frame; display wakes with a restrained purple-neutral glow",
+      "camera": "finish dolly and settle completely before handoff",
+      "screenState": "starts black, then soft simplified purple glow; avoid AI-generated text/icons",
+      "mustEndWith": "phone dead-center, perfectly upright, no hands touching it, camera stable, clean dark negative space around device"
+    },
+    {
+      "id": "live-handoff",
+      "startMs": 7500,
+      "endMs": 8300,
+      "durationMs": 800,
+      "framing": "locked hero frame matching live phone geometry",
+      "action": "hold stable composition while website live-phone bridge takes over; authored footage should not introduce new motion",
+      "camera": "locked-off",
+      "screenState": "cinematic screen may remain a dark/purple simplified state; exact live UI is supplied by website bridge",
+      "mustEndWith": "no camera motion, no hand, no box crossing phone, no focus or exposure change"
+    }
+  ],
+  "negativeConstraints": [
+    "no extra fingers",
+    "no fused fingers",
+    "no warped gloves",
+    "no bare skin",
+    "no jewelry",
+    "no visible arm above wrist",
+    "no duplicated hands",
+    "no floating objects",
+    "no impossible box geometry",
+    "no lid passing through hand or box",
+    "no phone morphing",
+    "no phone aspect-ratio changes",
+    "no random logos",
+    "no Apple logo",
+    "no readable AI-generated UI text",
+    "no changing dynamic island shape",
+    "no camera shake",
+    "no sudden zoom",
+    "no wide-angle stretching",
+    "no motion blur covering final frame",
+    "no bright white background",
+    "no saturated neon lighting",
+    "no lens flare across phone screen"
+  ]
+}
