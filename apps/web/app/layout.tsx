@@ -18,5 +18,5 @@ export default async function RootLayout({ children }: Readonly<{children: React
   const [settings,navigation,home,archive]=await Promise.all([getPublishedSiteConfiguration(),getPublicNavigation(),getPublishedDocument("home"),getPublishedDocument("memories-archive")]);
   const publicNavigation=Array.isArray(navigation)?navigation.filter((item:{href?:string|null})=>item.href!=='/app/radio'):null;
   const prefetchHrefs=publicNavigation?.map((item:{href?:string|null})=>item.href).filter((href:string|null|undefined):href is string=>typeof href==='string'&&href.startsWith('/'))??[];
-  return <html lang="en"><body><SiteNavigationProvider value={publicNavigation}><ArchiveJourney settings={archive?.nodes.find(n=>n.props.archivePart==='page')?.props??{}} prefetchHrefs={prefetchHrefs}><OSProvider settings={settings} homeDocument={home}>{children}</OSProvider></ArchiveJourney></SiteNavigationProvider></body></html>;
+  return <html lang="en"><body><SiteNavigationProvider value={publicNavigation}><ArchiveJourney settings={archive?.nodes.find(n=>n.props.archivePart==='page')?.props??{}} prefetchHrefs={prefetchHrefs} homeDocument={home} siteSettings={settings}><OSProvider settings={settings} homeDocument={home}>{children}</OSProvider></ArchiveJourney></SiteNavigationProvider></body></html>;
 }
