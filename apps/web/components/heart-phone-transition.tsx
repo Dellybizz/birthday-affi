@@ -24,14 +24,15 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
  const firstScene=config.scenes[0];
  const [mode,setMode]=useState<TransitionMode>('cinematic'),[videoFailed,setVideoFailed]=useState(false),[soundEnabled,setSoundEnabled]=useState(false),[isMobile,setIsMobile]=useState(false),[phoneFit,setPhoneFit]=useState(1),[sceneLabel,setSceneLabel]=useState(firstScene?.label??'Opening gift'),[sceneId,setSceneId]=useState<TransitionSceneId>(firstScene?.id??'box-establishing'),[replayToken,setReplayToken]=useState(0);
  destinationReadyRef.current=destinationReady;
- const selectedVideo=useMemo(()=>isMobile&&config.media.mobileVideoSrc?config.media.mobileVideoSrc:config.media.videoSrc,[config.media.mobileVideoSrc,config.media.videoSrc,isMobile]);
+ const rawSelectedVideo=useMemo(()=>isMobile&&config.media.mobileVideoSrc?config.media.mobileVideoSrc:config.media.videoSrc,[config.media.mobileVideoSrc,config.media.videoSrc,isMobile]);
+ const renderMode=config.artDirection.renderMode;
+ const selectedVideo=(renderMode==='auto'||renderMode==='video')?rawSelectedVideo:'';
  const currentFrame=config.frames[sceneId];
  const selectedFrame=useMemo(()=>currentFrame?(isMobile&&currentFrame.mobile?currentFrame.mobile:currentFrame.desktop):'',[currentFrame,isMobile]);
  const home=useMemo(()=>installPhoneHome(homeDocument??createDefaultPage('home')),[homeDocument]);
  const layeredAudio=Boolean(config.audio.musicSrc||config.audio.unboxingSrc||config.audio.wakeSrc);
  const skipVisible=config.accessibility.alwaysAllowSkip||config.playback.showSkip;
- const renderMode=config.artDirection.renderMode;
- const videoAvailable=Boolean(selectedVideo)&&!videoFailed&&(renderMode==='auto'||renderMode==='video');
+ const videoAvailable=Boolean(selectedVideo)&&!videoFailed;
  const hybridAvailable=Boolean(selectedFrame)&&(renderMode==='hybrid'||(renderMode==='auto'&&!videoAvailable));
  const videoActive=mode==='cinematic'&&videoAvailable;
  const hybridActive=mode==='cinematic'&&hybridAvailable;
@@ -104,7 +105,7 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
   '--transition-phone-x':art.phoneOffsetX+'px','--transition-phone-y':art.phoneOffsetY+'px','--transition-phone-tilt':art.phoneTilt+'deg','--transition-interface-opacity':art.interfaceOpacity
  } as CSSProperties;
  const frameStyle={objectFit:art.frameFit,objectPosition:`${art.framePositionX}% ${art.framePositionY}%`} as CSSProperties;
- return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-strategy={config.handoff.strategy} data-video={videoAvailable?'true':'false'} data-hybrid={hybridAvailable?'true':'false'} data-fallback={showPlaceholder?'true':'false'} data-render-mode={renderMode} data-scene={sceneId} data-interface={art.interfaceSource} style={style} role="dialog" aria-modal="true" aria-label={config.trigger.ariaLabel} onKeyDown={onKeyDown}>
+ return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-strategy={config.handoff.strategy} data-video={selectedVideo&&!videoFailed?'true':'false'} data-hybrid={hybridAvailable?'true':'false'} data-fallback={showPlaceholder?'true':'false'} data-render-mode={renderMode} data-scene={sceneId} data-interface={art.interfaceSource} style={style} role="dialog" aria-modal="true" aria-label={config.trigger.ariaLabel} onKeyDown={onKeyDown}>
   <div key={replayToken} className="heart-phone-transition-stage" aria-hidden="true" inert>
    {mode==='poster'&&config.media.posterSrc?<img className="heart-phone-transition-poster" src={config.media.posterSrc} alt=""/>:null}
    {videoActive?<video ref={video} className="heart-phone-transition-video" src={selectedVideo} poster={config.media.posterSrc||undefined} preload={config.performance.preload} playsInline muted onTimeUpdate={onTime} onEnded={onEnded} onError={()=>setVideoFailed(true)}/>:null}
