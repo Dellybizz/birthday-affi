@@ -24,7 +24,7 @@ export function createHeartPage(newId:()=>string):PageDocument{
  add('text','Previous memory button',popup,{heartPart:'popupPrev',text:'previous'});add('text','Next memory button',popup,{heartPart:'popupNext',text:'next'});add('text','Close memory label',popup,{heartPart:'popupCloseLabel',text:'Close memory'});
  const navigation=add('section','Back and forward navigation',root,{heartPart:'navigation'});
  add('action','Back to Memories Archive',navigation,{heartPart:'back',title:'← Memories Archive',href:'/'});
- add('action','Continue to iPhone',navigation,{heartPart:'next',...transitionToHeartActionProps(defaultHeartToPhoneTransition),title:'Enter Wiffeyyyy OS →'});
+ add('action','Continue to iPhone',navigation,{heartPart:'next',...transitionToHeartActionProps(defaultHeartToPhoneTransition),title:'Enter Wiffeyyyy OS →',transitionRenderMode:'hybrid',transitionFrameBoxSrc:'/cinematic/heart-phone/01-box.jpg',transitionFrameGlovesSrc:'/cinematic/heart-phone/02-gloves.jpg',transitionFrameOpenSrc:'/cinematic/heart-phone/03-open.jpg',transitionFrameLiftSrc:'/cinematic/heart-phone/04-lift.jpg',transitionFrameWakeSrc:'/cinematic/heart-phone/05-wake.jpg',transitionFrameHandoffSrc:'/cinematic/heart-phone/06-handoff.jpg',transitionInterfaceSource:'live-home',transitionHandoffStrategy:'match-cut',transitionMatchWallpaper:true});
  const audio=add('section','Heart soundtrack',root,{heartPart:'soundtrack'});add('audio','Heartbeat audio',audio,{heartPart:'heartbeatAudio',src:'',alt:'Heartbeat',loop:true,initialVolume:.5});add('audio','Heart background music',audio,{heartPart:'musicAudio',src:'',alt:'Heart soundtrack',loop:true,initialVolume:.5});
  return parsePageDocument(doc);
 }
