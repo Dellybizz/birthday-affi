@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 const read=path=>fs.readFileSync(path,'utf8');
 const pages=read('apps/admin/lib/editor-pages.ts');
+const registry=read('packages/content/src/experience-registry.ts');
 const renderer=read('packages/ui/src/cms-renderer.tsx');
 const preview=read('apps/admin/app/preview/[pageId]/preview-client.tsx');
 const frame=read('apps/admin/components/editor-live-frame.tsx');
@@ -32,10 +33,11 @@ const ACTIVE=[
 
 test('P9 active-page matrix keeps all eight live/editor experiences addressable',()=>{
  for(const [slug,title,path] of ACTIVE){
-  const escaped=slug.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const key=new RegExp(`(?:'${escaped}'|${escaped.replace(/-/g,'\\-')}):\\{title:'${title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}',livePath:'${path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}'`);
-  assert.match(pages,key,slug);
+  assert.ok(registry.includes(`slug:'${slug}'`),slug);
+  assert.ok(registry.includes(`title:'${title}'`),title);
+  assert.ok(registry.includes(`livePath:'${path}'`),path);
  }
+ assert.match(pages,/activeDocumentExperiences/);
  assert.match(pages,/editorHref:'\/editor\/'\+page\.slug/);
  assert.match(rootPage,/getPublishedDocument\('memories-archive'\)/);
  assert.match(rootPage,/className="os-archive-page"/);

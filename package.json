@@ -8,7 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:e2 && pnpm test:e3 && pnpm test:perf && pnpm test:p8 && pnpm test:p9 && pnpm test:editor-live && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
+    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:e2 && pnpm test:e3 && pnpm test:perf && pnpm test:p8 && pnpm test:p9 && pnpm test:f0 && pnpm test:editor-live && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
@@ -28,6 +28,7 @@
     "test:perf": "node --test tests/performance-navigation.test.mjs tests/editor-p7.test.mjs",
     "test:p8": "node --test tests/editor-p8.test.mjs",
     "test:p9": "node --test tests/editor-p9.test.mjs",
+    "test:f0": "node --test tests/f0-canonical-backend.test.mjs",
     "test:editor-live": "node --test tests/editor-live-preview.test.mjs"
   },
   "devDependencies": {

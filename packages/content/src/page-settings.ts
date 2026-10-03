@@ -1,4 +1,9 @@
-export const protectedPageSlugs=['welcome','home','reasons','hotline','adventure','movie','kiss-shop','radio'];
+import {experienceRegistry} from './experience-registry';
+
+// Every built-in document/preserved experience has a route contract. Runtime-only apps do
+// not own a pages row, so only non-runtime registry entries participate in page lifecycle.
+export const protectedPageSlugs=experienceRegistry.filter(experience=>experience.authoring!=='runtime').map(experience=>experience.slug);
+
 export function parsePageSettings(input:{title:string;slug:string;description:string}){
  const title=input.title.trim(),slug=input.slug.trim(),description=input.description.trim();
  if(!title||title.length>120)throw new Error('Title must contain 1–120 characters.');
