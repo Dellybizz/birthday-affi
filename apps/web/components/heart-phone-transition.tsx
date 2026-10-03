@@ -43,20 +43,22 @@ export function HeartPhoneTransition({config,homeDocument,siteSettings,onHandoff
   await wait(duration+80);finish();
  },[config.handoff.durationMs,findLivePhone,finish,syncPreviewScale]);
  const handoff=useCallback(()=>{if(handoffDone.current)return;handoffDone.current=true;setMode('aligning');onHandoff();void alignToLivePhone()},[alignToLivePhone,onHandoff]);
+ const directHandoff=useCallback(()=>{if(handoffDone.current)return;handoffDone.current=true;onHandoff();setMode('leaving');window.setTimeout(finish,30)},[finish,onHandoff]);
  const skip=useCallback(()=>{handoff()},[handoff]);
 
  useEffect(()=>{startedAt.current=performance.now();const media=window.matchMedia('(max-width: 680px)'),sync=()=>setIsMobile(media.matches);sync();media.addEventListener('change',sync);return()=>media.removeEventListener('change',sync)},[]);
+ useEffect(()=>{const canvas=previewCanvas.current;if(!canvas)return;canvas.setAttribute('inert','');canvas.setAttribute('aria-hidden','true')},[]);
  useEffect(()=>{const node=phone.current;if(!node)return;syncPreviewScale();const observer=new ResizeObserver(syncPreviewScale);observer.observe(node);return()=>observer.disconnect()},[syncPreviewScale]);
  useEffect(()=>{
   const previousOverflow=document.body.style.overflow,previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;document.body.style.overflow='hidden';
-  if(reducedMotionRequested()){handoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
+  if(reducedMotionRequested()){directHandoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
   if(slowConnection()){
-   if(config.performance.slowConnectionBehavior==='skip-to-home'||!config.media.posterSrc){handoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
+   if(config.performance.slowConnectionBehavior==='skip-to-home'||!config.media.posterSrc){directHandoff();return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus()}};
    setMode('poster');fallbackTimer.current=setTimeout(handoff,650);
   }
   watchdog.current=setTimeout(()=>{if(!handoffDone.current)handoff();else finish()},Math.max(config.playback.durationMs+3500,12500));
   return()=>{document.body.style.overflow=previousOverflow;previousFocus?.focus();if(fallbackTimer.current)clearTimeout(fallbackTimer.current);if(watchdog.current)clearTimeout(watchdog.current);stopSound()};
- },[config.media.posterSrc,config.performance.slowConnectionBehavior,config.playback.durationMs,finish,handoff,stopSound]);
+ },[config.media.posterSrc,config.performance.slowConnectionBehavior,config.playback.durationMs,directHandoff,finish,handoff,stopSound]);
 
  useEffect(()=>{
   if(mode!=='cinematic'||!selectedVideo||videoFailed)return;
