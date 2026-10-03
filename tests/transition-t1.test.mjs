@@ -31,14 +31,14 @@ test('player has accessible skip plus reduced-motion and constrained-network fal
  assert.match(player,/aria-modal="true"/);
 });
 
-test('player works before final T2 media exists and can later play real media',()=>{
+test('player works before final media exists and can later play real media',()=>{
  assert.match(player,/showPlaceholder/);
  assert.match(player,/<video/);
  assert.match(player,/config\.media\.mobileVideoSrc/);
  assert.match(player,/poster=\{config\.media\.posterSrc/);
  assert.match(player,/onTimeUpdate=\{onTime\}/);
- assert.match(css,/@keyframes t1-box/);
- assert.match(css,/@keyframes t1-phone/);
+ assert.match(css,/@keyframes t2-box/);
+ assert.match(css,/@keyframes t2-sync-phone/);
  assert.match(css,/data-mode="leaving"/);
  assert.match(layout,/heart-phone-transition\.css/);
 });
