@@ -15,7 +15,8 @@ test('whole-site publish validates and publishes inside one database function',(
  assert.match(sql,/private\.assert_page_document\(page_row\.draft_document\)/);
  assert.match(sql,/for update/);
  assert.match(sql,/private\.capture_site_release\(p_site,p_note\)/);
- assert.doesNotMatch(actions,/for\s*\([^)]*pages/i,'server action must not emulate atomicity by looping page publishes');
+ assert.match(actions,/db\.rpc\('publish_site_release'/);
+ assert.doesNotMatch(actions,/publishPage\s*\(/,'server action must not emulate atomicity with per-page publish calls');
 });
 
 test('rollback restores published pointers and records a new release without replacing draft documents',()=>{
