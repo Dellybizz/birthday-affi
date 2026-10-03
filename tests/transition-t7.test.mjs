@@ -14,9 +14,9 @@ const layout=read('apps/web/app/layout.tsx');
 
 test('T7 transition contract exposes editable art direction, frames and scene timing',()=>{
  const value=transition.defaultHeartToPhoneTransition;
- assert.equal(value.artDirection.renderMode,'auto');
+ assert.equal(value.artDirection.renderMode,'hybrid');
  assert.equal(value.artDirection.interfaceSource,'live-home');
- assert.equal(value.frames['box-establishing'].desktop,'');
+ assert.equal(value.frames['box-establishing'].desktop,'/cinematic/heart-phone/01-box.webp');
  assert.equal(value.timing.boxEndMs,1200);
  assert.equal(value.timing.wakeEndMs,7500);
 });
