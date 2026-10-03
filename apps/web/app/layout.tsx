@@ -4,6 +4,7 @@ import "./navigation-performance.css";
 import "./app-transitions.css";
 import "./heart-phone-transition.css";
 import "./heart-phone-transition-t4.css";
+import "./heart-phone-transition-t5.css";
 import {ArchiveJourney} from "../components/archive-journey";
 import { OSProvider } from "../components/os-provider";
 
