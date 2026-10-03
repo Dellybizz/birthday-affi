@@ -30,8 +30,10 @@ test('T4 activates previously persisted replay and accessibility-label controls'
  assert.match(player,/aria-label=\{config\.trigger\.ariaLabel\}/);
 });
 
-test('T4 certification keeps a missing authored video safe but visible as fallback-ready',()=>{
- const result=certification.certifyHeartToPhoneTransition(transition.defaultHeartToPhoneTransition);
+test('T4 certification keeps a missing authored video and missing frames safe but visible as fallback-ready',()=>{
+ const config=structuredClone(transition.defaultHeartToPhoneTransition);
+ for(const scene of Object.keys(config.frames))config.frames[scene].desktop='';
+ const result=certification.certifyHeartToPhoneTransition(config);
  assert.equal(result.ok,true);assert.equal(result.status,'fallback-ready');
  assert.ok(result.issues.some(issue=>issue.code==='desktop-video-missing'&&issue.level==='warning'));
 });
