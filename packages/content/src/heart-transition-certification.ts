@@ -1,4 +1,4 @@
-import {validateHeartToPhoneTransition,type HeartToPhoneTransitionConfig} from './heart-to-phone-transition';
+import {validateHeartToPhoneTransition,type HeartToPhoneTransitionConfig,type TransitionSceneId} from './heart-to-phone-transition';
 
 export type TransitionCertificationLevel='error'|'warning'|'info';
 export type TransitionCertificationStatus='disabled'|'blocked'|'fallback-ready'|'ready';
@@ -8,6 +8,7 @@ export type TransitionCertificationMedia={desktopVideo?:TransitionVideoMetadata;
 export type TransitionCertificationResult={status:TransitionCertificationStatus;ok:boolean;issues:TransitionCertificationIssue[]};
 
 const videoTypes=new Set(['video/mp4','video/webm']);
+const authoredScenes:TransitionSceneId[]=['box-establishing','gloves-enter','top-down-open','phone-lift','screen-wake','live-handoff'];
 const issue=(level:TransitionCertificationLevel,code:string,message:string):TransitionCertificationIssue=>({level,code,message});
 
 function certifyVideo(label:'Desktop'|'Mobile',media:TransitionVideoMetadata|undefined,maxBytes:number,handoffAtMs:number,issues:TransitionCertificationIssue[]){
@@ -17,6 +18,7 @@ function certifyVideo(label:'Desktop'|'Mobile',media:TransitionVideoMetadata|und
  if(typeof media.byteSize==='number'&&media.byteSize<=0)issues.push(issue('error',label.toLowerCase()+'-video-empty',`${label} cinematic video is empty.`));
  if(typeof media.durationMs==='number'&&media.durationMs<handoffAtMs)issues.push(issue('error',label.toLowerCase()+'-video-short',`${label} cinematic video ends before the configured handoff point.`));
 }
+function desktopFrameCount(config:HeartToPhoneTransitionConfig){return authoredScenes.filter(scene=>Boolean(config.frames[scene]?.desktop)).length}
 
 export function certifyHeartToPhoneTransition(config:HeartToPhoneTransitionConfig,media:TransitionCertificationMedia={}):TransitionCertificationResult{
  const issues:TransitionCertificationIssue[]=[];
@@ -24,15 +26,21 @@ export function certifyHeartToPhoneTransition(config:HeartToPhoneTransitionConfi
  for(const message of contract.errors)issues.push(issue('error','contract-invalid',message));
  if(!config.enabled)return {status:'disabled',ok:issues.every(item=>item.level!=='error'),issues};
 
- if(!config.media.videoSrc)issues.push(issue('warning','desktop-video-missing','No desktop cinematic video is configured. The built-in cinematic fallback remains usable.'));
+ const frames=desktopFrameCount(config),hasHybrid=frames>0,mode=config.artDirection.renderMode;
+ if(!config.media.videoSrc&&!hasHybrid)issues.push(issue('warning','desktop-video-missing','No desktop cinematic video or authored hybrid frames are configured. The built-in cinematic fallback remains usable.'));
+ if(mode==='video'&&!config.media.videoSrc)issues.push(issue('warning','video-mode-missing','Video mode is selected but no desktop cinematic video is configured. Runtime will fall back safely.'));
+ if(mode==='hybrid'&&!hasHybrid)issues.push(issue('warning','hybrid-frames-missing','Hybrid mode is selected but no authored scene frames are configured. Runtime will use the browser-built fallback.'));
+ if(hasHybrid&&frames<authoredScenes.length)issues.push(issue('info','hybrid-partial',`Hybrid sequence has ${frames} of ${authoredScenes.length} desktop scene frames; missing scenes use the safe fallback.`));
  if(config.media.videoSrc&&!config.media.posterSrc)issues.push(issue('warning','poster-missing','Add a poster so constrained-network and pre-playback states have an authored frame.'));
  if(config.media.videoSrc&&!config.media.mobileVideoSrc)issues.push(issue('info','mobile-uses-desktop','Mobile currently reuses the desktop cinematic video.'));
  if(config.handoff.strategy==='match-cut'&&!config.handoff.matchWallpaper)issues.push(issue('warning','match-wallpaper-off','Match-cut is selected while final wallpaper synchronization is disabled.'));
+ if(config.artDirection.interfaceSource==='frame-only'&&config.handoff.strategy==='match-cut')issues.push(issue('info','frame-only-interface','The final phone screen is frame-only. Choose Live Home if you want the transition to mirror the editable published Home page exactly.'));
 
  certifyVideo('Desktop',media.desktopVideo,config.performance.maxDesktopVideoBytes,config.handoff.handoffAtMs,issues);
  if(config.media.mobileVideoSrc)certifyVideo('Mobile',media.mobileVideo,config.performance.maxMobileVideoBytes,config.handoff.handoffAtMs,issues);
 
  const blocked=issues.some(item=>item.level==='error');
- const status:TransitionCertificationStatus=blocked?'blocked':config.media.videoSrc?'ready':'fallback-ready';
+ const ready=Boolean(config.media.videoSrc||hasHybrid);
+ const status:TransitionCertificationStatus=blocked?'blocked':ready?'ready':'fallback-ready';
  return {status,ok:!blocked,issues};
 }
