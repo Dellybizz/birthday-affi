@@ -2,12 +2,12 @@
 import {useCallback,useEffect,useRef,useState,type ReactNode,type CSSProperties} from 'react';
 import {usePathname,useRouter} from 'next/navigation';
 import {ArchiveNavigationProvider} from '@wiffeyyyy/ui/archive-navigation';
-import type {CMSField,HeartToPhoneTransitionConfig} from '@wiffeyyyy/content';
+import type {CMSField,HeartToPhoneTransitionConfig,PageDocument,SiteDocument} from '@wiffeyyyy/content';
 import {HeartPhoneTransition} from './heart-phone-transition';
 const HEART='/pages/in-my-heart';
 const CORE_ROUTES=['/home','/',HEART,'/app/hotline','/app/reasons','/app/adventure','/app/movie','/app/kiss-shop','/app/camera','/app/vault','/app/pieces'];
 const chapter=(path:string)=>path==='/'||path==='/pages/memories-archive'?'archive':path===HEART?'heart':path==='/home'?'phone':null;
-export function ArchiveJourney({settings,prefetchHrefs=[],children}:{settings:Record<string,CMSField>;prefetchHrefs?:string[];children:ReactNode}){
+export function ArchiveJourney({settings,siteSettings,homeDocument,prefetchHrefs=[],children}:{settings:Record<string,CMSField>;siteSettings:SiteDocument;homeDocument?:PageDocument|null;prefetchHrefs?:string[];children:ReactNode}){
  const router=useRouter(),pathname=usePathname();
  const [phase,setPhase]=useState<'idle'|'closing'|'opening'>('idle'),[heartTransition,setHeartTransition]=useState<HeartToPhoneTransitionConfig|null>(null);
  const busy=useRef(false),cinematicBusy=useRef(false),timer=useRef<ReturnType<typeof setTimeout>|null>(null),watchdog=useRef<ReturnType<typeof setTimeout>|null>(null),previous=useRef(pathname),startedAt=useRef(0);
@@ -38,5 +38,5 @@ export function ArchiveJourney({settings,prefetchHrefs=[],children}:{settings:Re
   const from=chapter(pathname),to=chapter(item.pathname);
   event.preventDefault();
   if(from&&to&&from!==to)navigate(item.href);else{router.prefetch(item.href);router.push(item.href)}
- }}>{children}{phase!=='idle'&&<div className="archive-journey-curtain" data-phase={phase} style={{'--journey-half':duration/2+'ms','--journey-accent':String(settings.transitionColor??'#ff78b4')} as CSSProperties} role="status" aria-live="polite"><div className="archive-journey-heart" aria-hidden="true">♡</div><p>{String(settings.transitionText??'A little world, just for you')}</p></div>}{heartTransition?<HeartPhoneTransition config={heartTransition} onHandoff={handoffHeartTransition} onComplete={completeHeartTransition}/>:null}</div></ArchiveNavigationProvider>;
+ }}>{children}{phase!=='idle'&&<div className="archive-journey-curtain" data-phase={phase} style={{'--journey-half':duration/2+'ms','--journey-accent':String(settings.transitionColor??'#ff78b4')} as CSSProperties} role="status" aria-live="polite"><div className="archive-journey-heart" aria-hidden="true">♡</div><p>{String(settings.transitionText??'A little world, just for you')}</p></div>}{heartTransition?<HeartPhoneTransition config={heartTransition} homeDocument={homeDocument} siteSettings={siteSettings} onHandoff={handoffHeartTransition} onComplete={completeHeartTransition}/>:null}</div></ArchiveNavigationProvider>;
 }
