@@ -1,0 +1,9 @@
+/* T4 strategy fidelity. Match-cut keeps the T2 bridge unchanged. */
+.heart-phone-transition[data-strategy="fade"][data-mode="handoff"] .heart-phone-transition-video,
+.heart-phone-transition[data-strategy="fade"][data-mode="handoff"] .heart-phone-transition-poster,
+.heart-phone-transition[data-strategy="fade"][data-mode="handoff"] .heart-phone-transition-placeholder{opacity:1;filter:none}
+.heart-phone-transition[data-strategy="fade"][data-mode="handoff"] .heart-phone-transition-stage:after{display:none}
+.heart-phone-transition[data-strategy="fade"] .heart-phone-sync-phone,
+.heart-phone-transition[data-strategy="instant"] .heart-phone-sync-phone{display:none!important}
+.heart-phone-transition[data-strategy="instant"]{transition:none!important}
+.heart-phone-transition[data-strategy="instant"][data-mode="leaving"]{opacity:0}

@@ -22,4 +22,5 @@ export * from './inspector-fields';
 export * from './transition-inspector-capabilities';
 export * from './heart-page';
 export * from './heart-to-phone-transition';
+export * from './heart-transition-certification';
 export * from './memories-archive';
