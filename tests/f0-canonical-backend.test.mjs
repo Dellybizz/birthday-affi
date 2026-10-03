@@ -10,6 +10,7 @@ const osProvider=read('apps/web/components/os-provider.tsx');
 const siteActions=read('apps/admin/lib/site-actions.ts');
 const releaseActions=read('apps/admin/lib/release-actions.ts');
 const migration=read('supabase/migrations/20261003053000_f0_canonical_releases.sql');
+const indexes=read('supabase/migrations/20261003053500_f0_release_indexes.sql');
 
 const active=[
  ['memories-archive','Memories Archive','/'],
@@ -59,6 +60,7 @@ test('F0 release manifest is additive and snapshots current published pointers o
  assert.doesNotMatch(migration,/update\s+public\.(pages|site_configurations|site_navigation)/i);
  assert.doesNotMatch(migration,/delete\s+from\s+public\.(pages|site_configurations|site_navigation)/i);
  assert.doesNotMatch(migration,/insert\s+into\s+public\.(page_versions|site_configuration_versions|navigation_versions)/i);
+ for(const name of ['site_release_pages_page_id_idx','site_release_pages_page_version_id_idx','site_releases_configuration_version_id_idx','site_releases_navigation_version_id_idx','site_releases_created_by_idx'])assert.ok(indexes.includes(name),name);
 });
 
 test('F0 release server action exposes snapshot history without publishing',()=>{
