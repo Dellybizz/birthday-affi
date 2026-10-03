@@ -2,6 +2,7 @@ import "@wiffeyyyy/ui/styles";
 import "./os.css";
 import "./navigation-performance.css";
 import "./app-transitions.css";
+import "./heart-phone-transition.css";
 import {ArchiveJourney} from "../components/archive-journey";
 import { OSProvider } from "../components/os-provider";
 
