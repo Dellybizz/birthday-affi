@@ -17,6 +17,18 @@ async function invalidatePublicCms(){
 }
 function refreshAdmin(){for(const path of ['/','/releases','/pages','/navigation','/settings'])revalidatePath(path)}
 
+// Preserved F0 snapshot-only action. It records the current published pointers and never publishes drafts.
+export async function captureCurrentRelease(siteId:string,note=''){
+ await requireAdmin('site:publish');
+ if(!uuid.test(siteId))throw new Error('Invalid site');
+ const clean=note.trim();if(clean.length>500)throw new Error('Release note must be 500 characters or less.');
+ const db=await adminDb();
+ const {data,error}=await db.rpc('capture_site_release',{p_site:siteId,p_note:clean});
+ if(error)throw new Error('Unable to capture the current published release.');
+ refreshAdmin();
+ return {id:String(data)};
+}
+
 export async function publishSiteRelease(_previous:ReleaseActionState,form:FormData):Promise<ReleaseActionState>{
  try{
   await requireAdmin('site:publish');
