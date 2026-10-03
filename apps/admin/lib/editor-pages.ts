@@ -1,3 +1,5 @@
+import {activeDocumentExperiences,legacyExperiences,runtimeExperiences} from '@wiffeyyyy/content';
+
 export type EditorPageGroup='active'|'drafts'|'legacy'|'runtime';
 export type EditorPageStatus='published'|'fallback'|'draft'|'legacy'|'archived'|'runtime'|'missing';
 export type EditorDbPage={id:string;title:string;slug:string;settings?:{archived?:boolean;description?:string}|null;published_version_id?:string|null};
@@ -18,22 +20,9 @@ export type EditorPageItem={
 };
 
 type ActiveMeta={title:string;livePath:string;order:number};
-const activePages:Record<string,ActiveMeta>={
- 'memories-archive':{title:'Memories Archive',livePath:'/',order:0},
- 'in-my-heart':{title:'In My Heart',livePath:'/pages/in-my-heart',order:1},
- home:{title:'iPhone Home',livePath:'/home',order:2},
- reasons:{title:'Adore',livePath:'/app/reasons',order:3},
- hotline:{title:'Hotdial',livePath:'/app/hotline',order:4},
- adventure:{title:'Pardanasheen',livePath:'/app/adventure',order:5},
- movie:{title:'Saragram',livePath:'/app/movie',order:6},
- 'kiss-shop':{title:'Kiss Shop',livePath:'/app/kiss-shop',order:7}
-};
-const legacySlugs=new Set(['welcome','radio']);
-const runtimePages=[
- {slug:'camera',title:'Clicksara',livePath:'/app/camera'},
- {slug:'vault',title:'Vault',livePath:'/app/vault'},
- {slug:'pieces',title:'Pieces of Us',livePath:'/app/pieces'}
-];
+const activePages=Object.fromEntries(activeDocumentExperiences.filter(experience=>experience.livePath).map(experience=>[experience.slug,{title:experience.title,livePath:experience.livePath!,order:experience.order}])) as Record<string,ActiveMeta>;
+const legacySlugs=new Set(legacyExperiences.map(experience=>experience.slug));
+const runtimePages=runtimeExperiences.map(experience=>({slug:experience.slug,title:experience.title,livePath:experience.livePath!}));
 
 export function normalizePublicSiteUrl(value:string|undefined|null){return (value??'').trim().replace(/\/+$/,'')}
 export function buildPublicHref(base:string,path:string|null){const normalized=normalizePublicSiteUrl(base);return normalized&&path?normalized+(path.startsWith('/')?path:'/'+path):null}
@@ -56,7 +45,7 @@ export function buildEditorPageCatalog(rows:EditorDbPage[]):EditorPageItem[]{
  const mapped=rows.map(fromRow);
  const known=new Set(rows.map(page=>page.slug));
  for(const [slug,meta] of Object.entries(activePages))if(!known.has(slug))mapped.push({id:null,slug,title:meta.title,editorHref:null,draftPreviewHref:null,livePath:meta.livePath,group:'active',status:'missing',badge:'Page record missing',note:'The public route exists but there is no editable page record.',editorEnabled:false,published:false});
- for(const runtime of runtimePages)mapped.push({id:null,slug:runtime.slug,title:runtime.title,editorHref:null,draftPreviewHref:null,livePath:runtime.livePath,group:'runtime',status:'runtime',badge:'Runtime · editor in E5',note:'The live app works independently; its CMS authoring adapter is scheduled for E5.',editorEnabled:false,published:false});
+ for(const runtime of runtimePages)mapped.push({id:null,slug:runtime.slug,title:runtime.title,editorHref:null,draftPreviewHref:null,livePath:runtime.livePath,group:'runtime',status:'runtime',badge:'Runtime experience',note:'The live app works independently; visual authoring is intentionally separate from visitor/runtime state.',editorEnabled:false,published:false});
  const groupOrder:Record<EditorPageGroup,number>={active:0,drafts:1,legacy:2,runtime:3};
  return mapped.sort((a,b)=>{
   const group=groupOrder[a.group]-groupOrder[b.group];if(group)return group;

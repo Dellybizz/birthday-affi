@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 const cache=new Map();
-function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file).exports;const module={exports:{}};cache.set(file,module);const code=ts.transpile(fs.readFileSync(file,'utf8'),{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022});new Function('require','module','exports',code)(name=>load(path.resolve(path.dirname(file),name+'.ts')),module,module.exports);return module.exports}
+function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file).exports;const module={exports:{}};cache.set(file,module);const code=ts.transpile(fs.readFileSync(file,'utf8'),{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022});new Function('require','module','exports',code)(name=>name==='@wiffeyyyy/content'?load(path.resolve('packages/content/src/experience-registry.ts')):load(path.resolve(path.dirname(file),name+'.ts')),module,module.exports);return module.exports}
 const pages=load('apps/admin/lib/editor-pages.ts');
 const navigation=load('apps/admin/lib/editor-navigation.ts');
 
@@ -21,7 +21,7 @@ test('E1 page catalog groups active, custom, legacy and runtime pages truthfully
  const custom=catalog.find(page=>page.slug==='secret-draft');assert.equal(custom.group,'drafts');assert.equal(custom.livePath,null);assert.equal(custom.badge,'Draft only');
  const radio=catalog.find(page=>page.slug==='radio');assert.equal(radio.group,'legacy');assert.equal(radio.livePath,null);
  const archived=catalog.find(page=>page.slug==='old-page');assert.equal(archived.status,'archived');assert.equal(archived.editorEnabled,false);
- for(const slug of ['camera','vault','pieces']){const runtime=catalog.find(page=>page.slug===slug);assert.equal(runtime.group,'runtime');assert.equal(runtime.editorEnabled,false);assert.match(runtime.badge,/E5/)}
+ for(const slug of ['camera','vault','pieces']){const runtime=catalog.find(page=>page.slug===slug);assert.equal(runtime.group,'runtime');assert.equal(runtime.editorEnabled,false);assert.match(runtime.badge,/Runtime/)}
  assert.equal(catalog.find(page=>page.slug==='memories-archive').status,'missing');
 });
 
