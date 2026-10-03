@@ -33,12 +33,12 @@ export const emptyTransitionFrames=():TransitionFrameMap=>({
 });
 
 export const defaultTransitionFrames=():TransitionFrameMap=>({
- 'box-establishing':{desktop:'/cinematic/heart-phone/01-box.jpg',mobile:''},
- 'gloves-enter':{desktop:'/cinematic/heart-phone/02-gloves.jpg',mobile:''},
- 'top-down-open':{desktop:'/cinematic/heart-phone/03-open.jpg',mobile:''},
- 'phone-lift':{desktop:'/cinematic/heart-phone/04-lift.jpg',mobile:''},
- 'screen-wake':{desktop:'/cinematic/heart-phone/05-wake.jpg',mobile:''},
- 'live-handoff':{desktop:'/cinematic/heart-phone/06-handoff.jpg',mobile:''}
+ 'box-establishing':{desktop:'/cinematic/heart-phone/01-box.webp',mobile:''},
+ 'gloves-enter':{desktop:'/cinematic/heart-phone/02-gloves.webp',mobile:''},
+ 'top-down-open':{desktop:'/cinematic/heart-phone/03-open.webp',mobile:''},
+ 'phone-lift':{desktop:'/cinematic/heart-phone/04-lift.webp',mobile:''},
+ 'screen-wake':{desktop:'/cinematic/heart-phone/05-wake.webp',mobile:''},
+ 'live-handoff':{desktop:'/cinematic/heart-phone/06-handoff.webp',mobile:''}
 });
 
 export function buildTransitionScenes(duration:number,t:TransitionTiming):TransitionScene[]{
