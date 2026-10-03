@@ -83,6 +83,17 @@ export const heartFields:Record<string,InspectorField[]>={
  scene:[{key:'defaultPov',label:'Starting perspective',type:'select',options:['overview','core']}],
  appearance:[],
  memory:[{key:'offsetX',label:'3D horizontal offset',type:'number',min:-1000,max:1000},{key:'offsetY',label:'3D vertical offset',type:'number',min:-1000,max:1000},{key:'offsetZ',label:'3D depth offset',type:'number',min:-1000,max:1000},{key:'cardScale',label:'Individual card scale',type:'number',min:.1,max:3,step:.05}],
+ next:[
+  {key:'transitionEnabled',label:'Enable cinematic transition',type:'select',options:['true','false']},
+  {key:'title',label:'Trigger label',type:'text'},{key:'transitionAriaLabel',label:'Screen-reader label',type:'text'},
+  {key:'transitionDurationMs',label:'Duration (milliseconds)',type:'number',min:3000,max:20000,step:100},
+  {key:'transitionShowSkip',label:'Show skip control',type:'select',options:['true','false']},{key:'transitionSkipLabel',label:'Skip label',type:'text'},{key:'transitionAllowReplay',label:'Allow replay',type:'select',options:['true','false']},
+  {key:'transitionVideoSrc',label:'Desktop cinematic video',type:'text'},{key:'transitionMobileVideoSrc',label:'Mobile video override',type:'text'},{key:'transitionPosterSrc',label:'Poster image',type:'text'},
+  {key:'transitionAudioEnabled',label:'Enable transition audio',type:'select',options:['true','false']},{key:'transitionMusicSrc',label:'Background score',type:'text'},{key:'transitionUnboxingSrc',label:'Unboxing sound effect',type:'text'},{key:'transitionWakeSrc',label:'Screen-wake sound effect',type:'text'},{key:'transitionVolume',label:'Transition volume',type:'number',min:0,max:1,step:.05},
+  {key:'href',label:'Handoff destination',type:'text'},{key:'transitionHandoffAtMs',label:'Match point (milliseconds)',type:'number',min:0,max:20000,step:50},{key:'transitionHandoffDurationMs',label:'Blend duration (milliseconds)',type:'number',min:100,max:2000,step:50},{key:'transitionHandoffStrategy',label:'Handoff strategy',type:'select',options:['match-cut','fade','instant']},{key:'transitionPreloadDestination',label:'Preload destination',type:'select',options:['true','false']},{key:'transitionMatchWallpaper',label:'Sync final wallpaper',type:'select',options:['true','false']},
+  {key:'transitionPreload',label:'Video preload mode',type:'select',options:['metadata','auto']},{key:'transitionSlowConnectionBehavior',label:'Slow-connection fallback',type:'select',options:['poster-to-home','skip-to-home']},{key:'transitionMaxMobileVideoBytes',label:'Mobile video budget (bytes)',type:'number',min:1000000,max:20000000,step:500000},{key:'transitionMaxDesktopVideoBytes',label:'Desktop video budget (bytes)',type:'number',min:1000000,max:40000000,step:500000},
+  {key:'transitionReducedMotionBehavior',label:'Reduced-motion behavior',type:'select',options:['skip-to-home','poster-to-home']},{key:'transitionAnnounceSceneChange',label:'Announce scene changes',type:'select',options:['true','false']}
+ ],
 };
 for(const [key,label] of Object.entries({drifting:'Automatic drifting',heartbeat:'Visual heartbeat',showMesh:'Connecting memory lines',showOutline:'Heart outline',showCenter:'Central heart',showParticles:'Twinkling particles',showFloatingHearts:'Floating hearts',showGrain:'Film grain',showVignette:'Edge vignette'}))heartFields.scene.push({key,label,type:'select',options:['true','false']});
 for(const [key,label,min,max,step]of [

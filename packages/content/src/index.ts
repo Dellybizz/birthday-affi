@@ -19,7 +19,7 @@ export * from './editor-schema';
 export * from './editor-operations';
 export * from './phone-home';
 export * from './inspector-fields';
-export * from './inspector-capabilities';
+export * from './transition-inspector-capabilities';
 export * from './heart-page';
 export * from './heart-to-phone-transition';
 export * from './memories-archive';

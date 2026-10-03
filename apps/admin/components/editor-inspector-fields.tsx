@@ -12,14 +12,14 @@ const sectionTitle='text-[13px] font-semibold text-[#202223]';
 const subtle='text-[11px] leading-4 text-[#6d7175]';
 const chip='h-8 rounded-md border border-[#c9cccf] bg-white px-2.5 text-[12px] font-medium text-[#303030] hover:bg-[#f6f6f7] disabled:opacity-40';
 
-type SettingsSection='Content'|'Image'|'Media'|'Position'|'Typography'|'Colours'|'Layout'|'Padding'|'Margin'|'Border & shadow'|'Effects'|'Playback'|'Navigation'|'Animation'|'Visibility & behavior'|'Advanced';
+type SettingsSection='Content'|'Image'|'Media'|'Position'|'Typography'|'Colours'|'Layout'|'Padding'|'Margin'|'Border & shadow'|'Effects'|'Playback'|'Navigation'|'Animation'|'Performance'|'Accessibility'|'Visibility & behavior'|'Advanced';
 type CommitResult=PageDocument|{document:PageDocument;selectedId:string|null};
 type Scope='base'|'mobile'|'tablet'|'desktop';
 
-const sectionOrder:SettingsSection[]=['Content','Image','Media','Position','Typography','Colours','Layout','Padding','Margin','Border & shadow','Effects','Playback','Navigation','Animation','Visibility & behavior','Advanced'];
-const sectionIcons:Record<SettingsSection,string>={Content:'✎',Image:'▧',Media:'▶',Position:'⌖',Typography:'T',Colours:'●',Layout:'▤',Padding:'□',Margin:'▢','Border & shadow':'◇',Effects:'✦',Playback:'♫',Navigation:'↗',Animation:'◌','Visibility & behavior':'◉',Advanced:'•••'};
+const sectionOrder:SettingsSection[]=['Content','Image','Media','Position','Typography','Colours','Layout','Padding','Margin','Border & shadow','Effects','Playback','Navigation','Animation','Performance','Accessibility','Visibility & behavior','Advanced'];
+const sectionIcons:Record<SettingsSection,string>={Content:'✎',Image:'▧',Media:'▶',Position:'⌖',Typography:'T',Colours:'●',Layout:'▤',Padding:'□',Margin:'▢','Border & shadow':'◇',Effects:'✦',Playback:'♫',Navigation:'↗',Animation:'◌',Performance:'⚡',Accessibility:'A','Visibility & behavior':'◉',Advanced:'•••'};
 const sectionHelp:Partial<Record<SettingsSection,string>>={
- Image:'Choose or replace media, then control how it fills its frame.',Position:'Choose which part of an image stays visible when it is cropped.',Typography:'Font, size, weight, spacing and text alignment.',Colours:'Colours used by this selected element only.',Layout:'Size, columns, gaps and element-specific positioning.',Padding:'Space inside the selected element.',Margin:'Space outside the selected element.','Border & shadow':'Corners, outline and depth.',Effects:'Opacity and visual intensity.',Navigation:'Where this element goes when it is activated.',Animation:'Motion and transition behavior.',Advanced:'Less common controls for this component.'
+ Image:'Choose or replace media, then control how it fills its frame.',Media:'Choose or replace video used by this experience.',Position:'Choose which part of an image stays visible when it is cropped.',Typography:'Font, size, weight, spacing and text alignment.',Colours:'Colours used by this selected element only.',Layout:'Size, columns, gaps and element-specific positioning.',Padding:'Space inside the selected element.',Margin:'Space outside the selected element.','Border & shadow':'Corners, outline and depth.',Effects:'Opacity and visual intensity.',Playback:'Timing, audio and playback controls.',Navigation:'Where this element goes when it is activated.',Animation:'Motion and transition behavior.',Performance:'Loading behavior and media budgets for slower connections.',Accessibility:'Reduced-motion and assistive-technology behavior.',Advanced:'Less common controls for this component.'
 };
 
 const fontKeys=new Set(['fontFamily','size','weight','align','lineHeight','letterSpacing','titleItalic','titleTracking','controlTextSize']);
@@ -27,11 +27,13 @@ const paddingKeys=new Set(['padding','paddingTop','paddingRight','paddingBottom'
 const marginKeys=new Set(['margin','marginTop','marginRight','marginBottom','marginLeft']);
 const colorKeys=new Set(['background','color','borderColor','transitionColor','gradientStart','gradientEnd','glowOneColor','glowTwoColor','decorativeHeartColor','bg','bg2','bg3','text','muted','pink','rose','blush','violet','line','glass','border','iconBackground']);
 const borderKeys=new Set(['radius','borderWidth','shadow','nodeRadius','mobileNodeRadius','popupRadius','controlRadius']);
-const imageKeys=new Set(['src','alt','emptyLabel','objectFit','focalX','focalY','displayHeight','mobileImageHeight','imageSide','poster','avatar','callerPhoto']);
+const imageKeys=new Set(['src','alt','emptyLabel','objectFit','focalX','focalY','displayHeight','mobileImageHeight','imageSide','poster','avatar','callerPhoto','transitionPosterSrc']);
 const layoutKeys=new Set(['columns','gap','maxWidth','heroMinHeight','heroSideSpace','heroGap','mobileHeroMinHeight','decorativeHeartSize','nodeWidth','mobileNodeWidth','popupWidth','mobilePopupWidth','controlHeight','povTop','mobilePovTop','hudInset','offsetX','offsetY','offsetZ','cardScale','heartScale','mobileHeartScale','heartDepth','mobileHeartDepth','shells','initialZoom','openSpread','closeSpread','perspective']);
 const animationKeys=new Set(['visualEffects','transitionEnabled','transitionDuration','revealAnimation','hoverLift','drifting','driftSpeed','zoomSpeed','heartbeat','heartbeatDuration','showMesh','showOutline','showCenter','showParticles','showFloatingHearts','showGrain','showVignette']);
-const playbackKeys=new Set(['loop','initialVolume','captions','voiceSrc','introSrc','transcript']);
-const navigationKeys=new Set(['href','openInNewTab','pageSlug','placement','archiveBackLabel','transitionText']);
+const playbackKeys=new Set(['loop','initialVolume','captions','voiceSrc','introSrc','transcript','transitionDurationMs','transitionShowSkip','transitionSkipLabel','transitionAllowReplay','transitionAudioEnabled','transitionVolume']);
+const navigationKeys=new Set(['href','openInNewTab','pageSlug','placement','archiveBackLabel','transitionText','transitionHandoffAtMs','transitionHandoffDurationMs','transitionHandoffStrategy','transitionPreloadDestination','transitionMatchWallpaper']);
+const performanceKeys=new Set(['transitionPreload','transitionSlowConnectionBehavior','transitionMaxMobileVideoBytes','transitionMaxDesktopVideoBytes']);
+const accessibilityKeys=new Set(['transitionAriaLabel','transitionReducedMotionBehavior','transitionAnnounceSceneChange']);
 const effectKeys=new Set(['opacity','decorationOpacity','grainOpacity','vignetteStrength','outlineOpacity','centerOpacity','dim','mutedAlpha','softAlpha','lineAlpha','glassAlpha','borderAlpha']);
 
 function settingSection(cap:InspectorCapability,group:InspectorGroup):SettingsSection{
@@ -49,6 +51,8 @@ function settingSection(cap:InspectorCapability,group:InspectorGroup):SettingsSe
  if(playbackKeys.has(key))return 'Playback';
  if(navigationKeys.has(key))return 'Navigation';
  if(animationKeys.has(key))return 'Animation';
+ if(performanceKeys.has(key))return 'Performance';
+ if(accessibilityKeys.has(key))return 'Accessibility';
  if(effectKeys.has(key))return 'Effects';
  if(group==='behavior')return 'Visibility & behavior';
  if(group==='content')return 'Content';
@@ -69,7 +73,7 @@ function optionLabel(field:InspectorField,option:string){
  return option.charAt(0).toUpperCase()+option.slice(1).replaceAll('-',' ');
 }
 function storageKey(cap:InspectorCapability,group:InspectorGroup,scope:Scope){return group==='appearance'&&scope!=='base'?scope+':'+cap.field.key:cap.field.key}
-function valueFor(node:CMSNode,cap:InspectorCapability,group:InspectorGroup,scope:Scope){const key=storageKey(cap,group,scope);return group==='appearance'&&scope!=='base'?(node.props[key]??node.props[cap.field.key]):node.props[cap.field.key]}
+function valueFor(node:CMSNode,cap:InspectorCapability,group:InspectorGroup,scope:Scope){const key=storageKey(cap,group,scope);const value=group==='appearance'&&scope!=='base'?(node.props[key]??node.props[cap.field.key]):node.props[cap.field.key];return value===undefined&&cap.hasDefault?cap.defaultValue:value}
 
 function Switch({checked,disabled,label,onChange}:{checked:boolean;disabled:boolean;label:string;onChange:(checked:boolean)=>void}){
  return <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} onClick={()=>onChange(!checked)} className={'relative h-6 w-11 shrink-0 rounded-full transition-colors '+(checked?'bg-[#008060]':'bg-[#8c9196]')+' disabled:opacity-40'}><span className={'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform '+(checked?'translate-x-5':'translate-x-0.5')}/></button>;
@@ -94,7 +98,7 @@ function FieldControl({field,value,capability,inherited,disabled,label,section,o
  const booleanSelect=field.type==='select'&&field.options?.length===2&&field.options.includes('true')&&field.options.includes('false');
  const alignment=field.key==='align'&&field.type==='select';const fit=field.key==='objectFit'&&field.type==='select';const shadow=field.key==='shadow'&&field.type==='select';
  const control=booleanSelect?<Switch checked={current==='true'||value===true} disabled={disabled} label={label} onChange={checked=>apply(String(checked))}/>:alignment?<Segmented disabled={disabled} value={current} onChange={apply} options={[{value:'left',label:'Left',icon:'≡'},{value:'center',label:'Centre',icon:'≡'},{value:'right',label:'Right',icon:'≡'}]}/>:fit?<Segmented disabled={disabled} value={current} onChange={apply} options={(field.options??[]).map(option=>({value:option,label:optionLabel(field,option)}))}/>:shadow?<Segmented disabled={disabled} value={current} onChange={apply} options={(field.options??[]).map(option=>({value:option,label:optionLabel(field,option)}))}/>:field.type==='textarea'?<textarea key={current} className="min-h-20 w-full resize-y rounded-md border border-[#8c9196] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#005bd3] focus:ring-1 focus:ring-[#005bd3]" defaultValue={current} rows={3} disabled={disabled} onBlur={e=>apply(e.target.value)}/>:field.type==='select'?<select className={input} value={current} disabled={disabled} onChange={e=>apply(e.target.value)}>{field.options?.map(option=><option key={option} value={option}>{optionLabel(field,option)}</option>)}</select>:field.type==='color'?<ColourControl field={field} value={value} disabled={disabled} onApply={onApply}/>:field.type==='number'?<NumberControl field={field} value={value} disabled={disabled} onApply={onApply}/>:<input key={current} className={input} defaultValue={current} disabled={disabled} type="text" onBlur={e=>apply(e.target.value)}/>;
- const showMediaPreview=capability.media?.kind==='image'&&['src','poster','avatar','callerPhoto'].includes(field.key);
+ const showMediaPreview=capability.media?.kind==='image';
  return <div className="py-2.5" title={capability.storagePath}>{showMediaPreview&&<div className="mb-2"><ImagePreview src={current} label={capability.media?.label??'Image'}/></div>}<div className="flex items-start justify-between gap-2"><label className="min-w-0 flex-1"><span className="mb-1.5 flex items-center gap-1 text-[12px] font-medium text-[#303030]">{label}{inherited&&<span className="rounded bg-[#f1f1f1] px-1.5 py-0.5 text-[9px] font-normal text-[#6d7175]">Inherited</span>}</span>{control}</label><button type="button" className="mt-6 shrink-0 text-[11px] font-medium text-[#005bd3] hover:underline disabled:opacity-40" disabled={disabled} onClick={onReset}>{capability.resetPolicy==='component-default'?'Reset':'Clear'}</button></div>{onPickMedia&&<div className="mt-2 flex gap-2"><button type="button" className={button+' flex-1'} disabled={disabled} onClick={onPickMedia}>{current?'Replace':'Add'} {capability.media?.label.toLowerCase()}</button>{current&&<button type="button" className={button} disabled={disabled} onClick={onReset}>Remove</button>}</div>}{capability.dependency&&<p className={'mt-1.5 '+subtle}>{capability.dependency}</p>}{message&&<p role="alert" className="mt-1.5 text-[11px] text-[#d72c0d]">{message}</p>}</div>;
 }
 

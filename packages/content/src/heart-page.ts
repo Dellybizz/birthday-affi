@@ -1,5 +1,6 @@
 import {createNode,type ComponentName} from './registry';
 import {parsePageDocument} from './validate';
+import {defaultHeartToPhoneTransition,transitionToHeartActionProps} from './heart-to-phone-transition';
 import type {CMSNode,CMSField,PageDocument} from './cms';
 export const HEART_ROUTE='/pages/in-my-heart';
 export function createHeartPage(newId:()=>string):PageDocument{
@@ -22,7 +23,8 @@ export function createHeartPage(newId:()=>string):PageDocument{
  const popup=add('section','Memory popup',root,{heartPart:'popup'});
  add('text','Previous memory button',popup,{heartPart:'popupPrev',text:'previous'});add('text','Next memory button',popup,{heartPart:'popupNext',text:'next'});add('text','Close memory label',popup,{heartPart:'popupCloseLabel',text:'Close memory'});
  const navigation=add('section','Back and forward navigation',root,{heartPart:'navigation'});
- add('action','Back to Memories Archive',navigation,{heartPart:'back',title:'← Memories Archive',href:'/'});add('action','Continue to iPhone',navigation,{heartPart:'next',title:'Enter Wiffeyyyy OS →',href:'/home'});
+ add('action','Back to Memories Archive',navigation,{heartPart:'back',title:'← Memories Archive',href:'/'});
+ add('action','Continue to iPhone',navigation,{heartPart:'next',...transitionToHeartActionProps(defaultHeartToPhoneTransition),title:'Enter Wiffeyyyy OS →'});
  const audio=add('section','Heart soundtrack',root,{heartPart:'soundtrack'});add('audio','Heartbeat audio',audio,{heartPart:'heartbeatAudio',src:'',alt:'Heartbeat',loop:true,initialVolume:.5});add('audio','Heart background music',audio,{heartPart:'musicAudio',src:'',alt:'Heart soundtrack',loop:true,initialVolume:.5});
  return parsePageDocument(doc);
 }
