@@ -1,0 +1,34 @@
+import {test,before,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,readdirSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+let db;
+const owner='00000000-0000-4000-8000-000000000001',editor='00000000-0000-4000-8000-000000000002',viewer='00000000-0000-4000-8000-000000000003';
+const site='00000000-0000-4000-8000-000000000010',page='00000000-0000-4000-8000-000000000011',other='00000000-0000-4000-8000-000000000012';
+const doc=text=>({schemaVersion:2,nodes:[{id:'s',type:'section',component:'section',parentId:null,props:{padding:20},visible:true,children:['t']},{id:'t',type:'block',component:'text',parentId:'s',props:{text},children:[],visible:true}],rootIds:['s']});
+before(async()=>{
+ db=new PGlite();await db.exec(`create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,unique(bucket_id,name));alter table storage.objects enable row level security;create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key);create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;create function auth.jwt() returns jsonb language sql stable as $$ select jsonb_build_object('session_id',nullif(current_setting('request.jwt.claim.session_id',true),'')) $$;grant usage on schema public,auth,storage to anon,authenticated;grant select,insert,update,delete on storage.objects to anon,authenticated;`);
+ for(const file of readdirSync('supabase/migrations').filter(x=>x.endsWith('.sql')).sort())await db.exec(readFileSync('supabase/migrations/'+file,'utf8').replace('create extension if not exists pgcrypto;',''));
+ await db.exec(`insert into auth.users values('${owner}'),('${editor}'),('${viewer}');insert into auth.sessions(id,user_id)select id,id from auth.users;insert into public.admin_users(id,role)values('${owner}','owner'),('${editor}','editor'),('${viewer}','viewer');insert into public.sites(id,name,slug,public_delivery_enabled)values('${site}','Test','phase5-test',true);`);
+ for(const [id,slug] of [[page,'home'],[other,'other']])await db.query('insert into public.pages(id,site_id,slug,title,draft_document)values($1,$2,$3,$3,$4)',[id,site,slug,JSON.stringify(doc('Initial'))]);
+});after(()=>db.close());
+async function role(user){await db.exec('set local role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.session_id',$1,true)",[user]);}
+async function run(user,fn){await db.exec('begin');try{await role(user);await fn()}finally{await db.exec('rollback')}}
+const save=async(userDoc,revision=0,id=page)=>(await db.query('select public.save_page_draft($1,$2,$3) result',[id,JSON.stringify(userDoc),revision])).rows[0].result;
+const publish=async(revision,id=page)=>(await db.query('select public.publish_page($1,$2) result',[id,revision])).rows[0].result;
+const rollback=async(version,revision,id=page)=>(await db.query('select public.rollback_page($1,$2,$3) result',[id,version,revision])).rows[0].result;
+async function rejects(fn,pattern){await db.exec('savepoint rejected');try{await assert.rejects(fn,pattern)}finally{await db.exec('rollback to rejected;release savepoint rejected')}}
+const live=async()=>(await db.query("select public.get_published_document('phase5-test','home') doc")).rows[0].doc;
+
+const components=['reason','hotline-message','adventure-choice','movie-scene','kiss-gift','radio-track'];
+const appDoc=component=>{const d=doc('App');d.nodes[1].component=component;d.nodes[1].props={title:'Personal title',body:'A personal message',src:'',category:'Together',price:'2 kisses',invitation:'It is a date.'};return d};
+test('all six app item types save and publish through the authenticated version contract',()=>run(owner,async()=>{let revision=0;for(const component of components){await save(appDoc(component),revision);revision++;await publish(revision);assert.equal((await live()).nodes[1].component,component)}}));
+test('SQL rejects unsafe app media and non-text app fields',()=>run(owner,async()=>{for(const patch of [{src:'javascript:alert(1)'},{title:4},{price:true},{invitation:[]},{body:null}]){const d=appDoc('reason');Object.assign(d.nodes[1].props,patch);await rejects(()=>save(d),/Invalid|Unsafe/)}}));
+test('app media retains kind, readiness and cross-site enforcement',()=>run(owner,async()=>{const asset='00000000-0000-4000-8000-000000000020';await db.query("insert into public.media_assets(id,site_id,kind,storage_path,filename,mime_type,byte_size,status)values($1,$2,'audio',$3,'call.mp3','audio/mpeg',100,'ready')",[asset,site,site+'/'+asset+'/original']);for(const component of ['hotline-message','radio-track']){const d=appDoc(component);Object.assign(d.nodes[1].props,{src:'/media/'+asset,mediaAssetId:asset,variantWidths:''});await save(d,component==='hotline-message'?0:1)}for(const component of ['reason','kiss-gift','movie-scene','adventure-choice']){const d=appDoc(component);Object.assign(d.nodes[1].props,{src:'/media/'+asset,mediaAssetId:asset,variantWidths:''});await rejects(()=>save(d,2),/unavailable/)}}));
+test('viewer cannot save or publish app content',()=>run(viewer,async()=>{await rejects(()=>save(appDoc('reason')),/Not authorized/);await rejects(()=>publish(0),/Not authorized/)}));
+
+test('timed captions save and publish with text preserved',()=>run(owner,async()=>{const d=appDoc('movie-scene');d.nodes[1].props.captions='0 | 2.5 | Hello\n2.5 | 4 | Love you';await save(d);await publish(1);assert.equal((await live()).nodes[1].props.captions,d.nodes[1].props.captions)}));
+test('SQL caption guard rejects malformed types and invalid timings',()=>run(owner,async()=>{for(const captions of [4,'words','2 | 1 | words','0 | 604801 | words','2 | 3 | words\n1 | 2 | words','0 | 1 | '+'x'.repeat(501)]){const d=appDoc('movie-scene');d.nodes[1].props.captions=captions;await rejects(()=>save(d),/Invalid caption/)}}));
+
+test('responsive overrides survive authenticated save and publication',()=>run(owner,async()=>{const d=doc('Responsive');d.nodes[0].props['mobile:padding']=8;d.nodes[1].props['tablet:size']=24;await save(d);await publish(1);assert.equal((await live()).nodes[0].props['mobile:padding'],8)}));
+test('SQL rejects unsafe responsive values and unsupported override keys',()=>run(owner,async()=>{for(const [key,value] of [['mobile:padding',-1],['tablet:color','url(evil)'],['mobile:src','https://example.test/a'],['phone:padding',2]]){const d=doc('Responsive');d.nodes[0].props[key]=value;await rejects(()=>save(d),/Invalid/)}}));

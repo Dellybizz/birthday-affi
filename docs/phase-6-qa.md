@@ -1,3 +1,5 @@
+> Historical scaffold QA notes. The current roadmap defines Phase 6 as the media system; see [phase-6-release.md](phase-6-release.md) for implemented work, checks and the live Storage blocker.
+
 # Phase 6 — End-to-End QA & Hardening
 
 ## Completed in source

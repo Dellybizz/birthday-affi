@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+const module={exports:{}};new Function('module','exports',ts.transpile(readFileSync('apps/web/lib/visitor-state.ts','utf8'),{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}))(module,module.exports);
+const {initialVisitorState,parseVisitorState,reduceVisitorState,APP_SLUGS}=module.exports;
+test('missing, damaged and unknown-version progress recovers to usable defaults',()=>{for(const raw of [null,'{broken','null','[]','{"version":2,"entered":true}'])assert.deepEqual(parseVisitorState(raw),initialVisitorState())});
+test('stored progress rejects unknown navigation targets and bounds history',()=>{const state=parseVisitorState(JSON.stringify({version:1,entered:'true',visited:[...APP_SLUGS,...APP_SLUGS,'javascript:alert(1)','missing',{}],readNotifications:['welcome','welcome','attack'],reducedMotion:true}));assert.equal(state.entered,false);assert.equal(state.visited.length,6);assert.deepEqual(state.readNotifications,['welcome']);assert.equal(state.reducedMotion,true)});
+test('return visits preserve order without duplicates or mutating previous state',()=>{const first=reduceVisitorState(initialVisitorState(),{type:'visit',slug:'hotline'}),next=reduceVisitorState(first,{type:'visit',slug:'radio'}),again=reduceVisitorState(next,{type:'visit',slug:'hotline'});assert.deepEqual(again.visited,['radio','hotline']);assert.deepEqual(next.visited,['hotline','radio']);assert.equal(again.entered,true)});
+test('unknown app cannot alter saved state',()=>{const state=initialVisitorState();assert.equal(reduceVisitorState(state,{type:'visit',slug:'outside'}),state)});
+test('notification acknowledgement is idempotent and survives serialize/restore',()=>{let state=reduceVisitorState(initialVisitorState(),{type:'read',ids:['welcome','welcome','outside']});state=reduceVisitorState(state,{type:'read',ids:['hotline']});assert.deepEqual(parseVisitorState(JSON.stringify(state)).readNotifications,['welcome','hotline'])});
+test('reset clears browser progress and preferences without changing earlier state',()=>{const state=reduceVisitorState(reduceVisitorState(initialVisitorState(),{type:'visit',slug:'reasons'}),{type:'motion',value:true});assert.deepEqual(reduceVisitorState(state,{type:'reset'}),initialVisitorState());assert.equal(state.reducedMotion,true)});
+test('welcome and motion preference survive reload representation',()=>{const state=reduceVisitorState(reduceVisitorState(initialVisitorState(),{type:'enter'}),{type:'motion',value:true});assert.deepEqual(parseVisitorState(JSON.stringify(state)),state)});

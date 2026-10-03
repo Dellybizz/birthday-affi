@@ -1,2 +1,13 @@
-import {adminDb} from "./supabase";
-export async function recordAudit(input:{siteId:string;actorId?:string;action:string;entityType:string;entityId:string;metadata?:Record<string,unknown>}){const db=adminDb();const {error}=await db.from("audit_logs").insert({site_id:input.siteId,actor_id:input.actorId??null,action:input.action,entity_type:input.entityType,entity_id:input.entityId,metadata:input.metadata??{}});if(error)throw new Error(error.message);return{ok:true}}
+import 'server-only';
+import { requireAdmin } from './auth';
+import { adminDb } from './supabase';
+
+// Database triggers record successful mutations atomically. Clients cannot forge audit rows.
+export async function listAudit(limit = 50) {
+  await requireAdmin('audit:read');
+  const db = await adminDb();
+  const { data, error } = await db.from('audit_logs').select('id,site_id,actor_id,action,entity_type,entity_id,created_at')
+    .order('created_at', { ascending: false }).limit(Math.max(1, Math.min(200, limit)));
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
