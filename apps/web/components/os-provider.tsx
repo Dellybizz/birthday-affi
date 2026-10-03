@@ -8,6 +8,7 @@ import {DocumentSettingsProvider} from '@wiffeyyyy/ui/page-layout';
 import {AudioDefaultsProvider} from '@wiffeyyyy/ui/media-player';
 import {PhoneAppTransition} from './phone-app-transition';
 import {VISITOR_KEY,initialVisitorState,parseVisitorState,reduceVisitorState,type VisitorState,type VisitorAction} from '../lib/visitor-state';
+import {computePhoneFit} from '../lib/phone-fit';
 
 const notifications=[
  {id:'welcome',title:'Your birthday home is ready',body:'Six little places to explore, all in one birthday world.',href:'/home'},
@@ -25,7 +26,7 @@ export function OSProvider({children,settings=defaultSiteDocument,homeDocument}:
  const pathname=usePathname(),stateRef=useRef(state),readyRef=useRef(false);
  const currentExperience=getExperienceByLivePath(pathname);
  const phonePath=currentExperience?.surface==='phone';
- useEffect(()=>{if(!phonePath)return;const fit=()=>{const scale=Math.min(1,Math.max(1,window.innerWidth-32)/390,Math.max(1,window.innerHeight-32)/844);setPhoneFit({scale,top:(window.innerHeight-844*scale)/2/scale+7})};fit();window.addEventListener('resize',fit);return()=>window.removeEventListener('resize',fit)},[phonePath]);
+ useEffect(()=>{if(!phonePath)return;const fit=()=>{const scale=computePhoneFit(window.innerWidth,window.innerHeight);setPhoneFit({scale,top:(window.innerHeight-844*scale)/2/scale+7})};fit();window.addEventListener('resize',fit);return()=>window.removeEventListener('resize',fit)},[phonePath]);
  const dispatch=useCallback((action:VisitorAction)=>{if(!readyRef.current)return;const next=reduceVisitorState(stateRef.current,action);stateRef.current=next;setState(next);try{localStorage.setItem(VISITOR_KEY,JSON.stringify(next))}catch{setStorageAvailable(false)}},[]);
  useEffect(()=>{let restored=initialVisitorState();try{restored=parseVisitorState(localStorage.getItem(VISITOR_KEY))}catch{setStorageAvailable(false)}stateRef.current=restored;readyRef.current=true;setState(restored);setReady(true);const sync=(e:StorageEvent)=>{if(e.key===VISITOR_KEY){const next=parseVisitorState(e.newValue);stateRef.current=next;setState(next)}};window.addEventListener('storage',sync);return()=>window.removeEventListener('storage',sync)},[]);
  useEffect(()=>{if(!ready)return;const slug=pathname.startsWith('/app/')?pathname.split('/')[2]:null;if(slug)dispatch({type:'visit',slug});else if(pathname==='/home')dispatch({type:'enter'})},[pathname,ready,dispatch]);
