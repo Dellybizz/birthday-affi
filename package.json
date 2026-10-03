@@ -8,7 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:e2 && pnpm test:e3 && pnpm test:perf && pnpm test:p8 && pnpm test:p9 && pnpm test:f0 && pnpm test:f1 && pnpm test:f2 && pnpm test:t0 && pnpm test:t1 && pnpm test:t2 && pnpm test:editor-live && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
+    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:e2 && pnpm test:e3 && pnpm test:perf && pnpm test:p8 && pnpm test:p9 && pnpm test:f0 && pnpm test:f1 && pnpm test:f2 && pnpm test:t0 && pnpm test:t1 && pnpm test:t2 && pnpm test:t3 && pnpm test:t4 && pnpm test:t7 && pnpm test:editor-live && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
@@ -34,6 +34,9 @@
     "test:t0": "node --test tests/transition-t0.test.mjs",
     "test:t1": "node --test tests/transition-t1.test.mjs",
     "test:t2": "node --test tests/transition-t2.test.mjs",
+    "test:t3": "node --test tests/transition-t3.test.mjs",
+    "test:t4": "node --test tests/transition-t4.test.mjs",
+    "test:t7": "node --test tests/transition-t7.test.mjs",
     "test:editor-live": "node --test tests/editor-live-preview.test.mjs"
   },
   "devDependencies": {
