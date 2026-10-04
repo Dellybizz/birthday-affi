@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import {PuzzleApp} from '@wiffeyyyy/ui/puzzle-app';
 import {getPublishedRuntimeAppConfiguration} from '../../../lib/cms';
 export const metadata={title:'Pieces of Us'};

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import {CameraApp} from '@wiffeyyyy/ui/camera-app';
 import {getPublishedRuntimeAppConfiguration} from '../../../lib/cms';
 export const metadata={title:'Clicksara'};

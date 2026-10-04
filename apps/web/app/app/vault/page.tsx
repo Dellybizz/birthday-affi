@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import VaultClient from './vault-client';
 import {getPublishedRuntimeAppConfiguration} from '../../../lib/cms';
 import './vault.css';
