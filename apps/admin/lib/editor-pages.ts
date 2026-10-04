@@ -45,7 +45,7 @@ export function buildEditorPageCatalog(rows:EditorDbPage[]):EditorPageItem[]{
  const mapped=rows.map(fromRow);
  const known=new Set(rows.map(page=>page.slug));
  for(const [slug,meta] of Object.entries(activePages))if(!known.has(slug))mapped.push({id:null,slug,title:meta.title,editorHref:null,draftPreviewHref:null,livePath:meta.livePath,group:'active',status:'missing',badge:'Page record missing',note:'The public route exists but there is no editable page record.',editorEnabled:false,published:false});
- for(const runtime of runtimePages)mapped.push({id:null,slug:runtime.slug,title:runtime.title,editorHref:null,draftPreviewHref:null,livePath:runtime.livePath,group:'runtime',status:'runtime',badge:'Runtime experience',note:'The live app works independently; visual authoring is intentionally separate from visitor/runtime state.',editorEnabled:false,published:false});
+ for(const runtime of runtimePages)mapped.push({id:null,slug:runtime.slug,title:runtime.title,editorHref:'/runtime/'+runtime.slug,draftPreviewHref:null,livePath:runtime.livePath,group:'runtime',status:'runtime',badge:'Runtime · presentation editable',note:'Edit copy, media and visual presentation here. Visitor state remains isolated from CMS content.',editorEnabled:true,published:true});
  const groupOrder:Record<EditorPageGroup,number>={active:0,drafts:1,legacy:2,runtime:3};
  return mapped.sort((a,b)=>{
   const group=groupOrder[a.group]-groupOrder[b.group];if(group)return group;
