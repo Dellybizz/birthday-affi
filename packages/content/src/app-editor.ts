@@ -2,7 +2,7 @@ import type {CMSField,CMSNode,PageDocument} from './cms';
 import {createNode,type ComponentName} from './registry';
 import type {SectionKind} from './layout-contract';
 import {parsePageDocument} from './validate';
-import {deleteNode,duplicateNode,moveNode,updateNode} from './editor-operations';
+import {deleteNode,duplicateNode,updateNode} from './editor-operations';
 import {mediaSelectionPatch,type MediaKind} from './inspector-capabilities';
 
 export type AppEditorSlug='reasons'|'hotline'|'adventure'|'movie'|'kiss-shop'|'radio';
@@ -87,12 +87,15 @@ function belongsToAction(document:PageDocument,node:CMSNode,action:AppEditorActi
 export type AppEditorItem={id:string;label:string;visible:boolean;actionKey:AppEditorActionKey;kind:string;mediaKind?:MediaKind;src:string;parentId:string|null};
 export function getAppEditorItems(document:PageDocument,slug:string):AppEditorItem[]{
  const definition=getAppEditorDefinition(slug);if(!definition)return [];
- const items:AppEditorItem[]=[];
- for(const node of document.nodes){
-  const matching=definition.actions.find(action=>belongsToAction(document,node,action));if(!matching)continue;
-  const title=typeof node.props.title==='string'&&node.props.title.trim()?node.props.title:String(node.label??matching.singular);
-  const src=typeof node.props.src==='string'?node.props.src:'';
-  items.push({id:node.id,label:title,visible:node.visible,actionKey:matching.key,kind:matching.singular,mediaKind:matching.mediaKind,src,parentId:node.parentId});
+ const byId=new Map(document.nodes.map(node=>[node.id,node])),items:AppEditorItem[]=[];
+ for(const action of definition.actions){
+  const parent=document.nodes.find(node=>node.parentId===null&&String(node.props.sectionKind??'')===action.sectionKind);if(!parent)continue;
+  for(const id of parent.children){
+   const node=byId.get(id);if(!node||!belongsToAction(document,node,action))continue;
+   const title=typeof node.props.title==='string'&&node.props.title.trim()?node.props.title:String(node.label??action.singular);
+   const src=typeof node.props.src==='string'?node.props.src:'';
+   items.push({id:node.id,label:title,visible:node.visible,actionKey:action.key,kind:action.singular,mediaKind:action.mediaKind,src,parentId:node.parentId});
+  }
  }
  return items;
 }
@@ -124,7 +127,14 @@ export function addAppEditorItem(document:PageDocument,slug:string,actionKey:App
 function appItem(document:PageDocument,slug:string,id:string){
  const item=getAppEditorItems(document,slug).find(candidate=>candidate.id===id);if(!item)throw new Error('App content item not found.');return item;
 }
-export function moveAppEditorItem(document:PageDocument,slug:string,id:string,direction:-1|1){appItem(document,slug,id);return moveNode(document,id,direction)}
+export function moveAppEditorItem(document:PageDocument,slug:string,id:string,direction:-1|1){
+ const item=appItem(document,slug,id),definition=getAppEditorDefinition(slug),action=definition?.actions.find(candidate=>candidate.key===item.actionKey);if(!action)throw new Error('App content action not found.');
+ const next=structuredClone(document),parent=next.nodes.find(node=>node.id===item.parentId);if(!parent)return document;
+ const matching=parent.children.filter(childId=>{const node=next.nodes.find(candidate=>candidate.id===childId);return !!node&&belongsToAction(next,node,action)}),index=matching.indexOf(id),target=index+direction;
+ if(index<0||target<0||target>=matching.length)return document;
+ const other=matching[target],a=parent.children.indexOf(id),b=parent.children.indexOf(other);[parent.children[a],parent.children[b]]=[parent.children[b],parent.children[a]];
+ return parsePageDocument(next);
+}
 export function toggleAppEditorItem(document:PageDocument,slug:string,id:string){const item=appItem(document,slug,id);return updateNode(document,id,{visible:!item.visible})}
 export function removeAppEditorItem(document:PageDocument,slug:string,id:string){appItem(document,slug,id);return deleteNode(document,id)}
 export function duplicateAppEditorItem(document:PageDocument,slug:string,id:string,newId:()=>string){appItem(document,slug,id);return duplicateNode(document,id,newId)}
