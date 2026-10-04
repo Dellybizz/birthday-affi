@@ -1,6 +1,6 @@
 import 'server-only';
 import { unstable_cache } from 'next/cache';
-import { parsePageDocument, defaultSiteDocument, parseSiteDocument } from '@wiffeyyyy/content';
+import { parsePageDocument, defaultSiteDocument, parseSiteDocument,defaultRuntimeAppConfig,isRuntimeAppConfigSlug,parseRuntimeAppConfig,type RuntimeAppConfigSlug } from '@wiffeyyyy/content';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const PUBLIC_REVALIDATE_SECONDS=10;
@@ -30,6 +30,16 @@ async function readPublishedSiteConfiguration(){
  return data?parseSiteDocument(data):defaultSiteDocument;
 }
 export const getPublishedSiteConfiguration=unstable_cache(readPublishedSiteConfiguration,['public-site-configuration-v2'],{revalidate:PUBLIC_REVALIDATE_SECONDS,tags:['public-cms']});
+
+async function readPublishedRuntimeAppConfiguration(slug:RuntimeAppConfigSlug){
+ if(!isRuntimeAppConfigSlug(slug))throw new Error('Unknown runtime app');
+ const db=getPublicDb(),siteSlug=process.env.NEXT_PUBLIC_SITE_SLUG;
+ if(!db||!siteSlug)return defaultRuntimeAppConfig(slug);
+ const {data,error}=await db.rpc('get_published_runtime_app_configuration',{p_site_slug:siteSlug,p_app_slug:slug});
+ if(error)throw new Error('Unable to load runtime app settings');
+ return data?parseRuntimeAppConfig(slug,data):defaultRuntimeAppConfig(slug);
+}
+export const getPublishedRuntimeAppConfiguration=unstable_cache(readPublishedRuntimeAppConfiguration,['public-runtime-app-configuration-v1'],{revalidate:PUBLIC_REVALIDATE_SECONDS,tags:['public-cms']});
 
 async function publicRpc(name:string,args:Record<string,string>){
  const db=getPublicDb();if(!db)return null;
