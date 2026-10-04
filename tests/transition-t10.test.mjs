@@ -87,3 +87,8 @@ test('T10.2 editor shell wires all app-content mutations through the canonical d
  for(const helper of ['moveAppEditorItem','toggleAppEditorItem','duplicateAppEditorItem','removeAppEditorItem','setAppEditorItemMedia'])assert.match(shell,new RegExp(helper));
  for(const prop of ['siteId={siteId}','onMove={moveAppContent}','onToggle={toggleAppContent}','onDuplicate={duplicateAppContent}','onDelete={deleteAppContent}','onMedia={setAppContentMedia}'])assert.ok(shell.includes(prop),prop);
 });
+
+test('T10.3 app collections expose search, health counts, missing-media and hidden filters',()=>{
+ for(const marker of ['data-t10-content-health','Search ','Missing media','Hidden','Clear search and filters'])assert.match(panel,new RegExp(marker));
+ assert.match(panel,/missingMedia=items\.filter/);assert.match(panel,/filter==='missing'/);assert.match(panel,/filter==='hidden'/);assert.match(panel,/visibleItems=useMemo/);
+});
