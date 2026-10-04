@@ -35,7 +35,7 @@ test('E3.1/P1 source follows the supplied Shopify visual-editor reference with a
  const source=fs.readFileSync('apps/admin/app/editor/[slug]/editor-client.tsx','utf8');
  const frame=fs.readFileSync('apps/admin/components/editor-live-frame.tsx','utf8');
  const preview=fs.readFileSync('apps/admin/app/preview/[pageId]/preview-client.tsx','utf8');
- for(const text of ['Theme settings','Sections','App embeds','Preview inspector on','Select a section or block','EditorLiveFrame'])assert.ok(source.includes(text),text);
+ for(const text of ['Theme settings','Sections','App content','Preview inspector on','Select a section or block','EditorLiveFrame'])assert.ok(source.includes(text),text);
  assert.equal(source.includes("['content','appearance','behavior','page']"),false);
  assert.match(source,/grid-cols-1 lg:grid-cols-\[292px_minmax\(0,1fr\)_312px\]/);
  assert.match(source,/h-\[50px\]/);
