@@ -31,7 +31,7 @@ export function HeartPhoneFrameCompositor({sceneId,frames,isMobile,frameStyle,re
     return [...outgoing.slice(-1),{id,scene:sceneId,src:source,state:'incoming'}];
    });
    requestAnimationFrame(()=>requestAnimationFrame(()=>setLayers(previous=>previous.map(layer=>layer.id===id?{...layer,state:'active'}:layer))));
-   cleanup.current=setTimeout(()=>setLayers(previous=>previous.filter(layer=>layer.id===id||layer.state!=='outgoing')),blendMs+100);
+   cleanup.current=setTimeout(()=>setLayers(previous=>previous.filter(layer=>layer.id===id||layer.state!=='outgoing')),blendMs+120);
   };
   if(typeof image.decode==='function')void image.decode().then(activate).catch(activate);else image.onload=activate;
   return()=>{cancelled=true};
@@ -40,6 +40,6 @@ export function HeartPhoneFrameCompositor({sceneId,frames,isMobile,frameStyle,re
  useEffect(()=>()=>{if(cleanup.current)clearTimeout(cleanup.current)},[]);
 
  return <div className="heart-phone-frame-compositor" style={{'--t9-frame-blend':blendMs+'ms'} as CSSProperties}>
-  {layers.map(layer=><img key={layer.id+'-'+replayToken} data-frame-state={layer.state} data-frame-scene={layer.scene} className="heart-phone-transition-keyframe" src={layer.src} alt="" style={frameStyle}/>) }
+  {layers.map(layer=><div key={layer.id+'-'+replayToken} data-frame-state={layer.state} data-frame-scene={layer.scene} className="heart-phone-frame-layer"><img className="heart-phone-transition-keyframe" src={layer.src} alt="" style={frameStyle}/></div>)}
  </div>;
 }
