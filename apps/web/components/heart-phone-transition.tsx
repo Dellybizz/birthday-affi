@@ -4,6 +4,7 @@ import {createDefaultPage,installPhoneHome,type HeartToPhoneTransitionConfig,typ
 import {CMSRenderer} from '@wiffeyyyy/ui/cms-renderer';
 import {DocumentSettingsProvider} from '@wiffeyyyy/ui/page-layout';
 import {computePhoneFit} from '../lib/phone-fit';
+import {HeartPhoneFrameCompositor} from './heart-phone-frame-compositor';
 
 type ConnectionInfo={effectiveType?:string;saveData?:boolean};
 type NavigatorWithConnection=Navigator&{connection?:ConnectionInfo};
@@ -105,11 +106,11 @@ export function HeartPhoneTransition({config,onHandoff,onComplete,destinationRea
   '--transition-phone-x':art.phoneOffsetX+'px','--transition-phone-y':art.phoneOffsetY+'px','--transition-phone-tilt':art.phoneTilt+'deg','--transition-interface-opacity':art.interfaceOpacity
  } as CSSProperties;
  const frameStyle={objectFit:art.frameFit,objectPosition:`${art.framePositionX}% ${art.framePositionY}%`} as CSSProperties;
- return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-strategy={config.handoff.strategy} data-video={selectedVideo&&!videoFailed?'true':'false'} data-hybrid={hybridAvailable?'true':'false'} data-fallback={showPlaceholder?'true':'false'} data-render-mode={renderMode} data-scene={sceneId} data-interface={art.interfaceSource} style={style} role="dialog" aria-modal="true" aria-label={config.trigger.ariaLabel} onKeyDown={onKeyDown}>
+ return <div ref={shell} className="heart-phone-transition" data-mode={mode} data-strategy={config.handoff.strategy} data-video={selectedVideo&&!videoFailed?'true':'false'} data-hybrid={hybridAvailable?'true':'false'} data-fallback={showPlaceholder?'true':'false'} data-render-mode={renderMode} data-scene={sceneId} data-interface={art.interfaceSource} data-t9-compositor={hybridActive?'true':'false'} style={style} role="dialog" aria-modal="true" aria-label={config.trigger.ariaLabel} onKeyDown={onKeyDown}>
   <div key={replayToken} className="heart-phone-transition-stage" aria-hidden="true" inert>
    {mode==='poster'&&config.media.posterSrc?<img className="heart-phone-transition-poster" src={config.media.posterSrc} alt=""/>:null}
    {videoActive?<video ref={video} className="heart-phone-transition-video" src={selectedVideo} poster={config.media.posterSrc||undefined} preload={config.performance.preload} playsInline muted onTimeUpdate={onTime} onEnded={onEnded} onError={()=>setVideoFailed(true)}/>:null}
-   {hybridActive?<img key={sceneId+'-'+replayToken} className="heart-phone-transition-keyframe" src={selectedFrame} alt="" style={frameStyle}/>:null}
+   {hybridActive?<HeartPhoneFrameCompositor sceneId={sceneId} frames={config.frames} isMobile={isMobile} frameStyle={frameStyle} replayToken={replayToken}/>:null}
    {showPlaceholder?<div className="heart-phone-transition-placeholder">
     <div className="unbox-ambient"/><div className="unbox-beam"/>
     <div className="unbox-table"><div className="unbox-table-glow"/></div>
