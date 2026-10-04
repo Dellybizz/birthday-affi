@@ -1,0 +1,29 @@
+/* T9 cinematic integration: hide frame changes inside deliberate camera motion and soften the final photographic -> live UI cut. */
+.heart-phone-transition-keyframe{will-change:opacity,scale,transform,filter;backface-visibility:hidden;transform-style:preserve-3d;scale:1.015;animation:t9-frame-enter .46s cubic-bezier(.2,.72,.2,1) both}
+.heart-phone-transition[data-scene="box-establishing"] .heart-phone-transition-keyframe{animation:t9-box-camera 1.2s cubic-bezier(.22,.61,.36,1) both}
+.heart-phone-transition[data-scene="gloves-enter"] .heart-phone-transition-keyframe{animation:t9-gloves-camera 1.4s cubic-bezier(.22,.61,.36,1) both}
+.heart-phone-transition[data-scene="top-down-open"] .heart-phone-transition-keyframe{animation:t9-open-camera 1.8s cubic-bezier(.22,.61,.36,1) both}
+.heart-phone-transition[data-scene="phone-lift"] .heart-phone-transition-keyframe{animation:t9-lift-camera 1.7s cubic-bezier(.16,.84,.23,1) both}
+.heart-phone-transition[data-scene="screen-wake"] .heart-phone-transition-keyframe{animation:t9-wake-camera 1.4s cubic-bezier(.16,.84,.23,1) both}
+.heart-phone-transition[data-scene="live-handoff"] .heart-phone-transition-keyframe{animation:t9-handoff-frame .8s cubic-bezier(.16,.84,.23,1) both}
+
+/* The generated final frame becomes supporting photography while the real published Home UI takes over. */
+.heart-phone-transition[data-hybrid="true"][data-interface="live-home"][data-scene="live-handoff"] .heart-phone-sync-phone{opacity:var(--transition-interface-opacity,1);transform:translate(-50%,-50%) scale(var(--phone-fit,1));transition:opacity .46s cubic-bezier(.16,.84,.23,1),transform .46s cubic-bezier(.16,.84,.23,1),filter .46s ease;filter:none}
+.heart-phone-transition[data-hybrid="true"][data-interface="live-home"][data-scene="live-handoff"] .heart-phone-transition-keyframe{filter:brightness(var(--transition-brightness,1)) contrast(var(--transition-contrast,1)) saturate(var(--transition-saturation,1)) blur(.45px)}
+.heart-phone-transition[data-mode="handoff"] .heart-phone-transition-keyframe{opacity:.06!important;scale:1.075;filter:blur(4px) brightness(var(--transition-brightness,1)) contrast(var(--transition-contrast,1)) saturate(var(--transition-saturation,1));transition:opacity .34s ease,scale .5s cubic-bezier(.16,.84,.23,1),filter .34s ease}
+.heart-phone-transition[data-mode="handoff"] .heart-phone-sync-phone{filter:none;transition:opacity .34s ease,transform .5s cubic-bezier(.16,.84,.23,1)}
+
+@keyframes t9-frame-enter{from{opacity:.78;scale:1.025}to{opacity:1;scale:1.015}}
+@keyframes t9-box-camera{0%{opacity:.88;scale:1.008;translate:0 5px}100%{opacity:1;scale:1.028;translate:0 -2px}}
+@keyframes t9-gloves-camera{0%{opacity:.84;scale:1.026;translate:0 4px}100%{opacity:1;scale:1.044;translate:0 -3px}}
+@keyframes t9-open-camera{0%{opacity:.86;scale:1.025;translate:0 3px}100%{opacity:1;scale:1.052;translate:0 -5px}}
+@keyframes t9-lift-camera{0%{opacity:.84;scale:1.03;translate:0 7px}100%{opacity:1;scale:1.06;translate:0 -7px}}
+@keyframes t9-wake-camera{0%{opacity:.86;scale:1.04;translate:0 4px}100%{opacity:1;scale:1.065;translate:0 -5px}}
+@keyframes t9-handoff-frame{0%{opacity:1;scale:1.045;translate:0 0}100%{opacity:.42;scale:1.07;translate:0 -3px}}
+
+@media(max-width:680px){
+ .heart-phone-transition-keyframe{scale:1.035}
+ .heart-phone-transition[data-scene="phone-lift"] .heart-phone-transition-keyframe,.heart-phone-transition[data-scene="screen-wake"] .heart-phone-transition-keyframe{transform-origin:50% 46%}
+ .heart-phone-transition[data-scene="live-handoff"] .heart-phone-transition-keyframe{transform-origin:50% 48%}
+}
+@media(prefers-reduced-motion:reduce){.heart-phone-transition-keyframe{animation:none!important;translate:none!important;scale:1!important}.heart-phone-transition[data-scene="live-handoff"] .heart-phone-transition-keyframe{opacity:.12!important}.heart-phone-transition .heart-phone-sync-phone{transition:none!important}}
