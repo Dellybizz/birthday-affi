@@ -9,6 +9,7 @@ const transition=load('packages/content/src/heart-to-phone-transition.ts');
 const read=file=>fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const capabilities=read('packages/content/src/transition-inspector-capabilities.ts');
 const player=read('apps/web/components/heart-phone-transition.tsx');
+const compositor=read('apps/web/components/heart-phone-frame-compositor.tsx');
 const css=read('apps/web/app/heart-phone-transition-t7.css');
 const layout=read('apps/web/app/layout.tsx');
 
@@ -40,7 +41,8 @@ test('T7 transition inspector adds Shopify-style controls for every scene and ar
 });
 
 test('T7 runtime can play authored hybrid frames and still hand off to the real Home UI',()=>{
- assert.match(player,/heart-phone-transition-keyframe/);
+ assert.match(player,/HeartPhoneFrameCompositor/);
+ assert.match(compositor,/heart-phone-transition-keyframe/);
  assert.match(player,/config\.frames\[sceneId\]/);
  assert.match(player,/data-hybrid=\{hybridAvailable\?'true':'false'\}/);
  assert.match(player,/art\.interfaceSource==='live-home'/);
