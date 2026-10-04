@@ -53,13 +53,15 @@ test('T10 replaces generic app embeds with the live app-content manager in the S
  assert.match(shell,/onAdd=\{addAppContent\}/);
 });
 
-test('T10.2 app operations preserve canonical hierarchy and support reorder, visibility, duplicate and delete',()=>{
+test('T10.2 app operations preserve canonical hierarchy and support grouped reorder, visibility, duplicate and delete',()=>{
  let document=pages.createDefaultPage('adventure');
  document=editor.addAppEditorItem(document,'adventure','photo','t10-a').document;
+ document=editor.addAppEditorItem(document,'adventure','video','t10-video-between').document;
  document=editor.addAppEditorItem(document,'adventure','photo','t10-b').document;
- const parent=document.nodes.find(node=>node.id===document.nodes.find(node=>node.id==='t10-a').parentId);
- assert.ok(parent.children.indexOf('t10-a')<parent.children.indexOf('t10-b'));
- document=editor.moveAppEditorItem(document,'adventure','t10-b',-1);assert.ok(document.nodes.find(node=>node.id===parent.id).children.indexOf('t10-b')<document.nodes.find(node=>node.id===parent.id).children.indexOf('t10-a'));
+ const parentId=document.nodes.find(node=>node.id==='t10-a').parentId,parent=()=>document.nodes.find(node=>node.id===parentId);
+ assert.ok(parent().children.indexOf('t10-a')<parent().children.indexOf('t10-b'));
+ document=editor.moveAppEditorItem(document,'adventure','t10-b',-1);assert.ok(parent().children.indexOf('t10-b')<parent().children.indexOf('t10-a'));
+ assert.deepEqual(editor.getAppEditorItems(document,'adventure').filter(item=>item.actionKey==='photo').map(item=>item.id).slice(-2),['t10-b','t10-a']);
  document=editor.toggleAppEditorItem(document,'adventure','t10-a');assert.equal(document.nodes.find(node=>node.id==='t10-a').visible,false);
  let n=0;const duplicated=editor.duplicateAppEditorItem(document,'adventure','t10-a',()=>`t10-copy-${++n}`);document=duplicated.document;assert.ok(document.nodes.some(node=>node.id===duplicated.selectedId));
  document=editor.removeAppEditorItem(document,'adventure','t10-a');assert.equal(document.nodes.some(node=>node.id==='t10-a'),false);
@@ -73,4 +75,14 @@ test('T10.2 direct media binding enforces the app item media type',()=>{
  const post=document.nodes.find(node=>node.id==='t10-media-post');assert.equal(post.props.src,'/media/image-1');assert.equal(post.props.alt,'A memory');assert.equal(post.props.mediaAssetId,'image-1');
  assert.throws(()=>editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:'video-1',kind:'video',metadata:{}}),/Choose image media/);
  document=editor.setAppEditorItemMedia(document,'movie','t10-media-reel',{id:'video-1',kind:'video',metadata:{}});assert.equal(document.nodes.find(node=>node.id==='t10-media-reel').props.src,'/media/video-1');
+});
+
+test('T10.2 app sidebar exposes inline operations and an in-editor media picker',()=>{
+ for(const marker of ['data-t10-app-item','Move ','Duplicate','Delete','Replace media','MediaLibrary','role="dialog"'])assert.match(panel,new RegExp(marker));
+ assert.match(panel,/onMove\(item\.id,-1\)/);assert.match(panel,/onMove\(item\.id,1\)/);assert.match(panel,/onToggle\(item\.id\)/);assert.match(panel,/onDuplicate\(item\.id\)/);assert.match(panel,/onDelete\(item\.id\)/);assert.match(panel,/onMedia\(picker\.id,media\)/);
+});
+
+test('T10.2 editor shell wires all app-content mutations through the canonical draft reducer',()=>{
+ for(const helper of ['moveAppEditorItem','toggleAppEditorItem','duplicateAppEditorItem','removeAppEditorItem','setAppEditorItemMedia'])assert.match(shell,new RegExp(helper));
+ for(const prop of ['siteId={siteId}','onMove={moveAppContent}','onToggle={toggleAppContent}','onDuplicate={duplicateAppContent}','onDelete={deleteAppContent}','onMedia={setAppContentMedia}'])assert.ok(shell.includes(prop),prop);
 });
