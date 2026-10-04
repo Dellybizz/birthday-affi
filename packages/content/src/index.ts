@@ -5,6 +5,7 @@ export * from './validate';
 export * from './default-pages';
 export * from './power-editor';
 export * from './app-builders';
+export * from './app-editor';
 export * from './component-contracts';
 export * from './app-content';
 export * from './public-apps';
