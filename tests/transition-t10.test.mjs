@@ -8,6 +8,7 @@ function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(
 const editor=load('packages/content/src/app-editor.ts');
 const pages=load('packages/content/src/default-pages.ts');
 const panel=fs.readFileSync(new URL('../apps/admin/components/app-content-manager.tsx',import.meta.url),'utf8');
+const shell=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/editor-client.tsx',import.meta.url),'utf8');
 
 test('T10 defines purpose-built authoring for every editable phone app',()=>{
  const expected={reasons:['reason'],hotline:['keypad-message'],adventure:['photo','video'],movie:['post','reel'],'kiss-shop':['gift'],radio:['station','track']};
@@ -42,4 +43,12 @@ test('T10 section shortcuts resolve app-specific settings such as Saragram profi
 test('T10 app panel exposes add-content, item collection, app sections and shared resources',()=>{
  for(const marker of ['data-t10-app-content-manager','Add content','Content','App sections','Shared resources','Media library'])assert.match(panel,new RegExp(marker));
  assert.match(panel,/onAdd\(action\.key\)/);assert.match(panel,/onSelect\(item\.id\)/);
+});
+
+test('T10 replaces generic app embeds with the live app-content manager in the Shopify editor',()=>{
+ assert.match(shell,/import AppContentManager/);
+ assert.match(shell,/addAppEditorItem/);
+ assert.match(shell,/title="App content"/);
+ assert.match(shell,/<AppContentManager slug=\{currentSlug\}/);
+ assert.match(shell,/onAdd=\{addAppContent\}/);
 });
