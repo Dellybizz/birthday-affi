@@ -6,6 +6,10 @@ import type {CMSField,HeartToPhoneTransitionConfig,PageDocument,SiteDocument} fr
 import {HeartPhoneTransition} from './heart-phone-transition';
 const HEART='/pages/in-my-heart';
 const CORE_ROUTES=['/home','/',HEART,'/app/hotline','/app/reasons','/app/adventure','/app/movie','/app/kiss-shop','/app/camera','/app/vault','/app/pieces'];
+const T9_CINEMATIC_FRAMES=['/cinematic/heart-phone/01-box.webp','/cinematic/heart-phone/02-gloves.webp','/cinematic/heart-phone/03-open.webp','/cinematic/heart-phone/04-lift.webp','/cinematic/heart-phone/05-wake.webp','/cinematic/heart-phone/06-handoff.webp'];
+const warmedFrames=new Set<string>();
+function warmFrame(src:string){if(!src||warmedFrames.has(src))return;warmedFrames.add(src);const image=new Image();image.decoding='async';image.src=src;if(typeof image.decode==='function')void image.decode().catch(()=>{})}
+function warmTransitionFrames(transition:HeartToPhoneTransitionConfig){for(const scene of transition.scenes){const frame=transition.frames[scene.id];if(!frame)continue;warmFrame(frame.desktop);warmFrame(frame.mobile)}}
 const chapter=(path:string)=>path==='/'||path==='/pages/memories-archive'?'archive':path===HEART?'heart':path==='/home'?'phone':null;
 export function ArchiveJourney({settings,prefetchHrefs=[],homeDocument,siteSettings,children}:{settings:Record<string,CMSField>;prefetchHrefs?:string[];homeDocument?:PageDocument|null;siteSettings:SiteDocument;children:ReactNode}){
  const router=useRouter(),pathname=usePathname();
@@ -22,10 +26,11 @@ export function ArchiveJourney({settings,prefetchHrefs=[],homeDocument,siteSetti
   router.push(target);
   watchdog.current=setTimeout(()=>{setPhase('idle');busy.current=false},8000);
  },[router,settings.transitionEnabled]);
- const startHeartTransition=useCallback((transition:HeartToPhoneTransitionConfig)=>{if(cinematicBusy.current||busy.current)return;cinematicBusy.current=true;router.prefetch(transition.handoff.destination);setHeartTransition(transition)},[router]);
+ const startHeartTransition=useCallback((transition:HeartToPhoneTransitionConfig)=>{if(cinematicBusy.current||busy.current)return;cinematicBusy.current=true;warmTransitionFrames(transition);router.prefetch(transition.handoff.destination);setHeartTransition(transition)},[router]);
  const handoffHeartTransition=useCallback(()=>{if(!heartTransition)return;router.prefetch(heartTransition.handoff.destination);router.push(heartTransition.handoff.destination)},[heartTransition,router]);
  const completeHeartTransition=useCallback(()=>{cinematicBusy.current=false;setHeartTransition(null)},[]);
  useEffect(()=>{for(const href of new Set([...CORE_ROUTES,...prefetchHrefs]))if(href.startsWith('/'))router.prefetch(href)},[router,prefetchHrefs]);
+ useEffect(()=>{if(pathname!==HEART)return;T9_CINEMATIC_FRAMES.forEach(warmFrame);router.prefetch('/home')},[pathname,router]);
  useEffect(()=>{const receive=(event:Event)=>{const detail=(event as CustomEvent<{href?:string;transition?:HeartToPhoneTransitionConfig}>).detail,href=detail?.href;if(pathname!==HEART||!href||!['/','/home'].includes(href))return;if(href==='/home'&&detail.transition?.id==='heart-to-phone'&&detail.transition.enabled)startHeartTransition(detail.transition);else navigate(href)};window.addEventListener('wiffey:journey',receive);return()=>window.removeEventListener('wiffey:journey',receive)},[pathname,navigate,startHeartTransition]);
  useEffect(()=>{if(previous.current===pathname)return;previous.current=pathname;document.querySelectorAll<HTMLElement>('[data-nav-press="true"]').forEach(node=>node.removeAttribute('data-nav-press'));if(!busy.current)return;if(watchdog.current)clearTimeout(watchdog.current);const elapsed=Math.max(0,performance.now()-startedAt.current),wait=Math.max(0,duration/2-elapsed);if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>{setPhase('opening');timer.current=setTimeout(()=>{setPhase('idle');busy.current=false},duration/2)},wait)},[pathname,duration]);
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);if(watchdog.current)clearTimeout(watchdog.current)},[]);
