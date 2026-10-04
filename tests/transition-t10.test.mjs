@@ -22,7 +22,7 @@ test('T10 Saragram creates distinct photo posts and video reels inside the canon
  const post=document.nodes.find(node=>node.id==='t10-post'),reel=document.nodes.find(node=>node.id==='t10-reel');
  assert.equal(post.props.mediaKind,'image');assert.equal(reel.props.mediaKind,'video');
  const feed=document.nodes.find(node=>node.props.sectionKind==='movie-player');assert.ok(feed.children.includes('t10-post'));assert.ok(feed.children.includes('t10-reel'));
- const items=editor.getAppEditorItems(document,'movie');assert.equal(items.find(item=>item.id==='t10-post').actionKey,'post');assert.equal(items.find(item=>item.id==='t10-reel').actionKey,'reel');
+ const items=editor.getAppEditorItems(document,'movie');assert.equal(items.find(item=>item.id==='t10-post').actionKey,'post');assert.equal(items.find(item=>item.id==='t10-post').mediaKind,'image');assert.equal(items.find(item=>item.id==='t10-reel').actionKey,'reel');assert.equal(items.find(item=>item.id==='t10-reel').mediaKind,'video');
 });
 
 test('T10 Pardanasheen adds photos and videos to the real photo library',()=>{
@@ -51,4 +51,26 @@ test('T10 replaces generic app embeds with the live app-content manager in the S
  assert.match(shell,/title="App content"/);
  assert.match(shell,/<AppContentManager slug=\{currentSlug\}/);
  assert.match(shell,/onAdd=\{addAppContent\}/);
+});
+
+test('T10.2 app operations preserve canonical hierarchy and support reorder, visibility, duplicate and delete',()=>{
+ let document=pages.createDefaultPage('adventure');
+ document=editor.addAppEditorItem(document,'adventure','photo','t10-a').document;
+ document=editor.addAppEditorItem(document,'adventure','photo','t10-b').document;
+ const parent=document.nodes.find(node=>node.id===document.nodes.find(node=>node.id==='t10-a').parentId);
+ assert.ok(parent.children.indexOf('t10-a')<parent.children.indexOf('t10-b'));
+ document=editor.moveAppEditorItem(document,'adventure','t10-b',-1);assert.ok(document.nodes.find(node=>node.id===parent.id).children.indexOf('t10-b')<document.nodes.find(node=>node.id===parent.id).children.indexOf('t10-a'));
+ document=editor.toggleAppEditorItem(document,'adventure','t10-a');assert.equal(document.nodes.find(node=>node.id==='t10-a').visible,false);
+ let n=0;const duplicated=editor.duplicateAppEditorItem(document,'adventure','t10-a',()=>`t10-copy-${++n}`);document=duplicated.document;assert.ok(document.nodes.some(node=>node.id===duplicated.selectedId));
+ document=editor.removeAppEditorItem(document,'adventure','t10-a');assert.equal(document.nodes.some(node=>node.id==='t10-a'),false);
+});
+
+test('T10.2 direct media binding enforces the app item media type',()=>{
+ let document=pages.createDefaultPage('movie');
+ document=editor.addAppEditorItem(document,'movie','post','t10-media-post').document;
+ document=editor.addAppEditorItem(document,'movie','reel','t10-media-reel').document;
+ document=editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:'image-1',kind:'image',alt_text:'A memory',width:1200,height:900,metadata:{variants:[480,960]}});
+ const post=document.nodes.find(node=>node.id==='t10-media-post');assert.equal(post.props.src,'/media/image-1');assert.equal(post.props.alt,'A memory');assert.equal(post.props.mediaAssetId,'image-1');
+ assert.throws(()=>editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:'video-1',kind:'video',metadata:{}}),/Choose image media/);
+ document=editor.setAppEditorItemMedia(document,'movie','t10-media-reel',{id:'video-1',kind:'video',metadata:{}});assert.equal(document.nodes.find(node=>node.id==='t10-media-reel').props.src,'/media/video-1');
 });
