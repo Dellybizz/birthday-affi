@@ -69,12 +69,13 @@ test('T10.2 app operations preserve canonical hierarchy and support grouped reor
 
 test('T10.2 direct media binding enforces the app item media type',()=>{
  let document=pages.createDefaultPage('movie');
+ const imageId='11111111-1111-4111-8111-111111111111',videoId='22222222-2222-4222-8222-222222222222';
  document=editor.addAppEditorItem(document,'movie','post','t10-media-post').document;
  document=editor.addAppEditorItem(document,'movie','reel','t10-media-reel').document;
- document=editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:'image-1',kind:'image',alt_text:'A memory',width:1200,height:900,metadata:{variants:[480,960]}});
- const post=document.nodes.find(node=>node.id==='t10-media-post');assert.equal(post.props.src,'/media/image-1');assert.equal(post.props.alt,'A memory');assert.equal(post.props.mediaAssetId,'image-1');
- assert.throws(()=>editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:'video-1',kind:'video',metadata:{}}),/Choose image media/);
- document=editor.setAppEditorItemMedia(document,'movie','t10-media-reel',{id:'video-1',kind:'video',metadata:{}});assert.equal(document.nodes.find(node=>node.id==='t10-media-reel').props.src,'/media/video-1');
+ document=editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:imageId,kind:'image',alt_text:'A memory',width:1200,height:900,metadata:{variants:[480,960]}});
+ const post=document.nodes.find(node=>node.id==='t10-media-post');assert.equal(post.props.src,'/media/'+imageId);assert.equal(post.props.alt,'A memory');assert.equal(post.props.mediaAssetId,imageId);
+ assert.throws(()=>editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:videoId,kind:'video',metadata:{}}),/Choose image media/);
+ document=editor.setAppEditorItemMedia(document,'movie','t10-media-reel',{id:videoId,kind:'video',metadata:{}});assert.equal(document.nodes.find(node=>node.id==='t10-media-reel').props.src,'/media/'+videoId);
 });
 
 test('T10.2 app sidebar exposes inline operations and an in-editor media picker',()=>{
