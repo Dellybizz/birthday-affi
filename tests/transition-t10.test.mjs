@@ -6,6 +6,7 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url),ts=require('typescript'),cache=new Map();
 function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file).exports;const module={exports:{}};cache.set(file,module);const source=fs.readFileSync(file,'utf8');const code=ts.transpile(source,{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022});new Function('require','module','exports',code)(name=>name.startsWith('.')?load(path.resolve(path.dirname(file),name+'.ts')):require(name),module,module.exports);return module.exports}
 const editor=load('packages/content/src/app-editor.ts');
+const runtime=load('packages/content/src/runtime-app-config.ts');
 const pages=load('packages/content/src/default-pages.ts');
 const panel=fs.readFileSync(new URL('../apps/admin/components/app-content-manager.tsx',import.meta.url),'utf8');
 const shell=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/editor-client.tsx',import.meta.url),'utf8');
@@ -91,4 +92,28 @@ test('T10.2 editor shell wires all app-content mutations through the canonical d
 test('T10.3 app collections expose search, health counts, missing-media and hidden filters',()=>{
  for(const marker of ['data-t10-content-health','Search ','Missing media','Hidden','Clear search and filters'])assert.match(panel,new RegExp(marker));
  assert.match(panel,/missingMedia=items\.filter/);assert.match(panel,/filter==='missing'/);assert.match(panel,/filter==='hidden'/);assert.match(panel,/visibleItems=useMemo/);
+});
+
+test('T10.4 runtime presentation contracts are strict and contain no visitor secrets',()=>{
+ for(const slug of ['camera','vault','pieces']){
+  const defaults=runtime.defaultRuntimeAppConfig(slug);assert.equal(runtime.parseRuntimeAppConfig(slug,defaults).slug,slug);
+  assert.throws(()=>runtime.parseRuntimeAppConfig(slug,{...defaults,unexpected:'nope'}),/Unknown or missing/);
+ }
+ const vault=runtime.defaultRuntimeAppConfig('vault');for(const forbidden of ['answer','story','chapters','unlockHash'])assert.equal(Object.hasOwn(vault,forbidden),false,forbidden);
+});
+
+test('T10.4 runtime settings use versioned public configuration while visitor state stays outside CMS',()=>{
+ const migration=fs.readFileSync('supabase/migrations/20261004041000_t10_runtime_app_config.sql','utf8');
+ for(const marker of ['runtime_app_configurations','runtime_app_configuration_versions','change_runtime_app_configuration','get_published_runtime_app_configuration'])assert.match(migration,new RegExp(marker));
+ assert.doesNotMatch(migration,/"answer"\s*:/);assert.doesNotMatch(migration,/"story"\s*:/);assert.doesNotMatch(migration,/"chapters"\s*:/);
+ const runtimeEditor=fs.readFileSync('apps/admin/components/runtime-app-editor.tsx','utf8'),catalog=fs.readFileSync('apps/admin/lib/editor-pages.ts','utf8');
+ assert.match(runtimeEditor,/data-t10-runtime-editor/);assert.match(runtimeEditor,/Runtime state stays separate/);assert.match(runtimeEditor,/changeRuntimeAppConfiguration/);assert.match(runtimeEditor,/MediaLibrary/);
+ assert.match(catalog,/editorHref:'\/runtime\/'\+runtime\.slug/);assert.match(catalog,/editorEnabled:true/);
+});
+
+test('T10.4 Clicksara, Vault and Pieces consume published presentation settings without moving their runtime state',()=>{
+ const cms=fs.readFileSync('apps/web/lib/cms.ts','utf8'),cameraPage=fs.readFileSync('apps/web/app/app/camera/page.tsx','utf8'),vaultPage=fs.readFileSync('apps/web/app/app/vault/page.tsx','utf8'),piecesPage=fs.readFileSync('apps/web/app/app/pieces/page.tsx','utf8');
+ const camera=fs.readFileSync('packages/ui/src/camera-app.tsx','utf8'),vault=fs.readFileSync('apps/web/app/app/vault/vault-client.tsx','utf8'),pieces=fs.readFileSync('packages/ui/src/puzzle-app.tsx','utf8');
+ assert.match(cms,/getPublishedRuntimeAppConfiguration/);for(const page of [cameraPage,vaultPage,piecesPage])assert.match(page,/getPublishedRuntimeAppConfiguration/);
+ assert.match(camera,/config\.permissionTitle/);assert.match(camera,/useCameraRoll\(\)/);assert.match(vault,/config\.question/);assert.match(vault,/fetch\('\/api\/vault'/);assert.match(pieces,/config\.completionTitle/);assert.match(pieces,/localStorage\.setItem\(STORE/);
 });
