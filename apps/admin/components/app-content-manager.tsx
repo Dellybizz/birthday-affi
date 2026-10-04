@@ -1,7 +1,13 @@
 'use client';
-import {getAppEditorDefinition,getAppEditorItems,getAppEditorSections,type AppEditorActionKey,type PageDocument} from '@wiffeyyyy/content';
+import {getAppEditorDefinition,getAppEditorItems,getAppEditorSections,type AppEditorActionKey,type AppEditorItem,type PageDocument} from '@wiffeyyyy/content';
 
 const button='rounded-md border border-[#c9cccf] bg-white px-3 py-2 text-[12px] font-medium text-[#303030] hover:bg-[#f6f6f7] disabled:cursor-not-allowed disabled:opacity-40';
+
+function MediaThumb({item}:{item:AppEditorItem}){
+ if(item.mediaKind==='image'&&item.src)return <span className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-[#e1e3e5] bg-[#f6f6f7]"><img src={item.src} alt="" className="h-full w-full object-cover"/></span>;
+ const icon=item.mediaKind==='video'?'▶':item.mediaKind==='audio'?'♫':item.mediaKind==='image'?'▧':'◇';
+ return <span aria-hidden className={'grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#e1e3e5] text-[13px] '+(item.src?'bg-[#eef7f2] text-[#008060]':'bg-[#f6f6f7] text-[#8c9196]')}>{icon}</span>;
+}
 
 export default function AppContentManager({slug,document,selectedId,disabled,onSelect,onAdd}:{slug:string;document:PageDocument;selectedId:string|null;disabled:boolean;onSelect:(id:string)=>void;onAdd:(action:AppEditorActionKey)=>void}){
  const definition=getAppEditorDefinition(slug),items=getAppEditorItems(document,slug),sections=getAppEditorSections(document,slug);
@@ -14,11 +20,12 @@ export default function AppContentManager({slug,document,selectedId,disabled,onS
   </section>
   <section className="border-b border-[#e1e3e5] p-2">
    <div className="flex items-center justify-between px-2 py-1"><p className="text-[11px] font-semibold text-[#6d7175]">Content</p><span className="rounded-full bg-[#f1f1f1] px-1.5 py-0.5 text-[9px] text-[#6d7175]">{items.length}</span></div>
-   <div className="mt-1 space-y-0.5">{items.map(item=><button key={item.id} type="button" onClick={()=>onSelect(item.id)} aria-current={selectedId===item.id?'true':undefined} className={'group flex w-full items-center gap-2 rounded-md px-2 py-2 text-left '+(selectedId===item.id?'bg-[#eaf3ff] text-[#005bd3]':'text-[#303030] hover:bg-[#f6f6f7]')}>
-    <span aria-hidden className={'h-2 w-2 shrink-0 rounded-full '+(item.visible?'bg-[#008060]':'bg-[#c9cccf]')}/>
-    <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{item.label}</span><span className="block truncate text-[10px] text-[#8c9196]">{item.kind}{item.src?' · media attached':''}</span></span>
-    <span aria-hidden className="text-[12px] text-[#8c9196]">›</span>
-   </button>)}{!items.length&&<p className="px-2 py-4 text-center text-[11px] leading-4 text-[#8c9196]">{definition.emptyMessage}</p>}</div>
+   <div className="mt-1 space-y-3">{definition.actions.map(action=>{const group=items.filter(item=>item.actionKey===action.key);if(!group.length)return null;return <div key={action.key} data-t10-content-group={action.key}><div className="flex items-center justify-between px-2 py-1"><span className="text-[10px] font-semibold uppercase tracking-[.06em] text-[#8c9196]">{action.singular}{group.length===1?'':'s'}</span><span className="text-[9px] text-[#8c9196]">{group.length}</span></div><div className="space-y-1">{group.map(item=><div key={item.id} className={'group flex items-center gap-2 rounded-md p-1.5 '+(selectedId===item.id?'bg-[#eaf3ff]':'hover:bg-[#f6f6f7]')}>
+    <button type="button" onClick={()=>onSelect(item.id)} aria-current={selectedId===item.id?'true':undefined} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+     <MediaThumb item={item}/><span className="min-w-0 flex-1"><span className={'block truncate text-[12px] font-medium '+(selectedId===item.id?'text-[#005bd3]':'text-[#303030]')}>{item.label}</span><span className="mt-0.5 flex items-center gap-1 text-[9px] text-[#8c9196]"><span className={'h-1.5 w-1.5 rounded-full '+(item.visible?'bg-[#008060]':'bg-[#c9cccf]')}/><span>{item.visible?'Visible':'Hidden'}</span><span>·</span><span>{item.src?'Media attached':'No media'}</span></span></span>
+    </button>
+    <button type="button" className="h-7 rounded px-1.5 text-[10px] font-medium text-[#005bd3] opacity-70 hover:bg-white hover:opacity-100" onClick={()=>onSelect(item.id)} title={item.src?'Replace or edit media':'Add media'}>{item.src?'Media':'Add media'}</button>
+   </div>)}</div></div>})}{!items.length&&<p className="px-2 py-4 text-center text-[11px] leading-4 text-[#8c9196]">{definition.emptyMessage}</p>}</div>
   </section>
   <section className="border-b border-[#e1e3e5] p-2">
    <p className="px-2 py-1 text-[11px] font-semibold text-[#6d7175]">App sections</p>
