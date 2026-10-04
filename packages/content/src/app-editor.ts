@@ -112,7 +112,7 @@ export function addAppEditorItem(document:PageDocument,slug:string,actionKey:App
  const next=structuredClone(document);
  const parent=next.nodes.find(node=>node.parentId===null&&String(node.props.sectionKind??'')===action.sectionKind);if(!parent)throw new Error(`Missing ${action.sectionKind} section.`);
  if(!canAddAppEditorItem(next,slug,actionKey))throw new Error(`No more ${action.singular.toLowerCase()} items can be added.`);
- const node=createNode(action.component,id,parent.id);node.label=action.singular;node.props={...node.props,...action.defaults};
+ const node:CMSNode=createNode(action.component,id,parent.id);node.label=action.singular;node.props={...node.props,...action.defaults};
  if(actionKey==='track'&&!node.props.stationId){const station=next.nodes.find(candidate=>candidate.component==='station');if(station)node.props.stationId=station.id}
  parent.children.push(node.id);next.nodes.push(node);
  return {document:parsePageDocument(next),selectedId:node.id};
