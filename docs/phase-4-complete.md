@@ -1,26 +1,34 @@
-# Phase 4 — Production Product Layer
+# Phase 4 — Visual editor MVP
 
-## Completed
-- Six dedicated CMS builder definitions: Reasons, Hotline, Adventure, Movie, Kiss Shop and Radio.
-- Per-app field definitions for text, long text, media, numeric ordering, toggles and app-specific item types.
-- Admin role/permission matrix for owner, editor and viewer.
-- Editor autosave controller with debounced persistence and explicit save states.
-- Signed, expiring preview-token utility.
-- Audit event service for site/entity changes.
-- Media validation policy with file-size and MIME restrictions for images, video and audio.
-- Phase 2 versioned publishing and Phase 3 visual editor remain the publishing/editing core.
-- Production-facing documentation boundary established.
+This record follows `phase-wise-plan.md`. The previous production-product-layer checklist described separate scaffolding and has been superseded.
 
-## Release checklist
-1. Configure Supabase URL/keys and service role in server environment.
-2. Configure Storage buckets and upload policies.
-3. Configure PREVIEW_TOKEN_SECRET.
-4. Create owner/admin identities and assign roles.
-5. Run all Supabase migrations.
-6. Seed the six app builders and recipient profile.
-7. Deploy web/admin to Vercel.
-8. Test mobile, tablet and desktop editor flows in a real browser.
-9. Test draft → preview → publish → rollback.
-10. Verify media upload limits and audit records.
+## Implemented
 
-Phase 4 code is complete; these checklist items are environment activation/QA and intentionally cannot be truthfully marked complete from source control alone.
+- Nested, collapsible section/block navigator using the saved child ordering.
+- Selection synchronized between navigator, canvas and inspector; hidden nodes remain editable in the navigator.
+- Mobile/tablet/desktop canvas width presets, with panels accessible through tabs on smaller admin screens. Responsive per-node overrides remain Phase 10.
+- Registry-driven insertion of sections, nested sections, headings, paragraphs, images and app grids. Blocks require a section parent.
+- Deep subtree duplication with new IDs and remapped parent/child references; copies are inserted after the original sibling.
+- Recursive deletion that removes descendant nodes and references, and sibling-only move controls with disabled boundaries.
+- Schema-driven content/design inspector: labels, text, typography, alignment, image URL/description, grid columns/gap, visibility, spacing, colors, radius and opacity.
+- Page-theme inspector connected to the shared renderer for background, text, accent, surface, muted color and app-card radius.
+- Document-snapshot undo/redo, bounded to 50 prior states. New edits clear redo; no-op operations create no history.
+- Operations validate before entering state, leaving the previous valid document intact on error.
+- Role-aware controls: viewer cannot edit, editor cannot publish, owner can edit/publish. Existing server authorization remains authoritative.
+- Save-state comparison against the last successfully saved document; concurrent save clicks and edits during saves are disabled. Save errors are displayed. Settings apply on blur, so an individual text edit creates one history entry.
+- Editor canvas supports keyboard selection and prevents app-link navigation; public app links retain navigation.
+
+## Verification
+
+- 12 operation tests: hierarchy, insertion limits, deep duplication, recursive deletion, sibling ordering, invalid edits, visibility/labels, undo/redo, history bounds and stale selections.
+- Four server-rendering tests: empty editor, panel controls, role restrictions, insertion choices, theme output, hidden subtrees and keyboard selection/link suppression.
+- 18 Phase 3 content tests and 14 Phase 2 security tests pass.
+- Both app TypeScript checks and Next.js production builds pass.
+
+## Release boundary
+
+This is implemented and tested in source. It has not been deployed or exercised interactively in a live browser in this phase. No real recipient content was published. Autosave, conflict detection, draft versioning, transactional publishing, rollback and private preview remain Phase 5; media uploads/picking remain Phase 6. Canvas presets fit the available screen width and are not a substitute for real-device testing.
+
+## Deployment update
+
+This implementation is now live in the Phase 5 production deployments. See `phase-5-release.md` for activation evidence and remaining interactive/real-device QA boundaries.

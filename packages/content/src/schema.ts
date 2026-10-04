@@ -1,4 +1,3 @@
-export type NodeType='section'|'block';
-export type ContentNode={id:string;type:NodeType;component:string;parentId:string|null;props:Record<string,unknown>;children:string[]};
-export type PageDocument={schemaVersion:1;nodes:ContentNode[];rootIds:string[]};
-export const emptyDocument=():PageDocument=>({schemaVersion:1,nodes:[],rootIds:[]});
+// Canonical document contract; schema version 1 is no longer accepted.
+export type { CMSNode as ContentNode, PageDocument } from "./cms";
+export { emptyPage as emptyDocument } from "./cms";

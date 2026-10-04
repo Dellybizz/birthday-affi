@@ -1,0 +1,92 @@
+'use client';
+import {useArchiveNavigation} from './archive-navigation';
+import {useContext,useEffect,useRef,useState,type CSSProperties,type ReactNode,type PointerEvent} from 'react';
+import {getPublicApp,safeMediaUrl,phoneSwipeCloses,type CMSNode,type PageDocument} from '@wiffeyyyy/content';
+import {DocumentSettingsContext} from './page-layout';
+import {PhoneAppIcon,CameraAppIcon} from './camera-app';
+import {KissShopLogo} from './kiss-shop-logo';
+import {PuzzleIcon} from './puzzle-icon';
+import {VaultIcon} from './vault-icon';
+import {SaragramLogo} from './saragram-icon';
+import {useNotificationShade,useNotificationCount,useNotificationExpanded} from './notification-shade';
+import {useSiteNavigation} from './navigation';
+
+const text=(node:CMSNode,key:string,fallback='')=>String(node.props[key]??fallback);
+function Glyph({kind,level=100}:{kind:'wifi'|'signal'|'battery'|'back'|'home'|'recent';level?:number}){
+ const paths={wifi:<><path d="M3 8a15 15 0 0 1 18 0M6 12a10 10 0 0 1 12 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="20" r="1"/></>,signal:<><path d="M4 20v-3M9 20v-7M14 20V9M19 20V4"/></>,battery:<><rect x="3" y="6" width="16" height="12" rx="3"/><path d="M22 10v4"/><rect x="6" y="9" width={10*Math.min(100,Math.max(0,level))/100} height="6" rx="1" fill="currentColor" stroke="none"/></>,back:<path d="m15 5-7 7 7 7"/>,home:<circle cx="12" cy="12" r="7"/>,recent:<rect x="5" y="5" width="14" height="14" rx="2"/>};
+ return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[kind]}</svg>;
+}
+export function PhoneHome({document,onSelect,selectedId,persist=false,contained=false,renderNode}:{document:PageDocument;onSelect?:(id:string)=>void;selectedId?:string;persist?:boolean;contained?:boolean;renderNode?:(id:string)=>ReactNode}){
+ const archiveNavigation=useArchiveNavigation();
+ const settings=useContext(DocumentSettingsContext),navigation=useSiteNavigation(),editing=!!onSelect;
+ const byId=new Map(document.nodes.map(n=>[n.id,n]));const root=document.nodes.find(n=>n.parentId===null&&n.props.phonePart==='home')!;
+ const nodes=root.children.map(id=>byId.get(id)!).filter(n=>n.visible);
+ const wallpaper=nodes.find(n=>n.props.phonePart==='wallpaper'),status=nodes.find(n=>n.props.phonePart==='status'),inbox=nodes.find(n=>n.props.phonePart==='notifications');
+ const notifications=inbox?inbox.children.map(id=>byId.get(id)!).filter(n=>n.visible):[];
+ const sharedOpen=useNotificationShade(),sharedCount=useNotificationCount(),sharedExpanded=useNotificationExpanded();
+ const [now,setNow]=useState<Date|null>(null),[open,setLocalOpen]=useState(false),[dismissed,setDismissed]=useState<string[]>([]),[reduceMotion,setReduceMotion]=useState(false),[folder,setFolder]=useState<string|null>(null),[imageFailed,setImageFailed]=useState(false);
+ const dialog=useRef<HTMLDialogElement>(null),gesture=useRef<{x:number;y:number;id:number;t:number}|null>(null);
+ const shadeGesture=useRef<{x:number;y:number;id:number;t:number;scroll:number;scroller:HTMLElement|null;dragging:boolean;scrolling:boolean}|null>(null),suppressClick=useRef(false);
+ const setOpen=(value:boolean)=>{if(value&&sharedOpen&&!editing)sharedOpen();else setLocalOpen(value)};
+ const closeShade=()=>{setOpen(false);dialog.current?.style.removeProperty('--shade-drag');};
+ const startShadeSwipe=(event:PointerEvent<HTMLDialogElement>)=>{if(event.button!==0)return;const target=event.target as HTMLElement,scroller=target.closest<HTMLElement>('.phone-notifications');suppressClick.current=false;shadeGesture.current={x:event.clientX,y:event.clientY,id:event.pointerId,t:performance.now(),scroll:scroller?.scrollTop??0,scroller,dragging:false,scrolling:false};};
+ const moveShadeSwipe=(event:PointerEvent<HTMLDialogElement>)=>{const start=shadeGesture.current;if(!start||start.id!==event.pointerId)return;const dx=event.clientX-start.x,dy=event.clientY-start.y;if(Math.abs(dy)<10||Math.abs(dy)<Math.abs(dx)*1.2)return;
+  if(start.scroller&&start.scroller.scrollHeight>start.scroller.clientHeight+1&&!(dy<0&&start.scroll>=start.scroller.scrollHeight-start.scroller.clientHeight-1)){start.scrolling=true;start.scroller.scrollTop=start.scroll-dy;suppressClick.current=true;return;}
+  if(dy>=0)return;start.dragging=true;suppressClick.current=true;event.currentTarget.setPointerCapture(event.pointerId);event.currentTarget.style.setProperty('--shade-drag',Math.min(0,dy)+'px');event.currentTarget.dataset.dragging='true';};
+ const endShadeSwipe=(event:PointerEvent<HTMLDialogElement>)=>{const start=shadeGesture.current;shadeGesture.current=null;event.currentTarget.removeAttribute('data-dragging');event.currentTarget.style.removeProperty('--shade-drag');if(start&&!start.scrolling&&phoneSwipeCloses(event.clientX-start.x,event.clientY-start.y,performance.now()-start.t))closeShade();};
+ const cancelShadeSwipe=()=>{shadeGesture.current=null;dialog.current?.removeAttribute('data-dragging');dialog.current?.style.removeProperty('--shade-drag');};
+ useEffect(()=>{const tick=()=>setNow(new Date());tick();const timer=setInterval(tick,1000*30);return()=>clearInterval(timer)},[]);
+ useEffect(()=>{setImageFailed(false)},[wallpaper?.props.src]);
+ useEffect(()=>{if(!persist)return;try{const saved=JSON.parse(localStorage.getItem('wiffeyyyy:phone-home')??'{}');if(Array.isArray(saved.dismissed))setDismissed(saved.dismissed.filter((id:unknown)=>typeof id==='string'));setReduceMotion(saved.reduceMotion===true)}catch{}},[persist]);
+ const save=(ids:string[],motion=reduceMotion)=>{setDismissed(ids);setReduceMotion(motion);if(persist)try{localStorage.setItem('wiffeyyyy:phone-home',JSON.stringify({version:1,dismissed:ids.slice(-500),reduceMotion:motion}))}catch{}};
+ useEffect(()=>{const el=dialog.current;if(!el)return;let animation:Animation|undefined;const reduced=reduceMotion||window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(open){suppressClick.current=false;if(!el.open){if(editing||contained)el.show();else el.showModal();}animation=el.animate([{transform:'translateY(-110%)'},{transform:'translateY(0)'}],{duration:reduced?0:300,easing:'cubic-bezier(.22,1,.36,1)'});}else if(el.open){animation=el.animate([{transform:getComputedStyle(el).transform},{transform:'translateY(-110%)'}],{duration:reduced?0:250,easing:'ease-in',fill:'forwards'});animation.finished.then(()=>el.close()).catch(()=>{});}return()=>animation?.cancel()},[open,editing,contained,reduceMotion]);
+ useEffect(()=>{if(!editing)return;const selected=byId.get(selectedId??'');if(selected&&(selected.id===inbox?.id||selected.parentId===inbox?.id))setOpen(true)},[selectedId,editing,inbox?.id]);
+ const mark=(node:CMSNode,content:ReactNode,className='',style:CSSProperties={})=><div key={node.id} data-phone-node={node.id} className={className} style={{color:node.props.color?String(node.props.color):undefined,padding:node.props.padding?Number(node.props.padding):undefined,margin:node.props.margin?Number(node.props.margin):undefined,opacity:node.props.opacity!==undefined?Number(node.props.opacity):undefined,background:node.props.phonePart!=='wallpaper'&&node.props.background&&node.props.background!=='transparent'?String(node.props.background):undefined,...style,outline:editing&&selectedId===node.id?'2px solid #ffb3d0':undefined}} onClick={editing?e=>{e.stopPropagation();e.preventDefault();onSelect(node.id)}:undefined} onKeyDown={editing?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onSelect(node.id)}}:undefined} role={editing?'button':undefined} tabIndex={editing?0:undefined} aria-label={editing?'Select '+node.label:undefined}>{content}</div>;
+ const clock=now?new Intl.DateTimeFormat('en',{hour:'numeric',minute:'2-digit',hour12:nodes.find(n=>n.props.phonePart==='widget')?.props.clockFormat!=='24',timeZone:settings.timezone}).format(now):'—:—';
+ const date=now?new Intl.DateTimeFormat('en',{weekday:'short',month:'long',day:'numeric',timeZone:settings.timezone}).format(now):'Birthday edition';
+ const route=(slug:string)=>slug==='home'?'/home':getPublicApp(slug)?'/app/'+slug:'/pages/'+slug;
+ const active=notifications.filter(n=>editing||!dismissed.includes(n.id));
+ const src=wallpaper&&safeMediaUrl(wallpaper.props.src)?text(wallpaper,'src'):'';
+ const renderText=(n:CMSNode)=>{if(!n.visible)return null;const value=n.props.binding==='nickname'?settings.nickname:text(n,'text');return mark(n,n.component==='heading'?<h1>{value}</h1>:<p>{value}</p>,'phone-widget-line',{fontSize:n.props.size?Number(n.props.size):undefined,color:n.props.color?String(n.props.color):undefined,textAlign:n.props.align as CSSProperties['textAlign']});};
+ const appIcon=(n:CMSNode)=>{
+  const slug=text(n,'pageSlug'),target=navigation?.find(item=>item.href===route(slug));
+  if(slug==='radio')return null;
+  if(navigation&&!target&&slug!=='camera'&&slug!=='hotline'&&slug!=='vault'&&slug!=='pieces')return null;
+  if(target&&!target.visible)return null;
+  const visibleParent=(id:string|null):boolean=>{if(!id)return true;const item=navigation?.find(x=>x.id===id);return !!item&&item.visible&&visibleParent(item.parentId)};
+  if(target&&!visibleParent(target.parentId))return null;
+  const appLabel=slug==='pieces'?'Pieces of Us':slug==='vault'?'Vault':slug==='camera'?'Clicksara':slug==='hotline'?'Hotdial':slug==='movie'?'Saragram':slug==='adventure'?'Pardanasheen':slug==='reasons'&&['Reasons','Reasons I’m Obsessed'].includes(text(n,'text',target?.label??slug))?'Adore':text(n,'text',target?.label??slug);
+  const custom=text(n,'src'),icon=slug==='reasons'?'♡':slug==='adventure'?'🌸':text(n,'icon',target?.icon??'♡');
+  return mark(n,<a className="phone-app-link" href={editing?undefined:target?.href??(slug==='pieces'?'/app/pieces':route(slug))} tabIndex={editing?-1:undefined} aria-label={'Open '+appLabel}><span className="phone-icon" style={{background:slug==='reasons'&&['#f3a8c8','#e8b4d0'].includes(text(n,'iconBackground','#e8b4d0'))?'#75263e':text(n,'iconBackground','#e8b4d0'),borderRadius:Number(n.props.radius??14)}}>{slug==='pieces'?<PuzzleIcon/>:slug==='kiss-shop'?<KissShopLogo/>:slug==='vault'?<VaultIcon/>:slug==='hotline'?<PhoneAppIcon/>:slug==='camera'?<CameraAppIcon/>:slug==='movie'?<SaragramLogo size={60}/>:custom&&safeMediaUrl(custom)?<img src={custom} alt="" loading="lazy"/>:<span aria-hidden="true">{icon}</span>}</span><span className="phone-icon-label">{appLabel}</span></a>,'phone-app');
+ };
+ const launcher=(node:CMSNode,dock=false)=>{const children=node.children.map(id=>byId.get(id)!).filter(n=>n.visible),grid=children.find(n=>n.component==='app-grid'),icons=children.filter(n=>n.props.phonePart==='app-icon'&&n.props.pageSlug!=='radio');
+  if(!icons.some(n=>n.props.pageSlug==='camera'))icons.push({...node,id:node.id+'-camera',component:'image',children:[],props:{phonePart:'app-icon',pageSlug:'camera',text:'Clicksara',placement:'dock'}});
+  if(!icons.some(n=>n.props.pageSlug==='vault'))icons.push({...node,id:node.id+'-vault',component:'image',children:[],props:{phonePart:'app-icon',pageSlug:'vault',text:'Vault',placement:'grid'}});
+  if(!icons.some(n=>n.props.pageSlug==='pieces'))icons.push({...node,id:node.id+'-pieces',component:'image',children:[],props:{phonePart:'app-icon',pageSlug:'pieces',text:'Pieces of Us',placement:'grid'}});
+  const extra=dock?[]:navigation?.filter(item=>item.parentId===null&&item.visible&&!node.children.map(id=>byId.get(id)!).some(icon=>icon.props.phonePart==='app-icon'&&route(text(icon,'pageSlug'))===item.href)&&!item.href?.startsWith('/app/'))??[];
+  return mark(node,<>{grid&&editing&&!dock&&mark(grid,<span>App grid settings</span>,'phone-grid-settings')}<div className="phone-apps" style={{gridTemplateColumns:dock?undefined:`repeat(${Math.min(4,Math.max(1,Number(grid?.props.columns??4)))},minmax(0,1fr))`,gap:Number(grid?.props.gap??12)}}>{icons.filter(n=>['camera','hotline','adventure'].includes(String(n.props.pageSlug))||(n.props.placement==='dock')===dock).map(appIcon)}{extra.map(item=><div key={item.id} className="phone-app">{navigation?.some(n=>n.parentId===item.id&&n.visible)?<button className="phone-app-link" onClick={()=>!editing&&setFolder(item.id)} disabled={editing}><span className="phone-icon">{item.icon||'▦'}</span><span className="phone-icon-label">{item.label}</span></button>:item.href&&<a className="phone-app-link" href={editing?undefined:item.href}><span className="phone-icon">{item.icon||'♡'}</span><span className="phone-icon-label">{item.label}</span></a>}</div>)}</div></>,dock?'phone-dock':'phone-launcher');};
+ return <div className="phone-home phone-ios" data-reduce-motion={reduceMotion||undefined} style={{color:root.props.color?String(root.props.color):'#ffffff',backgroundColor:wallpaper?text(wallpaper,'background','#593f65'):'#593f65'}}>
+  {root.visible&&<>
+  {wallpaper&&mark(wallpaper,<>{src&&!imageFailed&&<img className="phone-wallpaper-image" src={src} alt={text(wallpaper,'alt')} fetchPriority="high" onError={()=>setImageFailed(true)} style={{objectFit:text(wallpaper,'objectFit','cover') as CSSProperties['objectFit'],objectPosition:`${wallpaper.props.focalX??50}% ${wallpaper.props.focalY??50}%`}}/>}<div className="phone-wallpaper-dim" style={{background:`rgba(0,0,0,${wallpaper.props.dim??0.15})`}}/></>,'phone-wallpaper')}
+  <div className="phone-surface">
+   <a className="phone-archive-back" href={editing?undefined:archiveNavigation.backHref} aria-label="Return to In My Heart" tabIndex={editing?-1:undefined}>{archiveNavigation.backLabel}</a>
+   {status&&mark(status,<button className="phone-status-button" aria-label={`Open notification shade, ${sharedCount??active.length} notifications`} aria-expanded={sharedExpanded??open} onClick={()=>setOpen(true)} style={{touchAction:'none'}} onPointerDown={e=>{gesture.current={x:e.clientX,y:e.clientY,id:e.pointerId,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={e=>{const start=gesture.current;gesture.current=null;if(start&&e.clientY-start.y>35&&Math.abs(e.clientX-start.x)<100)setOpen(true)}} onPointerCancel={()=>{gesture.current=null}}><span className="phone-status-time">{clock.replace(/\s?(AM|PM)$/,'')}</span><span className="phone-island" aria-hidden="true"><i/></span><span className="phone-status-right"><Glyph kind="signal"/><Glyph kind="wifi"/><Glyph kind="battery" level={Number(status.props.battery??100)}/></span></button>,'phone-status')}
+   <div className="phone-content">{nodes.filter(n=>!['wallpaper','status','notifications','navigation'].includes(text(n,'phonePart'))).map(n=>{
+    if(n.props.phonePart==='launcher')return launcher(n);
+    if(n.props.phonePart==='widget'){if(root.props.showWidget==='false')return null;return mark(n,<><div className="phone-widget-copy">{n.children.map(id=>byId.get(id)!).filter(child=>child.visible&&(child.component==='heading'||child.props.binding==='nickname')).map(renderText)}<p className="phone-widget-date">{date}</p></div><div className="phone-clock"><span>{clock.replace(/\s?(AM|PM)$/,'')}</span><span className="phone-clock-caption">{clock.match(/(AM|PM)$/)?.[0]??''}</span></div></>,'phone-widget');}
+    return <div key={n.id} className="phone-note">{renderNode?renderNode(n.id):mark(n,<>{n.children.map(id=>renderText(byId.get(id)!))}</>)}</div>;
+   })}</div>
+   <div className="phone-bottom">{nodes.filter(n=>n.props.phonePart==='launcher').map(n=>launcher(n,true))}
+   {nodes.filter(n=>n.props.phonePart==='navigation').map(n=>mark(n,<div className="phone-navigation" aria-label="Phone navigation"><button className="phone-home-indicator" aria-label="Return to home screen" onClick={()=>{closeShade();setFolder(null);}}><span/></button></div>,'phone-navigation-layer'))}</div>
+  </div>
+  {inbox&&(!sharedOpen||editing)&&<dialog ref={dialog} className={'phone-shade'+(editing||contained?' phone-shade-contained':'')} data-reduce-motion={reduceMotion||undefined} aria-labelledby="phone-shade-title" onCancel={closeShade} onClose={()=>setOpen(false)} onPointerDownCapture={startShadeSwipe} onPointerMove={moveShadeSwipe} onPointerUp={endShadeSwipe} onPointerCancel={cancelShadeSwipe} onClickCapture={e=>{if(suppressClick.current){e.preventDefault();e.stopPropagation();suppressClick.current=false;}}} style={{'--phone-shade-color':inbox.props.background&&inbox.props.background!=='transparent'?String(inbox.props.background):'#f3eaf3'} as CSSProperties}>
+   <div className="phone-shade-handle" aria-hidden="true"><span/></div>
+   {mark(inbox,<><header className="phone-shade-heading"><div><p>{date}</p><h2 id="phone-shade-title">{text(inbox,'title','Notifications')}</h2></div><button className="phone-round-button" onClick={()=>setOpen(false)} aria-label="Close notification shade">×</button></header><div className="phone-quick-settings"><button aria-pressed={reduceMotion} onClick={()=>save(dismissed,!reduceMotion)}><span aria-hidden="true">◌</span>Reduce motion</button></div></>)}
+   <div className="phone-notifications">{active.length?active.map(n=>mark(n,<article className="phone-notification"><span className="phone-notification-icon" aria-hidden="true">{text(n,'icon','♡')}</span><a href={editing?undefined:route(text(n,'pageSlug','home'))} onClick={()=>{save([...new Set([...dismissed,n.id])]);setOpen(false)}}><span className="phone-notification-source">{settings.siteTitle}</span><h3>{text(n,'title')}</h3><p>{text(n,'body')}</p></a><button aria-label={'Dismiss '+text(n,'title')} onClick={()=>save([...new Set([...dismissed,n.id])])}>×</button></article>)):<p className="phone-inbox-empty">{text(inbox,'emptyMessage','All caught up. ♡')}</p>}</div>
+   {active.length>0&&<button className="phone-clear" disabled={editing} onClick={()=>save(notifications.map(n=>n.id))}>Clear all</button>}
+   <button className="phone-shade-close" onClick={closeShade} aria-label="Close notification shade"><span className="phone-shade-home-indicator"/><span className="phone-close-hint">Swipe up to close</span></button>
+  </dialog>}
+  {folder&&<div className="phone-folder" role="region" aria-label="App folder"><button onClick={()=>setFolder(null)} aria-label="Close app folder">×</button><h2>{navigation?.find(n=>n.id===folder)?.label}</h2>{navigation?.filter(n=>n.parentId===folder&&n.visible).map(n=>n.href?<a key={n.id} href={n.href}><span>{n.icon}</span>{n.label}</a>:<button key={n.id} onClick={()=>setFolder(n.id)}>{n.icon} {n.label}</button>)}</div>}
+  </>}
+ </div>;
+}

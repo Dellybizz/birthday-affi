@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+import {readFileSync} from 'node:fs';
+const module={exports:{}};new Function('module','exports',ts.transpile(readFileSync('apps/admin/lib/media-policy.ts','utf8'),{module:ts.ModuleKind.CommonJS}))(module,module.exports);
+const {validateMedia,matchesSignature,mediaKind}=module.exports;
+test('upload validation rejects empty, nonfinite, unsupported and over-limit files',()=>{for(const size of [0,-1,NaN,Infinity,1.5,8388609])assert.equal(validateMedia('image',size,'image/png').ok,false);assert.equal(validateMedia('image',8388608,'image/png').ok,true);assert.equal(validateMedia('video',52428801,'video/mp4').ok,false);assert.equal(validateMedia('image',100,'image/svg+xml').ok,false);assert.equal(validateMedia('audio',100,'text/html').ok,false);assert.equal(mediaKind('application/pdf'),null)});
+test('file signatures reject spoofed HTML while recognizing allowed containers',()=>{const ascii=s=>new Uint8Array([...s].map(c=>c.charCodeAt(0)));for(const mime of ['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','audio/mpeg','audio/wav','audio/ogg','audio/mp4'])assert.equal(matchesSignature(mime,ascii('<html>payload</html>')),false);assert.equal(matchesSignature('image/png',new Uint8Array([137,80,78,71,13,10,26,10])),true);assert.equal(matchesSignature('image/jpeg',new Uint8Array([255,216,255])),true);assert.equal(matchesSignature('image/webp',ascii('RIFF0000WEBP')),true);assert.equal(matchesSignature('audio/wav',ascii('RIFF0000WAVE')),true);assert.equal(matchesSignature('video/mp4',ascii('0000ftypisom')),true)});

@@ -1,0 +1,22 @@
+name: Production checks
+on:
+  workflow_dispatch:
+  deployment_status:
+permissions:
+  contents: read
+concurrency:
+  group: production-check
+  cancel-in-progress: false
+jobs:
+  public-smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/phase2-database-auth
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/production-check.mjs

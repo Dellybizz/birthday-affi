@@ -1,0 +1,119 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),ts=require('typescript'),cache=new Map();
+function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file).exports;const module={exports:{}};cache.set(file,module);const source=fs.readFileSync(file,'utf8');const code=ts.transpile(source,{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022});new Function('require','module','exports',code)(name=>name.startsWith('.')?load(path.resolve(path.dirname(file),name+'.ts')):require(name),module,module.exports);return module.exports}
+const editor=load('packages/content/src/app-editor.ts');
+const runtime=load('packages/content/src/runtime-app-config.ts');
+const pages=load('packages/content/src/default-pages.ts');
+const panel=fs.readFileSync(new URL('../apps/admin/components/app-content-manager.tsx',import.meta.url),'utf8');
+const shell=fs.readFileSync(new URL('../apps/admin/app/editor/[slug]/editor-client.tsx',import.meta.url),'utf8');
+
+test('T10 defines purpose-built authoring for every editable phone app',()=>{
+ const expected={reasons:['reason'],hotline:['keypad-message'],adventure:['photo','video'],movie:['post','reel'],'kiss-shop':['gift'],radio:['station','track']};
+ for(const [slug,actions] of Object.entries(expected))assert.deepEqual(editor.getAppEditorDefinition(slug).actions.map(action=>action.key),actions,slug);
+});
+
+test('T10 Saragram creates distinct photo posts and video reels inside the canonical feed',()=>{
+ let document=pages.createDefaultPage('movie');
+ let result=editor.addAppEditorItem(document,'movie','post','t10-post');document=result.document;
+ result=editor.addAppEditorItem(document,'movie','reel','t10-reel');document=result.document;
+ const post=document.nodes.find(node=>node.id==='t10-post'),reel=document.nodes.find(node=>node.id==='t10-reel');
+ assert.equal(post.props.mediaKind,'image');assert.equal(reel.props.mediaKind,'video');
+ const feed=document.nodes.find(node=>node.props.sectionKind==='movie-player');assert.ok(feed.children.includes('t10-post'));assert.ok(feed.children.includes('t10-reel'));
+ const items=editor.getAppEditorItems(document,'movie');assert.equal(items.find(item=>item.id==='t10-post').actionKey,'post');assert.equal(items.find(item=>item.id==='t10-post').mediaKind,'image');assert.equal(items.find(item=>item.id==='t10-reel').actionKey,'reel');assert.equal(items.find(item=>item.id==='t10-reel').mediaKind,'video');
+});
+
+test('T10 Pardanasheen adds photos and videos to the real photo library',()=>{
+ let document=pages.createDefaultPage('adventure');
+ document=editor.addAppEditorItem(document,'adventure','photo','t10-photo').document;
+ document=editor.addAppEditorItem(document,'adventure','video','t10-video').document;
+ assert.equal(document.nodes.find(node=>node.id==='t10-photo').component,'image');
+ assert.equal(document.nodes.find(node=>node.id==='t10-video').component,'video');
+ assert.equal(editor.getAppEditorItems(document,'adventure').slice(-2).length,2);
+});
+
+test('T10 section shortcuts resolve app-specific settings such as Saragram profile',()=>{
+ const document=pages.createDefaultPage('movie'),sections=editor.getAppEditorSections(document,'movie');
+ assert.equal(sections.find(value=>value.entry.key==='profile').node.props.sectionKind,'movie-credits');
+ assert.equal(sections.find(value=>value.entry.key==='ending').node.props.sectionKind,'birthday-ending');
+});
+
+test('T10 app panel exposes add-content, item collection, app sections and shared resources',()=>{
+ for(const marker of ['data-t10-app-content-manager','Add content','Content','App sections','Shared resources','Media library'])assert.match(panel,new RegExp(marker));
+ assert.match(panel,/onAdd\(action\.key\)/);assert.match(panel,/onSelect\(item\.id\)/);
+});
+
+test('T10 replaces generic app embeds with the live app-content manager in the Shopify editor',()=>{
+ assert.match(shell,/import AppContentManager/);
+ assert.match(shell,/addAppEditorItem/);
+ assert.match(shell,/title="App content"/);
+ assert.match(shell,/<AppContentManager slug=\{currentSlug\}/);
+ assert.match(shell,/onAdd=\{addAppContent\}/);
+});
+
+test('T10.2 app operations preserve canonical hierarchy and support grouped reorder, visibility, duplicate and delete',()=>{
+ let document=pages.createDefaultPage('adventure');
+ document=editor.addAppEditorItem(document,'adventure','photo','t10-a').document;
+ document=editor.addAppEditorItem(document,'adventure','video','t10-video-between').document;
+ document=editor.addAppEditorItem(document,'adventure','photo','t10-b').document;
+ const parentId=document.nodes.find(node=>node.id==='t10-a').parentId,parent=()=>document.nodes.find(node=>node.id===parentId);
+ assert.ok(parent().children.indexOf('t10-a')<parent().children.indexOf('t10-b'));
+ document=editor.moveAppEditorItem(document,'adventure','t10-b',-1);assert.ok(parent().children.indexOf('t10-b')<parent().children.indexOf('t10-a'));
+ assert.deepEqual(editor.getAppEditorItems(document,'adventure').filter(item=>item.actionKey==='photo').map(item=>item.id).slice(-2),['t10-b','t10-a']);
+ document=editor.toggleAppEditorItem(document,'adventure','t10-a');assert.equal(document.nodes.find(node=>node.id==='t10-a').visible,false);
+ let n=0;const duplicated=editor.duplicateAppEditorItem(document,'adventure','t10-a',()=>`t10-copy-${++n}`);document=duplicated.document;assert.ok(document.nodes.some(node=>node.id===duplicated.selectedId));
+ document=editor.removeAppEditorItem(document,'adventure','t10-a');assert.equal(document.nodes.some(node=>node.id==='t10-a'),false);
+});
+
+test('T10.2 direct media binding enforces the app item media type',()=>{
+ let document=pages.createDefaultPage('movie');
+ const imageId='11111111-1111-4111-8111-111111111111',videoId='22222222-2222-4222-8222-222222222222';
+ document=editor.addAppEditorItem(document,'movie','post','t10-media-post').document;
+ document=editor.addAppEditorItem(document,'movie','reel','t10-media-reel').document;
+ document=editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:imageId,kind:'image',alt_text:'A memory',width:1200,height:900,metadata:{variants:[480,960]}});
+ const post=document.nodes.find(node=>node.id==='t10-media-post');assert.equal(post.props.src,'/media/'+imageId);assert.equal(post.props.alt,'A memory');assert.equal(post.props.mediaAssetId,imageId);
+ assert.throws(()=>editor.setAppEditorItemMedia(document,'movie','t10-media-post',{id:videoId,kind:'video',metadata:{}}),/Choose image media/);
+ document=editor.setAppEditorItemMedia(document,'movie','t10-media-reel',{id:videoId,kind:'video',metadata:{}});assert.equal(document.nodes.find(node=>node.id==='t10-media-reel').props.src,'/media/'+videoId);
+});
+
+test('T10.2 app sidebar exposes inline operations and an in-editor media picker',()=>{
+ for(const marker of ['data-t10-app-item','Move ','Duplicate','Delete','Replace media','MediaLibrary','role="dialog"'])assert.match(panel,new RegExp(marker));
+ assert.match(panel,/onMove\(item\.id,-1\)/);assert.match(panel,/onMove\(item\.id,1\)/);assert.match(panel,/onToggle\(item\.id\)/);assert.match(panel,/onDuplicate\(item\.id\)/);assert.match(panel,/onDelete\(item\.id\)/);assert.match(panel,/onMedia\(picker\.id,media\)/);
+});
+
+test('T10.2 editor shell wires all app-content mutations through the canonical draft reducer',()=>{
+ for(const helper of ['moveAppEditorItem','toggleAppEditorItem','duplicateAppEditorItem','removeAppEditorItem','setAppEditorItemMedia'])assert.match(shell,new RegExp(helper));
+ for(const prop of ['siteId={siteId}','onMove={moveAppContent}','onToggle={toggleAppContent}','onDuplicate={duplicateAppContent}','onDelete={deleteAppContent}','onMedia={setAppContentMedia}'])assert.ok(shell.includes(prop),prop);
+});
+
+test('T10.3 app collections expose search, health counts, missing-media and hidden filters',()=>{
+ for(const marker of ['data-t10-content-health','Search ','Missing media','Hidden','Clear search and filters'])assert.match(panel,new RegExp(marker));
+ assert.match(panel,/missingMedia=items\.filter/);assert.match(panel,/filter==='missing'/);assert.match(panel,/filter==='hidden'/);assert.match(panel,/visibleItems=useMemo/);
+});
+
+test('T10.4 runtime presentation contracts are strict and contain no visitor secrets',()=>{
+ for(const slug of ['camera','vault','pieces']){
+  const defaults=runtime.defaultRuntimeAppConfig(slug);assert.equal(runtime.parseRuntimeAppConfig(slug,defaults).slug,slug);
+  assert.throws(()=>runtime.parseRuntimeAppConfig(slug,{...defaults,unexpected:'nope'}),/Unknown or missing/);
+ }
+ const vault=runtime.defaultRuntimeAppConfig('vault');for(const forbidden of ['answer','story','chapters','unlockHash'])assert.equal(Object.hasOwn(vault,forbidden),false,forbidden);
+});
+
+test('T10.4 runtime settings use versioned public configuration while visitor state stays outside CMS',()=>{
+ const migration=fs.readFileSync('supabase/migrations/20261004041000_t10_runtime_app_config.sql','utf8');
+ for(const marker of ['runtime_app_configurations','runtime_app_configuration_versions','change_runtime_app_configuration','get_published_runtime_app_configuration'])assert.match(migration,new RegExp(marker));
+ assert.doesNotMatch(migration,/"answer"\s*:/);assert.doesNotMatch(migration,/"story"\s*:/);assert.doesNotMatch(migration,/"chapters"\s*:/);
+ const runtimeEditor=fs.readFileSync('apps/admin/components/runtime-app-editor.tsx','utf8'),catalog=fs.readFileSync('apps/admin/lib/editor-pages.ts','utf8');
+ assert.match(runtimeEditor,/data-t10-runtime-editor/);assert.match(runtimeEditor,/Runtime state stays separate/);assert.match(runtimeEditor,/changeRuntimeAppConfiguration/);assert.match(runtimeEditor,/MediaLibrary/);
+ assert.match(catalog,/editorHref:'\/runtime\/'\+runtime\.slug/);assert.match(catalog,/editorEnabled:true/);
+});
+
+test('T10.4 Clicksara, Vault and Pieces consume published presentation settings without moving their runtime state',()=>{
+ const cms=fs.readFileSync('apps/web/lib/cms.ts','utf8'),cameraPage=fs.readFileSync('apps/web/app/app/camera/page.tsx','utf8'),vaultPage=fs.readFileSync('apps/web/app/app/vault/page.tsx','utf8'),piecesPage=fs.readFileSync('apps/web/app/app/pieces/page.tsx','utf8');
+ const camera=fs.readFileSync('packages/ui/src/camera-app.tsx','utf8'),vault=fs.readFileSync('apps/web/app/app/vault/vault-client.tsx','utf8'),pieces=fs.readFileSync('packages/ui/src/puzzle-app.tsx','utf8');
+ assert.match(cms,/getPublishedRuntimeAppConfiguration/);for(const page of [cameraPage,vaultPage,piecesPage])assert.match(page,/getPublishedRuntimeAppConfiguration/);
+ assert.match(camera,/config\.permissionTitle/);assert.match(camera,/useCameraRoll\(\)/);assert.match(vault,/config\.question/);assert.match(vault,/fetch\('\/api\/vault'/);assert.match(pieces,/config\.completionTitle/);assert.match(pieces,/localStorage\.setItem\(STORE/);
+});

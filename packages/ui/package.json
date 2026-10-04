@@ -1,1 +1,31 @@
-{"name":"@wiffeyyyy/ui","private":true,"version":"0.2.1","exports":{"./styles":"./src/styles.css","./cn":"./src/cn.ts","./app-experience":"./src/app-experience.tsx"},"peerDependencies":{"react":"^19.0.0"},"devDependencies":{"@types/react":"^19.0.0","react":"^19.1.0"}}
+{
+  "name": "@wiffeyyyy/ui",
+  "private": true,
+  "version": "0.2.1",
+  "exports": {
+    "./styles": "./src/styles.css",
+    "./camera-app": "./src/camera-app.tsx",
+    "./cn": "./src/cn.ts",
+    "./app-experience": "./src/app-experience.tsx",
+    "./cms-renderer": "./src/cms-renderer.tsx",
+    "./media-player": "./src/media-player.tsx",
+    "./navigation": "./src/navigation.tsx",
+    "./live-hotline": "./src/live-hotline.tsx",
+    "./page-layout": "./src/page-layout.tsx",
+    "./notification-shade": "./src/notification-shade.tsx",
+    "./puzzle-app": "./src/puzzle-app.tsx",
+    "./archive-navigation": "./src/archive-navigation.tsx",
+    "./public-page-shell": "./src/public-page-shell.tsx"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.1.0"
+  },
+  "dependencies": {
+    "@wiffeyyyy/content": "workspace:*",
+    "tailwindcss": "^4.1.0"
+  }
+}

@@ -1,0 +1,1 @@
+T8 authored cinematic frame sequence. Images in this folder are editable/replaceable through the Heart transition backend controls. The final screen handoff uses the live published Home page.

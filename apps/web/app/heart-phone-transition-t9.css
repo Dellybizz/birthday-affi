@@ -1,0 +1,40 @@
+/* T9 cinematic integration: decoded two-frame compositor, scene camera motion, mobile crop discipline and calibrated Live Home handoff. */
+.heart-phone-frame-compositor{position:absolute;inset:0;z-index:2;overflow:hidden;isolation:isolate;background:var(--transition-background,#050404)}
+.heart-phone-frame-layer{position:absolute;inset:0;opacity:0;transition:opacity var(--t9-frame-blend,460ms) cubic-bezier(.22,.61,.36,1);will-change:opacity;pointer-events:none}
+.heart-phone-frame-layer[data-frame-state="active"]{opacity:1;z-index:2}
+.heart-phone-frame-layer[data-frame-state="incoming"]{opacity:0;z-index:2}
+.heart-phone-frame-layer[data-frame-state="outgoing"]{opacity:0;z-index:1}
+.heart-phone-frame-layer .heart-phone-transition-keyframe{position:absolute;inset:0;width:100%;height:100%;display:block;background:var(--transition-background,#050404);backface-visibility:hidden;transform-style:preserve-3d;will-change:transform,scale,translate,filter;filter:brightness(var(--transition-brightness,1)) contrast(var(--transition-contrast,1)) saturate(var(--transition-saturation,1));transform:translate(var(--transition-stage-x,0),var(--transition-stage-y,0)) scale(var(--transition-stage-scale,1));transform-origin:center}
+
+/* Each authored still gets a restrained virtual-camera move. The blend lives on the wrapper, so outgoing and incoming frames can overlap without fighting opacity keyframes. */
+.heart-phone-frame-layer[data-frame-scene="box-establishing"] .heart-phone-transition-keyframe{animation:t9-box-camera 1.2s cubic-bezier(.22,.61,.36,1) both}
+.heart-phone-frame-layer[data-frame-scene="gloves-enter"] .heart-phone-transition-keyframe{animation:t9-gloves-camera 1.4s cubic-bezier(.22,.61,.36,1) both}
+.heart-phone-frame-layer[data-frame-scene="top-down-open"] .heart-phone-transition-keyframe{animation:t9-open-camera 1.8s cubic-bezier(.22,.61,.36,1) both}
+.heart-phone-frame-layer[data-frame-scene="phone-lift"] .heart-phone-transition-keyframe{animation:t9-lift-camera 1.7s cubic-bezier(.16,.84,.23,1) both}
+.heart-phone-frame-layer[data-frame-scene="screen-wake"] .heart-phone-transition-keyframe{animation:t9-wake-camera 1.4s cubic-bezier(.16,.84,.23,1) both}
+.heart-phone-frame-layer[data-frame-scene="live-handoff"] .heart-phone-transition-keyframe{animation:t9-handoff-frame .8s cubic-bezier(.16,.84,.23,1) both}
+
+/* The photographed final phone sits about 100 px to the right of the centered live shell at the fitted 16:9 crop. During route handoff the real published Home starts there, then glides to the exact destination geometry while the photo recedes. */
+.heart-phone-transition[data-hybrid="true"][data-interface="live-home"][data-scene="live-handoff"] .heart-phone-sync-phone{opacity:0;animation:none}
+.heart-phone-transition[data-hybrid="true"][data-interface="live-home"][data-mode="handoff"] .heart-phone-sync-phone{opacity:var(--transition-interface-opacity,1);animation:t9-live-home-match var(--handoff-duration,500ms) cubic-bezier(.16,.84,.23,1) both;filter:none}
+.heart-phone-transition[data-hybrid="true"][data-interface="live-home"][data-mode="handoff"] .heart-phone-frame-compositor{opacity:.16;filter:blur(1.4px);scale:1.018;transition:opacity .34s ease,filter .34s ease,scale var(--handoff-duration,500ms) cubic-bezier(.16,.84,.23,1)}
+.heart-phone-transition[data-mode="leaving"] .heart-phone-frame-compositor{opacity:.04;filter:blur(4px);scale:1.04;transition:opacity .2s ease,filter .2s ease,scale .3s ease}
+
+@keyframes t9-box-camera{0%{scale:1.008;translate:0 5px}100%{scale:1.028;translate:0 -2px}}
+@keyframes t9-gloves-camera{0%{scale:1.026;translate:0 4px}100%{scale:1.044;translate:0 -3px}}
+@keyframes t9-open-camera{0%{scale:1.025;translate:0 3px}100%{scale:1.052;translate:0 -5px}}
+@keyframes t9-lift-camera{0%{scale:1.03;translate:0 7px}100%{scale:1.06;translate:0 -7px}}
+@keyframes t9-wake-camera{0%{scale:1.04;translate:0 4px}100%{scale:1.065;translate:0 -5px}}
+@keyframes t9-handoff-frame{0%{scale:1.045;translate:0 0}100%{scale:1.07;translate:0 -3px}}
+@keyframes t9-live-home-match{0%{transform:translate(calc(-50% + 100px),calc(-50% - 10px)) scale(calc(var(--phone-fit,1)*.86)) rotateX(0) rotateZ(0);opacity:.08}18%{opacity:1}100%{transform:translate(-50%,-50%) scale(var(--phone-fit,1)) rotateX(0) rotateZ(0);opacity:1}}
+
+@media(max-width:680px){
+ .heart-phone-frame-layer .heart-phone-transition-keyframe{transform-origin:50% 48%}
+ .heart-phone-frame-layer[data-frame-scene="phone-lift"] .heart-phone-transition-keyframe,.heart-phone-frame-layer[data-frame-scene="screen-wake"] .heart-phone-transition-keyframe{transform-origin:50% 46%}
+ .heart-phone-frame-layer[data-frame-scene="live-handoff"] .heart-phone-transition-keyframe{transform-origin:50% 48%}
+ @keyframes t9-live-home-match{0%{transform:translate(calc(-50% + 92px),calc(-50% - 8px)) scale(calc(var(--phone-fit,1)*.86)) rotateX(0) rotateZ(0);opacity:.08}18%{opacity:1}100%{transform:translate(-50%,-50%) scale(var(--phone-fit,1)) rotateX(0) rotateZ(0);opacity:1}}
+}
+@media(prefers-reduced-motion:reduce){
+ .heart-phone-frame-layer{transition:none!important}.heart-phone-frame-layer .heart-phone-transition-keyframe{animation:none!important;translate:none!important;scale:1!important}
+ .heart-phone-transition[data-hybrid="true"][data-interface="live-home"][data-mode="handoff"] .heart-phone-sync-phone{animation:none!important;opacity:1!important;transform:translate(-50%,-50%) scale(var(--phone-fit,1))!important}
+}

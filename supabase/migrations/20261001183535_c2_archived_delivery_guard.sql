@@ -1,0 +1,1 @@
+create or replace function public.get_published_document(site_slug text,page_slug text)returns jsonb language sql stable security invoker set search_path='' as $$select private.public_page_info(site_slug,page_slug)->'document'$$;

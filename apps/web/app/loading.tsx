@@ -1,0 +1,1 @@
+export default function Loading(){return <main role="status" aria-label="Opening your birthday app" className="mx-auto max-w-[430px] p-6"><div className="mb-6 h-8 w-2/3 rounded-xl bg-rose-100"/><div className="h-48 rounded-3xl bg-rose-50"/><p className="mt-4 text-sm">Opening your birthday app…</p></main>}
