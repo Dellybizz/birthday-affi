@@ -6,6 +6,7 @@ import "./heart-phone-transition.css";
 import "./heart-phone-transition-t4.css";
 import "./heart-phone-transition-t5.css";
 import "./heart-phone-transition-t7.css";
+import "./heart-phone-transition-t9.css";
 import {ArchiveJourney} from "../components/archive-journey";
 import { OSProvider } from "../components/os-provider";
 
