@@ -203,3 +203,36 @@ test('B5 document-backed runtime apps protect their routes and publish page-ID n
  await db.query('select public.change_navigation($1,$2,0,false)',[site,JSON.stringify(entries)]);await db.query('select public.change_navigation($1,null,1,true)',[site]);
  const nav=(await db.query("select public.get_public_navigation('phase5-test') result")).rows[0].result;assert.deepEqual(nav.map(n=>n.href),['/app/camera','/app/vault','/app/pieces']);
 })});
+
+test('B6 audio media stays private until published, archive preserves delivery and release usage',async()=>{
+ await run(owner,async()=>{
+ const asset='00000000-0000-4000-8000-000000000020';
+ await db.query("insert into public.media_assets(id,site_id,kind,filename,mime_type,byte_size,storage_path,status)values($1,$2,'audio','song.mp3','audio/mpeg',100,$3,'ready')",[asset,site,site+'/'+asset+'/original']);
+ const document={...osContent.defaultSiteDocument,audio:{tracks:[{assetId:asset,title:'Song',transcript:'Words'}],defaultTrack:asset,loop:true,background:'continue',interruption:'pause'}};
+ await db.query('select public.change_site_configuration($1,$2,0,false)',[site,JSON.stringify(document)]);
+ assert.equal((await db.query("select public.get_published_media('phase5-test',$1) media",[asset])).rows[0].media,null);
+ let usage=(await db.query('select public.get_media_usage($1) usage',[asset])).rows[0].usage;assert.equal(usage.audioDraft,true);assert.equal(usage.audioPublished,false);
+ await db.query('select public.change_site_configuration($1,null,1,true)',[site]);
+ assert.equal((await db.query("select public.get_published_media('phase5-test',$1) media",[asset])).rows[0].media.kind,'audio');
+ await db.query('select public.publish_site_release($1,$2)',[site,'B6 soundtrack']);
+ await db.query('select public.archive_media($1,true)',[asset]);assert.ok((await db.query("select public.get_published_media('phase5-test',$1) media",[asset])).rows[0].media);
+ await db.query("update public.media_assets set caption='New caption',transcript='Text equivalent' where id=$1",[asset]);
+ usage=(await db.query('select public.get_media_usage($1) usage',[asset])).rows[0].usage;assert.equal(usage.audioPublished,true);assert.ok(usage.releases>0);
+ await rejects(()=>db.query('delete from public.media_assets where id=$1',[asset]),/permission denied/);
+ await rejects(()=>db.query('select public.change_site_configuration($1,$2,1,false)',[site,JSON.stringify({...document,audio:{...document.audio,background:null}})]),/Invalid audio/);
+ await rejects(()=>db.query('select public.change_site_configuration($1,$2,1,false)',[site,JSON.stringify({...document,audio:{...document.audio,tracks:[{assetId:other,title:'Missing',transcript:''}],defaultTrack:other}})]),/unavailable/);
+ });
+ await db.exec('begin;set local role anon');try{await assert.rejects(()=>db.query("select public.get_media_usage('00000000-0000-4000-8000-000000000020')"),/permission denied/)}finally{await db.exec('rollback')}
+});
+
+test('B6 app picker media validates kinds and secondary references at save and publish',async()=>{
+ await run(owner,async()=>{
+ const asset='00000000-0000-4000-8000-000000000021',pending='00000000-0000-4000-8000-000000000022';
+ for(const [id,status] of [[asset,'ready'],[pending,'pending']])await db.query("insert into public.media_assets(id,site_id,kind,filename,mime_type,byte_size,storage_path,status)values($1,$2,'audio','voice.mp3','audio/mpeg',100,$3,$4)",[id,site,site+'/'+id+'/original',status]);
+ let revision=0;for(const component of ['audio','hotline-message','radio-track']){const document=appDoc(component);document.nodes[1].props={title:'Recording',body:'Words',src:'/media/'+asset,mediaAssetId:asset,variantWidths:'',captions:'0 | 1 | Hello',transcript:'Hello'};revision=(await save(document,revision)).revision;await publish(revision);assert.ok((await db.query("select public.get_published_media('phase5-test',$1) media",[asset])).rows[0].media)}
+ const wrong=appDoc('movie-scene');wrong.nodes[1].props.src='/media/'+asset;wrong.nodes[1].props.mediaAssetId=asset;await rejects(()=>save(wrong,revision),/unavailable/);
+ const secondary=appDoc('reason');secondary.nodes[1].props.voiceSrc='/media/'+asset;revision=(await save(secondary,revision)).revision;await publish(revision);assert.ok((await db.query("select public.get_published_media('phase5-test',$1) media",[asset])).rows[0].media);
+ secondary.nodes[1].props.voiceSrc='/media/'+pending;await rejects(()=>save(secondary,revision),/unavailable/);secondary.nodes[1].props.voiceSrc='/media/'+other;await rejects(()=>save(secondary,revision),/unavailable/);
+ await rejects(()=>db.query("update public.media_assets set captions='2 | 1 | Reversed' where id=$1",[asset]),/Invalid media caption/);
+ });
+});

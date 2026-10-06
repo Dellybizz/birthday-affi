@@ -4,9 +4,14 @@ import { requireAdmin } from './auth';
 import { validateMedia, matchesSignature, mediaBucket, type MediaKind, type MediaAsset } from './media-policy';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function siteDb(siteId:string){if(!uuid.test(siteId))throw new Error('Invalid site');const db=await adminDb();const {data,error}=await db.from('sites').select('id').eq('id',siteId).eq('slug',process.env.NEXT_PUBLIC_SITE_SLUG??'wiffeyyyy-os').single();if(error||!data)throw new Error('Site not found');return db}
-export async function listMediaAssets(siteId:string,archived=false,readyOnly=false):Promise<MediaAsset[]>{
- await requireAdmin();const db=await siteDb(siteId);let query=db.from('media_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,metadata,status').eq('site_id',siteId).order('created_at',{ascending:false}).limit(200);if(readyOnly)query=query.eq('status','ready');query=archived?query.not('archived_at','is',null):query.is('archived_at',null);const {data,error}=await query;if(error)throw new Error('Unable to load media');return(data??[]).map(m=>({...m,previewUrl:'/media/'+m.id}));
+export async function listMediaAssets(siteId:string,archived=false,readyOnly=false,options:{search?:string;kind?:MediaKind|'';offset?:number}={}):Promise<MediaAsset[]>{
+ await requireAdmin();const search=options.search?.trim()??'',offset=options.offset??0;if(search.length>200||!Number.isSafeInteger(offset)||offset<0||offset>100000||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
+ const db=await siteDb(siteId);let query=db.from('media_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,caption,transcript,captions,metadata,status').eq('site_id',siteId).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+49);
+ if(readyOnly)query=query.eq('status','ready');if(options.kind)query=query.eq('kind',options.kind);
+ if(search){const pattern='%'+search.replace(/[\\%_]/g,char=>'\\'+char)+'%';query=query.or(['filename','alt_text','caption','transcript'].map(field=>field+'.ilike.'+JSON.stringify(pattern)).join(','))}
+ query=archived?query.not('archived_at','is',null):query.is('archived_at',null);const {data,error}=await query;if(error)throw new Error('Unable to load media');return(data??[]).map(m=>({...m,previewUrl:'/media/'+m.id}));
 }
+
 export async function reserveMedia(input:{siteId:string;kind:MediaKind;filename:string;mimeType:string;size:number}){
  await requireAdmin('media:write');const check=validateMedia(input.kind,input.size,input.mimeType);if(!check.ok)throw new Error(check.error);if(typeof input.filename!=='string'||input.filename.length<1||input.filename.length>255)throw new Error('Invalid filename');const db=await siteDb(input.siteId);
  // Fail before reserving metadata if the provider has not provisioned Storage.
@@ -28,5 +33,16 @@ export async function finalizeMedia(id:string,input:{width?:number;height?:numbe
  }
  const {error:finishError}=await db.from('media_assets').update({status:'ready',width:input.width??null,height:input.height??null,duration_ms:input.durationMs??null,metadata:{variants}}).eq('id',id);if(finishError)throw new Error('Unable to finish upload');return{ok:true};
 }
-export async function updateMediaMetadata(id:string,altText:string){await requireAdmin('media:write');if(!uuid.test(id)||typeof altText!=='string'||altText.length>2000)throw new Error('Invalid alt text');const db=await adminDb();const {error}=await db.from('media_assets').update({alt_text:altText}).eq('id',id);if(error)throw new Error('Unable to save alt text');return{ok:true}}
-export async function archiveMedia(id:string,archive=true){await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {error}=await db.rpc('archive_media',{asset_id:id,archive});if(error)throw new Error('Unable to archive media');return{ok:true}}
+export async function updateMediaMetadata(id:string,altText:string){await requireAdmin('media:write');if(!uuid.test(id)||typeof altText!=='string'||altText.length>2000)throw new Error('Invalid alt text');const db=await adminDb();const {data:m}=await db.from('media_assets').select('site_id').eq('id',id).single();if(!m)throw new Error('Media not found');await siteDb(m.site_id);const {error}=await db.from('media_assets').update({alt_text:altText}).eq('id',id);if(error)throw new Error('Unable to save alt text');return{ok:true}}
+export async function archiveMedia(id:string,archive=true){await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {data:m}=await db.from('media_assets').select('site_id').eq('id',id).single();if(!m)throw new Error('Media not found');await siteDb(m.site_id);const {error}=await db.rpc('archive_media',{asset_id:id,archive});if(error)throw new Error('Unable to archive media');return{ok:true}}
+
+export async function saveMediaEditorial(id:string,input:{caption:string;transcript:string;captions:string}){
+ await requireAdmin('media:write');if(!uuid.test(id)||!input||Object.keys(input).sort().join(',')!=='caption,captions,transcript'||Object.entries(input).some(([key,value])=>typeof value!=='string'||value.length>(key==='caption'?500:20000)))throw new Error('Invalid media metadata');
+ const {parseCaptions}=await import('../../../packages/audio/src/controller');parseCaptions(input.captions);
+ const db=await adminDb();const {data:m}=await db.from('media_assets').select('site_id').eq('id',id).single();if(!m)throw new Error('Media not found');await siteDb(m.site_id);
+ const {error}=await db.from('media_assets').update(input).eq('id',id);if(error)throw new Error('Unable to save media metadata');return{ok:true};
+}
+export async function mediaUsage(id:string){
+ await requireAdmin();if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {data:m}=await db.from('media_assets').select('site_id').eq('id',id).single();if(!m)throw new Error('Media not found');await siteDb(m.site_id);
+ const {data,error}=await db.rpc('get_media_usage',{asset_id:id});if(error)throw new Error('Unable to load usage');return data as {drafts:number;versions:number;releases:number;audioDraft:boolean;audioPublished:boolean};
+}

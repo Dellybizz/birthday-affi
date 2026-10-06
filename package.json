@@ -8,7 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:e2 && pnpm test:e3 && pnpm test:perf && pnpm test:p8 && pnpm test:p9 && pnpm test:f0 && pnpm test:f1 && pnpm test:b1 && pnpm test:b2 && pnpm test:b3 && pnpm test:b4 && pnpm test:b5 && pnpm test:f2 && pnpm test:editor-live && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
+    "test": "node --test tests/default-pages.test.mjs tests/phone-home.test.mjs && pnpm test:c2 && pnpm test:c1 && pnpm test:c0 && pnpm test:e1 && pnpm test:e2 && pnpm test:e3 && pnpm test:perf && pnpm test:p8 && pnpm test:p9 && pnpm test:f0 && pnpm test:f1 && pnpm test:b1 && pnpm test:b2 && pnpm test:b3 && pnpm test:b4 && pnpm test:b5 && pnpm test:b6 && pnpm test:f2 && pnpm test:editor-live && pnpm test:phase2 && pnpm test:phase3 && pnpm test:phase4 && pnpm test:phase5 && turbo test && pnpm test:phase6 && pnpm test:phase7 && pnpm test:phase8 && pnpm test:phase9 && pnpm test:phase10",
     "test:phase2": "node --test tests/phase2.test.mjs",
     "test:admin-smoke": "node tests/admin-smoke.mjs",
     "test:phase3": "node --test tests/phase3.test.mjs",
@@ -36,7 +36,8 @@
     "test:b2": "node --test tests/b2-pages-navigation.test.mjs",
     "test:b3": "node --test tests/b3-os-settings.test.mjs",
     "test:b4": "node --test tests/b4-visual-editor.test.mjs",
-    "test:b5": "node --test tests/b5-app-authoring.test.mjs"
+    "test:b5": "node --test tests/b5-app-authoring.test.mjs",
+    "test:b6": "node --test tests/b6-media-audio.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
