@@ -37,8 +37,9 @@ test('E3.1/P1 source follows the supplied Shopify visual-editor reference with a
  const preview=fs.readFileSync('apps/admin/app/preview/[pageId]/preview-client.tsx','utf8');
  for(const text of ['Theme settings','Sections','App embeds','Preview inspector on','Select a section or block','EditorLiveFrame'])assert.ok(source.includes(text),text);
  assert.equal(source.includes("['content','appearance','behavior','page']"),false);
- assert.match(source,/grid-cols-1 lg:grid-cols-\[292px_minmax\(0,1fr\)_312px\]/);
- assert.match(source,/h-\[50px\]/);
+ assert.match(source,/grid-cols-1 lg:grid-cols-\[240px_minmax\(0,1fr\)_280px\] xl:grid-cols-\[292px_minmax\(0,1fr\)_312px\]/);
+ assert.match(source,/admin-editor-toolbar/);
+ assert.match(source,/min-h-14 shrink-0 flex-wrap/);
  assert.match(frame,/data-editor-preview-stage/);
  assert.match(frame,/transform:`scale\(\$\{scale\}\)`/);
  assert.match(preview,/Add section before/);

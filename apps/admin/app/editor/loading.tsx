@@ -1,0 +1,1 @@
+export default function EditorLoading(){return <main role="status" aria-busy="true" className="grid h-dvh place-items-center bg-[#f6f4f2] p-6 text-center"><div><h1 className="text-lg font-semibold text-[#302a28]">Loading editor…</h1><p className="mt-2 text-sm text-[#766a65]">Preparing your page and preview.</p></div></main>}

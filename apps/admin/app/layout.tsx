@@ -3,6 +3,7 @@ import "../../web/app/os.css";
 import "../../web/app/navigation-performance.css";
 import "../../web/app/app-transitions.css";
 import "./admin-preview-isolation.css";
+import "./admin-controls.css";
 import {AdminShell} from "../components/admin-shell";
 
 export const metadata = { title: "Wiffeyyyy OS · Admin", robots: { index: false, follow: false } };
