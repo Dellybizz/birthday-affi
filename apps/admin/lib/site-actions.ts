@@ -25,11 +25,11 @@ export async function publishPage(pageId:string,expectedRevision:number){
 }
 export async function rollbackPage(pageId:string,versionId:string,expectedRevision:number){
  await requireAdmin('site:publish');const db=await adminDb();
- const {data:version,error:readError}=await db.from('page_versions').select('document').eq('id',versionId).eq('page_id',pageId).eq('status','published').single();
+ const {data:version,error:readError}=await db.from('page_versions').select('document,metadata').eq('id',versionId).eq('page_id',pageId).eq('status','published').single();
  if(readError)throw new Error('Published version not found');parsePageDocument(version.document);
  const {data,error}=await db.rpc('rollback_page',{p_page_id:pageId,p_version_id:versionId,p_expected_revision:expectedRevision});
  if(error)throw new Error(error.code==='40001'?'Draft changed before rollback. Reload the latest draft.':error.message);
- revalidatePath('/');return {ok:true,version:Number(data.versionNumber)};
+ revalidatePath('/');return {ok:true,version:Number(data.versionNumber),metadata:version.metadata};
 }
 export async function getVersionDocument(pageId:string,versionId:string){
  await requireAdmin();const db=await adminDb();

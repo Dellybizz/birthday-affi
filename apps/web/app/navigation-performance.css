@@ -8,3 +8,5 @@
 .os-app-loading p{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;opacity:.76}
 @keyframes os-loading-pop{0%{transform:scale(.9);opacity:.3}70%{transform:scale(1.015);opacity:1}100%{transform:scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.os-app-loading-mark{animation:none}.archive-journey a[data-nav-press="true"],.phone-app-link:active .phone-icon,.phone-app-link:active .phone-icon-label,.phone-archive-back:active,.os-primary:active,.os-back:active{transition:none}}
+
+.configured-journey{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:40;display:flex;gap:12px;max-width:calc(100% - 24px)}.configured-journey a{background:#382b3c;color:white;padding:10px 16px;border-radius:24px;text-decoration:none;box-shadow:0 3px 15px #0003}

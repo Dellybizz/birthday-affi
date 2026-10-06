@@ -28,7 +28,7 @@ export async function loadEditorBootstrap(){
  const settings=parseSiteDocument(configuration?.draft??defaultSiteDocument);
  const catalog=buildEditorPageCatalog(pages??[]);
  const hrefByPageId=new Map((pages??[]).map(row=>[row.id,catalog.find(item=>item.slug===row.slug)?.livePath??null]));
- const previewNavigation=parseNavigation(navigation?.draft??[]).map(item=>({...item,href:item.pageId?hrefByPageId.get(item.pageId)??null:null})).filter(item=>item.href!=='/app/radio');
+ const previewNavigation=parseNavigation(navigation?.draft??[]).map(item=>({...item,href:item.runtimeSlug?'/app/'+item.runtimeSlug:item.pageId?hrefByPageId.get(item.pageId)??null:null})).filter(item=>item.href!=='/app/radio');
  return {
   siteId,siteSlug,settings,catalog,previewNavigation,
   publicSiteUrl:normalizePublicSiteUrl(process.env.NEXT_PUBLIC_WEB_URL??process.env.NEXT_PUBLIC_SITE_URL),

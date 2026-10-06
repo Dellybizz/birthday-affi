@@ -112,3 +112,37 @@ test('Android home saves and publishes through the existing SQL schema with wall
   assert.equal(published.nodes.find(n=>n.id===icon.id).props.pageSlug,icon.props.pageSlug);
  });
 });
+
+test('B2 runtime placement publishes safely and SEO stays private until a new publication',async()=>{
+ await run(owner,async()=>{
+  const item={id:'camera',parentId:null,pageId:null,runtimeSlug:'camera',placement:'dock',label:'Our camera',icon:'📷',description:'Capture us',visible:true,startHere:false};
+  await db.query('select public.change_navigation($1,$2,0,false)',[site,JSON.stringify([item])]);
+  await db.query('select public.change_navigation($1,null,1,true)',[site]);
+  const nav=(await db.query("select public.get_public_navigation('phase5-test') doc")).rows[0].doc;
+  assert.equal(nav[0].href,'/app/camera');assert.equal(nav[0].placement,'dock');
+  await rejects(()=>db.query('select public.change_navigation($1,$2,1,false)',[site,JSON.stringify([{...item,runtimeSlug:'external'}])]),/Invalid runtime/);
+  await rejects(()=>db.query('select public.change_navigation($1,$2,1,false)',[site,JSON.stringify([{...item,placement:'external'}])]),/Invalid navigation placement/);
+  await publish(0,other);
+  await db.query('update public.pages set settings=$1 where id=$2',[JSON.stringify({seoTitle:'Search title',seoDescription:'Search description',socialImage:'/media/cover.jpg',noIndex:true}),other]);
+  const read=async()=>(await db.query("select public.get_public_page_info('phase5-test','other') info")).rows[0].info;
+  assert.equal((await read()).metadata.seoTitle,undefined);
+  const first=await publish(1,other);assert.equal((await read()).metadata.seoTitle,'Search title');assert.equal((await read()).metadata.noIndex,true);
+  assert.equal((await publish(1,other)).versionId,first.versionId);
+  await rejects(()=>db.query('update public.pages set settings=$1 where id=$2',[JSON.stringify({socialImage:'javascript:bad'}),other]),/Invalid SEO/);
+  await rejects(()=>db.query('update public.pages set settings=$1 where id=$2',[JSON.stringify({seoTitle:'x'.repeat(71)}),other]),/Invalid SEO/);
+ });
+});
+
+test('B2 whole-site releases snapshot SEO changes, deduplicate unchanged pages and rollback metadata only',async()=>{
+ await run(owner,async()=>{
+  const release=async()=>(await db.query("select public.publish_site_release($1,'B2 regression') result",[site])).rows[0].result;
+  const first=await release();
+  await db.query("update public.pages set settings=settings||'{\"seoTitle\":\"New search title\"}'::jsonb where id=$1",[other]);
+  const changed=await release();assert.equal(changed.changedPages,1);
+  assert.equal((await release()).changedPages,0);
+  await db.query("select public.rollback_site_release($1,$2,'B2 rollback')",[site,first.releaseId]);
+  const info=(await db.query("select public.get_public_page_info('phase5-test','other') info")).rows[0].info;
+  assert.equal(info.metadata.seoTitle,undefined);
+  assert.equal((await db.query('select settings from public.pages where id=$1',[other])).rows[0].settings.seoTitle,'New search title');
+ });
+});

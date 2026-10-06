@@ -171,3 +171,15 @@ test('B1 editor exposes named publication actions and published document status'
  const newHtml=render(Editor,{pageId:'test',initialDocument:doc});
  assert.match(newHtml,/admin-status-draft[^>]*>Draft/);
 });
+
+test('B2 published navigation controls phone order, dock, hidden groups and custom destinations',()=>{
+ const {SiteNavigationProvider}=load(path.join(root,'packages/ui/src/navigation.tsx'));
+ const {installPhoneHome}=load(path.join(root,'packages/content/src/index.ts'));
+ const entry=(id,href,extra={})=>({id,parentId:null,pageId:null,label:id,icon:'⭐',description:'Custom navigation',visible:true,startHere:false,placement:'grid',href,...extra});
+ const items=[entry('First link','/pages/letter'),entry('Second camera','/app/camera',{runtimeSlug:'camera'}),entry('Dock link','/pages/dock',{placement:'dock'}),entry('Hidden menu',null,{visible:false}),entry('Hidden child','/pages/hidden',{parentId:'Hidden menu'}),entry('Journey only','/pages/journey',{placement:'journey'})];
+ const html=renderToStaticMarkup(createElement(SiteNavigationProvider,{value:items},createElement(CMSRenderer,{document:installPhoneHome(createDefaultPage('home'))})));
+ assert.match(html,/href="\/pages\/letter"/);assert.match(html,/href="\/app\/camera"/);assert.ok(html.indexOf('First link')<html.indexOf('Second camera'));
+ assert.match(html,/<div[^>]*class="phone-dock"[\s\S]*href="\/pages\/dock"/);
+ assert.doesNotMatch(html,/Hidden child|Journey only|href="\/app\/vault"/);
+ assert.match(html,/Custom navigation/);
+});

@@ -16,7 +16,7 @@ test('P7 keeps site bootstrap in a persistent editor layout and makes slug route
  assert.match(bootstrap,/buildEditorPageCatalog/);
  assert.match(workspace,/useLayoutEffect/);
  assert.match(workspace,/<Editor pageId=\{page\.pageId\}/);
- assert.match(page,/select\('id,slug,draft_document,draft_revision,settings,published_version_id'\)/);
+ assert.match(page,/select\('id,slug,draft_document,draft_revision,settings,published_version_id,title'\)/);
  assert.doesNotMatch(page,/site_configurations/);
  assert.doesNotMatch(page,/site_navigation/);
  assert.doesNotMatch(page,/buildEditorPageCatalog/);
