@@ -2,7 +2,7 @@ name: Verify
 
 on:
   push:
-    branches: [main, codex/phase2-database-auth]
+    branches: [main]
   pull_request:
 
 jobs:
