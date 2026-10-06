@@ -23,3 +23,5 @@ export * from './inspector-capabilities';
 export * from './heart-page';
 export * from './memories-archive';
 export * from './navigation-operations';
+
+export * from './os-settings';

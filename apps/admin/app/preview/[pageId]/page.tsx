@@ -24,7 +24,7 @@ export default async function DraftPreview({params,searchParams}:{params:Promise
  ]);
  if(configurationError)throw new Error('Unable to load preview settings');if(navigationError)throw new Error('Unable to load preview navigation');if(pagesError)throw new Error('Unable to load preview pages');
  const settings=parseSiteDocument(configuration?.draft??defaultSiteDocument),catalog=buildEditorPageCatalog(pages??[]),hrefByPageId=new Map((pages??[]).map(row=>[row.id,catalog.find(item=>item.slug===row.slug)?.livePath??null]));
- const previewNavigation=parseNavigation(navigation?.draft??[]).map(item=>({...item,href:item.pageId?hrefByPageId.get(item.pageId)??null:null})).filter(item=>item.href!=='/app/radio');
+ const previewNavigation=parseNavigation(navigation?.draft??[]).map(item=>({...item,href:item.runtimeSlug?'/app/'+item.runtimeSlug:item.pageId?hrefByPageId.get(item.pageId)??null:null})).filter(item=>item.href!=='/app/radio');
  const document=page.slug==='home'?installPhoneHome(rawDocument):parsePageDocument(rawDocument),embedded=embed==='1';
  const homeRow=(pages??[]).find(row=>row.slug==='home'),homeDocument=homeRow?installPhoneHome(homeRow.draft_document):installPhoneHome(createDefaultPage('home'));
  const archiveRow=(pages??[]).find(row=>row.slug==='memories-archive'),archiveDocument=archiveRow?parsePageDocument(archiveRow.draft_document):null;

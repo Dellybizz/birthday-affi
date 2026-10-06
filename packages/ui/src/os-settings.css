@@ -1,0 +1,27 @@
+.os-settings-viewport{display:flex;width:100%;min-height:100dvh;height:100dvh;justify-content:center;overflow:hidden;box-sizing:border-box}
+.os-settings-preview{height:660px;min-height:660px;border-radius:16px}
+.os-settings-viewport .os-settings-screen{position:relative;width:var(--os-width);height:calc(var(--phone-height) + 2 * var(--os-frame));flex:none;min-height:0!important;max-width:none;border:var(--os-frame) solid var(--os-frame-color);border-radius:var(--os-frame-radius);overflow:hidden;margin:0;padding:0;zoom:var(--phone-scale);background:#593f65!important;box-shadow:0 22px 70px rgb(32 23 41 / var(--os-shadow));isolation:isolate}
+.os-configured #birthday-content,.os-configured .phone-home{height:var(--phone-height);min-height:0;max-width:none}
+.os-configured .phone-shade{--phone-top:var(--phone-fit-top);max-height:none;max-width:none;background:color-mix(in srgb,var(--w-surface) calc(var(--os-opacity) * 100%),transparent)!important;backdrop-filter:blur(var(--os-blur))}
+.os-configured .phone-wallpaper-image{filter:brightness(var(--os-brightness))}
+.os-configured .phone-dock{background:rgb(255 255 255 / var(--os-dock-opacity))!important;backdrop-filter:blur(var(--os-dock-blur));border-radius:var(--os-dock-radius)}
+.os-configured .phone-dock .phone-apps{justify-content:center;gap:var(--os-dock-gap)!important}
+.os-configured .phone-icon{width:var(--os-icon-size)!important;height:var(--os-icon-size)!important;border-radius:var(--os-icon-radius)!important}
+.os-configured .phone-icon>svg{width:100%;height:100%}
+.os-configured .phone-icon-label{font-size:calc(11px * var(--os-font-scale))!important}
+.os-configured[data-dock-visible=false] .phone-dock{display:none}
+.os-configured[data-icon-labels=false] .phone-icon-label{display:none}
+.os-configured[data-status-visible=false] .phone-status{visibility:hidden}
+.os-configured[data-color-mode=light] .phone-home{color:#24212b!important}
+.os-configured[data-color-mode=light] .phone-dock{background:rgb(0 0 0 / var(--os-dock-opacity))!important}
+.os-configured[data-reduced-motion=true] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media(prefers-color-scheme:light){.os-configured[data-color-mode=system] .phone-home{color:#24212b!important}}
+@media(prefers-reduced-motion:reduce){.os-configured *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.os-configured :is(.camera-app,.photo-library,.saragram-app,.adore-app,.kiss-shop-app,.vault-app,.puzzle-app){max-width:none;width:100%;height:var(--phone-height);min-height:0}
+.os-configured .os-shade-trigger{width:100%!important;left:0!important;right:0!important}
+
+.os-settings-screen.os-configured .phone-shade{--phone-width:calc(var(--os-width) - 2 * var(--os-frame));--phone-height:var(--os-height);--phone-corner:max(0px,calc(var(--os-frame-radius) - var(--os-frame)));--phone-top:var(--phone-fit-top)}
+.os-configured .phone-shade-contained{top:0;height:100%;width:100%;max-width:none}
+.os-configured .phone-apps{row-gap:var(--os-icon-gap)!important}
+body:has(.os-settings-viewport){display:block}
+.archive-journey:has(.os-settings-viewport:not(.os-settings-preview)){width:100vw}

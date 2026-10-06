@@ -42,7 +42,7 @@ test('P5 morphs apps from their real icon origin and reverses toward the remembe
  const provider=read('apps/web/components/os-provider.tsx');
  const css=read('apps/web/app/app-transitions.css');
  const pressCss=read('apps/web/app/navigation-performance.css');
- assert.match(provider,/PhoneAppTransition pathname=\{pathname\} reducedMotion=\{state\.reducedMotion\}/);
+ assert.match(provider,/PhoneAppTransition pathname=\{pathname\} reducedMotion=\{state\.reducedMotion\|\|systemMotion\|\|os\.reducedMotion/);
  assert.match(motion,/querySelector<HTMLElement>\('\.phone-icon'\)/);
  assert.match(motion,/getBoundingClientRect\(\)/);
  assert.match(motion,/rootRect\.width\/Math\.max\(1,root\.offsetWidth\)/);

@@ -15,7 +15,9 @@
     "./notification-shade": "./src/notification-shade.tsx",
     "./puzzle-app": "./src/puzzle-app.tsx",
     "./archive-navigation": "./src/archive-navigation.tsx",
-    "./public-page-shell": "./src/public-page-shell.tsx"
+    "./public-page-shell": "./src/public-page-shell.tsx",
+    "./os-settings-surface": "./src/os-settings-surface.tsx",
+    "./phone-home": "./src/phone-home.tsx"
   },
   "peerDependencies": {
     "react": "^19.0.0"

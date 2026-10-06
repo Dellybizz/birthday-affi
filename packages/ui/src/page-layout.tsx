@@ -4,7 +4,7 @@ import {createContext,useContext,useState,useEffect,type ReactNode,type CSSPrope
 import {defaultSiteDocument,parseLayoutProgress,getPublicApp,type SiteDocument,type PageDocument,type CMSNode} from '@wiffeyyyy/content';
 import {MediaPlayer} from './media-player';
 import {HomeNavigation,useSiteNavigation} from './navigation';
-export const DocumentSettingsContext=createContext(defaultSiteDocument);
+export const DocumentSettingsContext=createContext<SiteDocument>(defaultSiteDocument);
 export function DocumentSettingsProvider({value,children}:{value:SiteDocument;children:ReactNode}){return <DocumentSettingsContext.Provider value={value}>{children}</DocumentSettingsContext.Provider>;}
 const card='rounded-[var(--section-radius,24px)] border border-[var(--w-accent)]/20 bg-[var(--w-surface)] p-5';
 const button='min-h-11 rounded-2xl border px-4 py-3 text-sm font-semibold disabled:opacity-40';

@@ -3,28 +3,29 @@ import {useCallback,useEffect,useRef,useState,type ReactNode,type CSSProperties}
 import {usePathname,useRouter} from 'next/navigation';
 import {ArchiveNavigationProvider} from '@wiffeyyyy/ui/archive-navigation';
 import {useSiteNavigation} from '@wiffeyyyy/ui/navigation';
-import {navigationVisible,navigationPlacement,orderedNavigation} from '@wiffeyyyy/content';
+import {navigationVisible,navigationPlacement,orderedNavigation,resolveOsSettings,defaultSiteDocument,type SiteDocument} from '@wiffeyyyy/content';
 import type {CMSField} from '@wiffeyyyy/content';
 const HEART='/pages/in-my-heart';
 const CORE_ROUTES=['/home','/',HEART,'/app/hotline','/app/reasons','/app/adventure','/app/movie','/app/kiss-shop','/app/camera','/app/vault','/app/pieces'];
 const chapter=(path:string)=>path==='/'||path==='/pages/memories-archive'?'archive':path===HEART?'heart':path==='/home'?'phone':null;
-export function ArchiveJourney({settings,prefetchHrefs=[],children}:{settings:Record<string,CMSField>;prefetchHrefs?:string[];children:ReactNode}){
+export function ArchiveJourney({settings,prefetchHrefs=[],children,siteSettings=defaultSiteDocument}:{siteSettings?:SiteDocument;settings:Record<string,CMSField>;prefetchHrefs?:string[];children:ReactNode}){
  const router=useRouter(),pathname=usePathname(),navigation=useSiteNavigation();
  const journey=orderedNavigation(navigation??[]).filter(item=>item.href&&navigationVisible(navigation??[],item)&&navigationPlacement(navigation??[],item)==='journey');
  const index=journey.findIndex(item=>item.href===pathname),previousStep=index>0?journey[index-1]:null,nextStep=index>=0?journey[index+1]:null;
  const [phase,setPhase]=useState<'idle'|'closing'|'opening'>('idle');
  const busy=useRef(false),timer=useRef<ReturnType<typeof setTimeout>|null>(null),watchdog=useRef<ReturnType<typeof setTimeout>|null>(null),previous=useRef(pathname),startedAt=useRef(0);
- const duration=Math.min(1800,Math.max(300,Number(settings.transitionDuration)||800));
+ const os=resolveOsSettings(siteSettings);
+ const duration=Math.min(1800,Math.max(300,siteSettings.os?os.journeyDuration:Number(settings.transitionDuration)||800));
  const internalHref=useCallback((target:EventTarget|null)=>{const link=(target as HTMLElement|null)?.closest?.<HTMLAnchorElement>('a[href]');if(!link)return null;const raw=link.getAttribute('href');if(!raw||raw.startsWith('#')||link.target||link.hasAttribute('download'))return null;const destination=new URL(link.href);if(destination.origin!==window.location.origin)return null;return {link,href:destination.pathname+destination.search+destination.hash,pathname:destination.pathname}},[]);
  const navigate=useCallback((target:string)=>{
   if(busy.current)return;
   router.prefetch(target);
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches||document.querySelector('.birthday-os[data-reduced-motion="true"]');
-  if(settings.transitionEnabled===false||settings.transitionEnabled==='false'||reduced){router.push(target);return;}
+  if(!os.motionEnabled||os.reducedMotion||settings.transitionEnabled===false||settings.transitionEnabled==='false'||reduced){router.push(target);return;}
   busy.current=true;startedAt.current=performance.now();setPhase('closing');
   router.push(target);
   watchdog.current=setTimeout(()=>{setPhase('idle');busy.current=false},8000);
- },[router,settings.transitionEnabled]);
+ },[router,settings.transitionEnabled,os.motionEnabled,os.reducedMotion]);
  useEffect(()=>{for(const href of new Set([...CORE_ROUTES,...prefetchHrefs]))if(href.startsWith('/'))router.prefetch(href)},[router,prefetchHrefs]);
  useEffect(()=>{const receive=(event:Event)=>{const href=(event as CustomEvent).detail?.href;if(pathname===HEART&&['/','/home'].includes(href))navigate(href==='/'?previousStep?.href??href:nextStep?.href??href)};window.addEventListener('wiffey:journey',receive);return()=>window.removeEventListener('wiffey:journey',receive)},[pathname,navigate,previousStep?.href,nextStep?.href]);
  useEffect(()=>{if(previous.current===pathname)return;previous.current=pathname;document.querySelectorAll<HTMLElement>('[data-nav-press="true"]').forEach(node=>node.removeAttribute('data-nav-press'));if(!busy.current)return;if(watchdog.current)clearTimeout(watchdog.current);const elapsed=Math.max(0,performance.now()-startedAt.current),wait=Math.max(0,duration/2-elapsed);if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>{setPhase('opening');timer.current=setTimeout(()=>{setPhase('idle');busy.current=false},duration/2)},wait)},[pathname,duration]);

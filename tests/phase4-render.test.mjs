@@ -13,6 +13,11 @@ function load(file){
  const code=ts.transpile(fs.readFileSync(file,'utf8'),{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022});
  const localRequire=name=>{
   if(name==='@wiffeyyyy/content')return load(path.join(root,'packages/content/src/index.ts'));
+  if(name==='@wiffeyyyy/ui/os-settings-surface')return load(path.join(root,'packages/ui/src/os-settings-surface.tsx'));
+  if(name==='@wiffeyyyy/ui/phone-home')return load(path.join(root,'packages/ui/src/phone-home.tsx'));
+  if(name==='@wiffeyyyy/ui/page-layout')return load(path.join(root,'packages/ui/src/page-layout.tsx'));
+  if(name==='@wiffeyyyy/ui/navigation')return load(path.join(root,'packages/ui/src/navigation.tsx'));
+  if(name.endsWith('/configuration-actions'))return {changeConfiguration:()=>{throw Error('No writes in rendering tests')}};
   if(name==='@wiffeyyyy/ui/cms-renderer')return load(path.join(root,'packages/ui/src/cms-renderer.tsx'));
   if(name.endsWith('/media-library'))return {default:()=>null};
   if(name.endsWith('/site-actions'))return {saveDraft:()=>{throw Error('No server actions in rendering tests')},publishPage:()=>{throw Error('No server actions in rendering tests')}};
@@ -182,4 +187,13 @@ test('B2 published navigation controls phone order, dock, hidden groups and cust
  assert.match(html,/<div[^>]*class="phone-dock"[\s\S]*href="\/pages\/dock"/);
  assert.doesNotMatch(html,/Hidden child|Journey only|href="\/app\/vault"/);
  assert.match(html,/Custom navigation/);
+});
+
+test('B3 settings workspace renders owner controls and a real phone preview without publishing',()=>{
+ const {ConfigurationEditor}=load(path.join(root,'apps/admin/components/configuration-editor.tsx'));
+ const {defaultSiteDocument,defaultOsSettings}=load(path.join(root,'packages/content/src/index.ts'));
+ const html=render(ConfigurationEditor,{siteId:'site',initial:{...defaultSiteDocument,os:{...defaultOsSettings,clockMode:'fixed',fixedTime:'21:42',clockFormat:'24',notificationsEnabled:false,wallpaper:'https://example.com/global-wallpaper.jpg'}},initialRevision:4,canWrite:true});
+ for(const label of ['Personalization','OS interface','Appearance','Status bar &amp; dock','Motion &amp; notifications','Private phone preview','Save draft','Publish saved settings'])assert.ok(html.includes(label),label);
+ assert.match(html,/global-wallpaper.jpg/);assert.match(html,/21:42/);assert.doesNotMatch(html,/Clear all/);assert.match(html,/os-settings-preview/);
+ const readOnly=render(ConfigurationEditor,{siteId:'site',initial:defaultSiteDocument,initialRevision:4,canWrite:false});assert.match(readOnly,/<fieldset disabled=""/);assert.match(readOnly,/<button disabled=""[^>]*>Publish saved settings/);
 });
