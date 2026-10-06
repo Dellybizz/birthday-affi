@@ -61,7 +61,7 @@ test('F1 persistent shell keeps control-panel navigation but excludes login, edi
  const layout=read('apps/admin/app/layout.tsx');
  for(const route of ["'/login'","'/editor'","'/preview'"])assert.ok(shell.includes(route),route);
  for(const label of ['Dashboard','Pages','Navigation','Media','Site settings','Hotline'])assert.ok(shell.includes(`label:'${label}'`),label);
- assert.match(shell,/aliases:\['\/theme','\/audio'\]/);
+ assert.match(shell,/aliases:\['\/theme'\]/);assert.match(shell,/label:'Audio',href:'\/audio'/);
  assert.match(shell,/Open editor/);
  assert.match(shell,/View site/);
  assert.match(shell,/form action=\{signOut\}/);

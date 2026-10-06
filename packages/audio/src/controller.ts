@@ -6,6 +6,7 @@ export class PlaybackCoordinator {
     if (this.active && this.active !== player) this.active.pause();
     this.active = player;
   }
+  pauseActive() {const player=this.active;this.active=null;player?.pause();}
   release(player: Player) { if (this.active === player) this.active = null; }
 }
 export const playbackCoordinator = new PlaybackCoordinator();

@@ -16,10 +16,10 @@ export const controlPanelNavigation:readonly NavGroup[]=[
   {label:'Pages',href:'/pages',description:'Pages, apps and page settings',icon:'pages'},
   {label:'Navigation',href:'/navigation',description:'Home grid and navigation',icon:'navigation'}
  ]},
- {label:'Assets',items:[{label:'Media',href:'/media',description:'Images, video and audio assets',icon:'media'}]},
+ {label:'Assets',items:[{label:'Media',href:'/media',description:'Images, video and audio assets',icon:'media'},{label:'Audio',href:'/audio',description:'Birthday soundtrack and playback rules',icon:'media'}]},
  {label:'Site',items:[
   {label:'Releases',href:'/releases',description:'Publish and restore site releases',icon:'publish'},
-  {label:'Site settings',href:'/settings',description:'Personalization, theme, audio and account',icon:'settings',aliases:['/theme','/audio']},
+  {label:'Site settings',href:'/settings',description:'Personalization, theme, audio and account',icon:'settings',aliases:['/theme']},
   {label:'Vault story',href:'/vault',description:'Private chapters and accepted answers',icon:'pages'},
   {label:'Hotline',href:'/hotline',description:'Private caller and receiver links',icon:'hotline'}
  ]}

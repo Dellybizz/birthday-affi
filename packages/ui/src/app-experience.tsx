@@ -9,7 +9,7 @@ const primary=button+' bg-[#a9476b] text-white';
 const muted='text-sm leading-7 text-[var(--w-muted)]';
 function Media({item,kind}:{item:AppItem;kind:'audio'|'video'}){
  if(!item.src)return <p className={muted}>The {kind==='audio'?'recording':'video'} hasn’t been added yet. You can read the message below.</p>;
- return <MediaPlayer identity={kind+':'+item.id} src={item.src} kind={kind} title={item.alt||item.title} captions={item.captions} className={kind==='audio'?'w-full':'aspect-video w-full rounded-2xl bg-black'}/>;
+ return <MediaPlayer identity={kind+':'+item.id} src={item.src} kind={kind} title={item.alt||item.title} captions={item.captions} transcript={item.transcript} className={kind==='audio'?'w-full':'aspect-video w-full rounded-2xl bg-black'}/>;
 }
 function Photo({item}:{item:AppItem}){const [failed,setFailed]=useState(false);return item.src&&!failed?<img src={item.src} alt={item.alt} loading="lazy" decoding="async" onError={()=>setFailed(true)} className="mb-4 max-h-80 w-full rounded-2xl object-contain"/>:null;}
 export function AppExperience({app,items:provided,embedded=false}:{app:AppDefinition;items?:AppItem[];embedded?:boolean}){

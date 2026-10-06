@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode,
 import { playbackCoordinator, parsePlayback, resumeTime, parseCaptions } from '../../audio/src/controller';
 const AudioDefaults=createContext({volume:1,muted:false});
 export function AudioDefaultsProvider({value,children}:{value:{volume:number;muted:boolean};children:ReactNode}){return <AudioDefaults.Provider value={value}>{children}</AudioDefaults.Provider>;}
-export function MediaPlayer({src,kind,title,identity,captions='',style,className,disabled=false,poster,autoPlay=false,loop=false,initialVolume}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;style?:CSSProperties;className?:string;disabled?:boolean;poster?:string;autoPlay?:boolean;loop?:boolean;initialVolume?:number}) {
+export function MediaPlayer({src,kind,title,identity,captions='',transcript:textTranscript='',style,className,disabled=false,poster,autoPlay=false,loop=false,initialVolume}:{src:string;kind:'audio'|'video';title:string;identity:string;captions?:string;transcript?:string;style?:CSSProperties;className?:string;disabled?:boolean;poster?:string;autoPlay?:boolean;loop?:boolean;initialVolume?:number}) {
  const defaults=useContext(AudioDefaults);
  const media=useRef<HTMLMediaElement|null>(null);
  const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0),[storageWarning,setStorageWarning]=useState(false),[caption,setCaption]=useState('');
@@ -48,7 +48,7 @@ export function MediaPlayer({src,kind,title,identity,captions='',style,className
   };
  },[src,identity,kind,captions,attempt,disabled,defaults.volume,defaults.muted,initialVolume]);
  const ref=(element:HTMLMediaElement|null)=>{media.current=element};
- let transcript='';try{transcript=parseCaptions(captions).map(c=>c.text).join('\n')}catch{}
+ let transcript=textTranscript;try{transcript=transcript||parseCaptions(captions).map(c=>c.text).join('\n')}catch{}
  const props={src,loop,controls:!disabled,style,className,'aria-label':title};
  return <div className="space-y-3">{kind==='audio'?<audio key={attempt+src} ref={ref} {...props} preload="metadata"/>:<video key={attempt+src} ref={ref} {...props} playsInline poster={poster} autoPlay={autoPlay&&!disabled} preload="metadata"/>}
  {restored&&<p className="text-xs text-[var(--w-muted)]">Your saved position is ready. Press play to continue.</p>}

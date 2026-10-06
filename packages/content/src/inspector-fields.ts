@@ -20,7 +20,7 @@ export const componentFields:Record<string,InspectorField[]>={
  'app-grid':[{key:'columns',label:'Columns',type:'number',min:1,max:4,step:1},{key:'gap',label:'Gap',type:'number',min:0,max:96}],
 };
 const captionField:InspectorField={key:'captions',label:'Timed captions (start seconds | end seconds | text; one cue per line)',type:'textarea'};
-for(const kind of ['audio','video','hotline-message','movie-scene','radio-track']) componentFields[kind].push(captionField);
+for(const kind of ['audio','video','hotline-message','movie-scene','radio-track']) componentFields[kind].push(captionField,{key:'transcript',label:'Transcript / text equivalent',type:'textarea'});
 componentFields.action=[{key:'title',label:'Button label',type:'text'},{key:'href',label:'Link destination',type:'text'},{key:'openInNewTab',label:'Open in new tab',type:'select',options:['true','false']}];
 componentFields.invitation=['title','body','date','time','place'].map(key=>({key,label:key,type:key==='body'?'textarea':'text'}));
 componentFields.chapter=[{key:'title',label:'Chapter title',type:'text'},{key:'sceneId',label:'Scene ID',type:'text'}];

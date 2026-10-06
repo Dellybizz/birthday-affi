@@ -31,3 +31,5 @@ export * from './tree-order';
 export * from './app-settings';
 
 export * from './vault-contract';
+
+export * from './audio-settings';
