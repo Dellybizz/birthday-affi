@@ -21,7 +21,7 @@ test('E1 page catalog groups active, custom, legacy and runtime pages truthfully
  const custom=catalog.find(page=>page.slug==='secret-draft');assert.equal(custom.group,'drafts');assert.equal(custom.livePath,null);assert.equal(custom.badge,'Draft only');
  const radio=catalog.find(page=>page.slug==='radio');assert.equal(radio.group,'legacy');assert.equal(radio.livePath,null);
  const archived=catalog.find(page=>page.slug==='old-page');assert.equal(archived.status,'archived');assert.equal(archived.editorEnabled,false);
- for(const slug of ['camera','vault','pieces']){const runtime=catalog.find(page=>page.slug===slug);assert.equal(runtime.group,'runtime');assert.equal(runtime.editorEnabled,false);assert.match(runtime.badge,/Runtime/)}
+ for(const slug of ['camera','vault','pieces']){const runtime=catalog.find(page=>page.slug===slug);assert.equal(runtime.group,'active');assert.equal(runtime.editorEnabled,false);assert.match(runtime.badge,/missing/)}
  assert.equal(catalog.find(page=>page.slug==='memories-archive').status,'missing');
 });
 

@@ -26,14 +26,14 @@ export const experienceRegistry:readonly ExperienceDefinition[]=[
  {slug:'adventure',title:'Pardanasheen',livePath:'/app/adventure',order:5,lifecycle:'active',authoring:'document',surface:'phone',icon:'🌸',appKind:'adventure'},
  {slug:'movie',title:'Saragram',livePath:'/app/movie',order:6,lifecycle:'active',authoring:'document',surface:'phone',icon:'📷',appKind:'movie'},
  {slug:'kiss-shop',title:'Kiss Shop',livePath:'/app/kiss-shop',order:7,lifecycle:'active',authoring:'document',surface:'phone',icon:'💋',appKind:'shop'},
- {slug:'camera',title:'Clicksara',livePath:'/app/camera',order:20,lifecycle:'runtime',authoring:'runtime',surface:'phone',icon:'📷',appKind:'camera'},
- {slug:'vault',title:'Vault',livePath:'/app/vault',order:21,lifecycle:'runtime',authoring:'runtime',surface:'phone',icon:'🔐',appKind:'vault'},
- {slug:'pieces',title:'Pieces of Us',livePath:'/app/pieces',order:22,lifecycle:'runtime',authoring:'runtime',surface:'phone',icon:'🧩'},
+ {slug:'camera',title:'Clicksara',livePath:'/app/camera',order:20,lifecycle:'runtime',authoring:'document',surface:'phone',icon:'📷',appKind:'camera'},
+ {slug:'vault',title:'Vault',livePath:'/app/vault',order:21,lifecycle:'runtime',authoring:'document',surface:'phone',icon:'🔐',appKind:'vault'},
+ {slug:'pieces',title:'Pieces of Us',livePath:'/app/pieces',order:22,lifecycle:'runtime',authoring:'document',surface:'phone',icon:'🧩'},
  {slug:'welcome',title:'Welcome',livePath:null,order:90,lifecycle:'legacy',authoring:'preserved',surface:'page'},
  {slug:'radio',title:'Birthday Radio',livePath:null,order:91,lifecycle:'legacy',authoring:'preserved',surface:'phone',icon:'📻',appKind:'radio'}
 ];
 
-export const activeDocumentExperiences:readonly ExperienceDefinition[]=experienceRegistry.filter(experience=>experience.lifecycle==='active'&&experience.authoring==='document');
+export const activeDocumentExperiences:readonly ExperienceDefinition[]=experienceRegistry.filter(experience=>experience.lifecycle!=='legacy'&&experience.authoring==='document');
 export const runtimeExperiences:readonly ExperienceDefinition[]=experienceRegistry.filter(experience=>experience.lifecycle==='runtime');
 export const legacyExperiences:readonly ExperienceDefinition[]=experienceRegistry.filter(experience=>experience.lifecycle==='legacy');
 

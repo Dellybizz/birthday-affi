@@ -20,6 +20,7 @@ export const controlPanelNavigation:readonly NavGroup[]=[
  {label:'Site',items:[
   {label:'Releases',href:'/releases',description:'Publish and restore site releases',icon:'publish'},
   {label:'Site settings',href:'/settings',description:'Personalization, theme, audio and account',icon:'settings',aliases:['/theme','/audio']},
+  {label:'Vault story',href:'/vault',description:'Private chapters and accepted answers',icon:'pages'},
   {label:'Hotline',href:'/hotline',description:'Private caller and receiver links',icon:'hotline'}
  ]}
 ] as const;

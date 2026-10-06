@@ -246,3 +246,11 @@ test('B4 inspector filters workspaces and resets groups while keeping unrelated 
  const searched=render(Inspector,{...props,group:'appearance',workspace:'Appearance',settingQuery:'text colour'});
  assert.doesNotMatch(searched,/Padding/);assert.match(searched,/Text colour/);
 });
+
+test('B5 runtime previews use authored labels, media and safe preview behavior',()=>{
+ const {createRuntimeAppDocument}=load(path.join(root,'packages/content/src/index.ts'));
+ const camera=createRuntimeAppDocument('camera');camera.nodes[0].props.appTitle='Our camera';camera.nodes[0].props.permissionMessage='Capture something lovely';
+ const cameraHtml=render(CMSRenderer,{document:camera,onSelect:()=>{}});assert.match(cameraHtml,/Our camera/);assert.match(cameraHtml,/Capture something lovely/);assert.match(cameraHtml,/<button[^>]*disabled=""[^>]*>Camera disabled in preview/);
+ const vault=createRuntimeAppDocument('vault');vault.nodes[0].props.question='Our test question?';vault.nodes[0].props.lockedTitle='A test keepsake';const vaultHtml=render(CMSRenderer,{document:vault,onSelect:()=>{}});assert.match(vaultHtml,/Our test question/);assert.match(vaultHtml,/A test keepsake/);assert.doesNotMatch(vaultHtml,/Private test fixture/);
+ const pieces=createRuntimeAppDocument('pieces');pieces.nodes[0].props.puzzleTitle='Our custom puzzle';pieces.nodes[1].props.title='A new beginning';pieces.nodes[1].props.src='https://example.test/puzzle.jpg';pieces.nodes[1].props.cols=2;pieces.nodes[1].props.rows=2;const html=render(CMSRenderer,{document:pieces,onSelect:()=>{}});assert.match(html,/Our custom puzzle/);assert.match(html,/A new beginning/);assert.match(html,/4 pieces/);assert.match(html,/Preview progress is temporary/);
+});

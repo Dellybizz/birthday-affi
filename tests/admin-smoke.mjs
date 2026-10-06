@@ -20,7 +20,7 @@ try {
     await setTimeout(200);
   }
   assert.ok(ready, 'Admin production server starts');
-  for (const path of ['/', '/editor/home', '/editor/home?pageId=00000000-0000-4000-8000-000000000011', '/unauthorized']) {
+  for (const path of ['/', '/editor/home', '/editor/camera', '/editor/vault', '/editor/pieces', '/vault', '/editor/home?pageId=00000000-0000-4000-8000-000000000011', '/unauthorized']) {
     const response=await fetch(base+path,{redirect:'manual'});
     assert.equal(response.status,307,path);
     assert.equal(new URL(response.headers.get('location')).pathname,'/login',path);
