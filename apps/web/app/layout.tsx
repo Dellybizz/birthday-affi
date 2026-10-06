@@ -1,3 +1,4 @@
+import '@wiffeyyyy/ui/vault.css';
 import "@wiffeyyyy/ui/styles";
 import "./os.css";
 import "./navigation-performance.css";

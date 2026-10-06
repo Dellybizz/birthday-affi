@@ -1,3 +1,4 @@
+import {appSettingDefinitions,authoredApps} from './app-settings';
 import { parseCaptions } from '../../audio/src/controller';
 import type { PageDocument } from './cms';
 import {sectionKinds,layoutSingletons,sectionBlocks} from './layout-contract';
@@ -39,7 +40,7 @@ export function parsePageDocument(input: unknown): PageDocument {
       const ranges: Record<string, [number, number]> = { paddingTop:[0,96],paddingRight:[0,96],paddingBottom:[0,96],paddingLeft:[0,96],marginTop:[0,96],marginRight:[0,96],marginBottom:[0,96],marginLeft:[0,96],maxWidth:[0,1600],borderWidth:[0,12],lineHeight:[1,3],letterSpacing:[0,12],initialVolume:[0,1],padding: [0,96], margin:[0,96], radius:[0,64], opacity:[0,1], size:[10,72], weight:[100,900], columns:[1,4], gap:[0,96], focalX:[0,100], focalY:[0,100], displayHeight:[0,1200] };
       if (key === 'columns' && (typeof value !== 'number' || !Number.isInteger(value))) fail(raw.id + ': columns must be an integer');
       if (ranges[key] && (typeof value !== 'number' || value < ranges[key][0] || value > ranges[key][1])) fail(raw.id + ': invalid ' + key);
-      if (['background','color','borderColor'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
+      if (['background','color','borderColor','appAccent','appBackground'].includes(key) && !color(value)) fail(raw.id + ': invalid color');
       if (key === 'phonePart' && !['home','wallpaper','status','notifications','notification','widget','launcher','app-icon','navigation'].includes(String(value))) fail(raw.id + ': invalid phone part');
       if (key === 'pageSlug' && (typeof value !== 'string' || !/^[a-z0-9][a-z0-9-]{0,99}$/.test(value))) fail(raw.id + ': invalid page slug');
       if (key === 'collection' && !['film','bonus'].includes(String(value))) fail(raw.id + ': invalid movie collection');
@@ -58,8 +59,17 @@ export function parsePageDocument(input: unknown): PageDocument {
       if (['src','poster','avatar','voiceSrc','callerPhoto','introSrc'].includes(key) && !safeMediaUrl(value)) fail(raw.id + ': unsafe media URL');
       if (['text','alt','className','title','body','category','price','invitation'].includes(key) && typeof value !== 'string') fail(raw.id + ': invalid ' + key);
     }
+    if(['answers','answer','acceptedAnswers','story','chapters'].some(key=>Object.hasOwn(raw.props as Record<string,unknown>,key)))fail(raw.id+': private Vault content cannot be stored in a public page');
+    const settings=authoredApps.flatMap(app=>appSettingDefinitions[app]);
+    for(const {field} of settings){const value=raw.props[field.key];if(value===undefined)continue;if(field.type==='select'&&!field.options?.includes(String(value)))fail(raw.id+': invalid '+field.key);if(['text','textarea'].includes(field.type)&&(typeof value!=='string'||value.length>2000))fail(raw.id+': invalid '+field.key);if(field.type==='number'&&(typeof value!=='number'||!Number.isFinite(value)||value<(field.min??0)||value>(field.max??Infinity)))fail(raw.id+': invalid '+field.key);}
+    if(raw.props.runtimeApp!==undefined&&(raw.parentId!==null||raw.type!=='section'||!['camera','vault','pieces'].includes(String(raw.props.runtimeApp))))fail(raw.id+': invalid runtime app');
+    if(raw.props.runtimePart!==undefined){if(typeof raw.props.title!=='string'||typeof raw.props.src!=='string')fail(raw.id+': invalid puzzle title or photo');if(raw.props.runtimePart!=='level'||raw.component!=='image')fail(raw.id+': invalid runtime item');for(const key of ['cols','rows'])if(typeof raw.props[key]!=='number'||!Number.isInteger(raw.props[key])||Number(raw.props[key])<2||Number(raw.props[key])>8)fail(raw.id+': invalid puzzle '+key);if(typeof raw.props.ratio!=='number'||raw.props.ratio<.3||raw.props.ratio>3||!['Easy','Moderate','Hard'].includes(String(raw.props.difficulty)))fail(raw.id+': invalid puzzle shape or difficulty');}
     if(raw.props.mediaAssetId && raw.props.src !== '/media/'+raw.props.mediaAssetId) fail(raw.id + ': media source must match asset');
   }
+  const runtimeRoots=[...nodes.values()].filter(n=>record(n.props)&&n.props.runtimeApp!==undefined);
+  if(runtimeRoots.length>1)fail('Only one runtime app is allowed');
+  if(runtimeRoots.length){const root=runtimeRoots[0],props=root.props as Record<string,unknown>;if(input.rootIds.length!==1)fail('Runtime app requires a single root');const children=Array.isArray(root.children)?root.children:[];if(props.runtimeApp!=='pieces'&&children.length)fail('This app has no public content items');if(props.runtimeApp==='pieces'&&(children.length>10||children.some(id=>!record(nodes.get(String(id))?.props)|| (nodes.get(String(id))!.props as Record<string,unknown>).runtimePart!=='level')))fail('Use at most 10 puzzle levels');}
+  for(const n of nodes.values())if(record(n.props)&&n.props.runtimePart==='level'&&(!n.parentId||!record(nodes.get(String(n.parentId))?.props)||(nodes.get(String(n.parentId))!.props as Record<string,unknown>).runtimeApp!=='pieces'))fail('Puzzle levels belong inside Pieces of Us');
   if(input.layout!==undefined){
    if(!record(input.layout)||input.layout.version!==1||!['welcome','home','reasons','hotline','adventure','movie','kiss-shop','radio'].includes(String(input.layout.page)))fail('Invalid layout version or page');
   }

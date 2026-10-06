@@ -27,3 +27,7 @@ export * from './navigation-operations';
 export * from './os-settings';
 
 export * from './tree-order';
+
+export * from './app-settings';
+
+export * from './vault-contract';

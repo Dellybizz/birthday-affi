@@ -13,3 +13,5 @@
 @keyframes adore-page-in{from{opacity:.4;transform:translateX(12px) rotate(.7deg)}to{opacity:1;transform:translateX(0) rotate(0)}}@media(prefers-reduced-motion:reduce){.adore-app *{animation:none!important;scroll-behavior:auto}}
 
 .adore-intro-copy{font-size:12px!important;color:#93765d;line-height:1.6;letter-spacing:0!important;margin:8px 0 0!important;text-transform:none}
+
+.adore-app{--journal-ink:var(--app-accent,#75263e)}.adore-tabs button[aria-current=page],.adore-title h1,.adore-signature{color:var(--app-accent,#75263e)}

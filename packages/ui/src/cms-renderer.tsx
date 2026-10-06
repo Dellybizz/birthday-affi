@@ -1,4 +1,7 @@
 "use client";
+import {CameraApp} from './camera-app';
+import {PuzzleApp} from './puzzle-app';
+import {VaultApp} from './vault-app';
 import {HeartPage} from './heart-page';
 import {ArchiveFrame} from './archive-frame';
 import {KissShop} from './kiss-shop';
@@ -47,6 +50,8 @@ export function CMSRenderer({document,onSelect,selectedId,embedded=false,preview
  const group=(!onSelect||exactLivePreview)?groups.find(g=>g.component===n.component):undefined;if(group)return group.items[0]?.id===id?liveSurface(<AppExperience key={id} app={group.app} items={group.items} embedded/>,id):null;
  const archivePart=String(n.props.archivePart??'');return <div key={id} data-node-id={id} role={onSelect?'button':undefined} tabIndex={onSelect?0:undefined} aria-label={onSelect?'Select '+(n.label??n.component):undefined} onKeyDown={onSelect?chooseFromSurface(id):undefined} onClick={onSelect?chooseFromSurface(id):undefined} style={{...(n.type==='section'?style(n):{}),outline:legacyEditing&&selectedId===id?'2px solid #d86f91':undefined}} data-archive-part={archivePart||undefined} data-archive-alternate={archivePart==='collection'?String(n.props.alternateLayout??true):undefined} data-archive-reveal={archivePart==='collection'?String(n.props.revealAnimation??true):undefined} data-archive-hover={archivePart==='collection'?String(n.props.hoverLift??true):undefined} data-archive-image-side={archivePart==='memory'?String(n.props.imageSide??'auto'):undefined}>{n.type==='block'&&<Block node={n} editing={legacyEditing}/>} {n.children.map(render)}</div>};
  const rootId=valid.rootIds[0]??'';
+ const runtime=valid.nodes.find(n=>n.parentId===null&&n.props.runtimeApp);
+ if(runtime){if(!runtime.visible)return null;const app=runtime.props.runtimeApp;return liveSurface(app==='camera'?<CameraApp document={valid} editing={!!onSelect||exactLivePreview}/>:app==='pieces'?<PuzzleApp key={JSON.stringify(runtime.children.map(id=>{const n=byId.get(id);return [id,n?.visible,n?.props.src,n?.props.cols,n?.props.rows]}))} document={valid} persist={persistProgress}/>:<VaultApp document={valid} editing={!!onSelect||exactLivePreview}/>,runtime.id)}
  if(valid.nodes.some(n=>n.props.heartPart==='page'&&n.parentId===null)){const heart=<HeartPage document={valid} onSelect={onSelect} selectedId={selectedId} contained={legacyEditing&&!!previewDevice} liveVisual={exactLivePreview}/>;return exactLivePreview?liveShell(heart,'os-heart-page'):heart}
  if(valid.layout?.page==='kiss-shop'){const page=exactLivePreview?liveSurface(<KissShop document={valid} persist={persistProgress}/>,rootId):<KissShop document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;return exactLivePreview?liveShell(page,'os-home os-adore-page',true):page}
  if(valid.layout?.page==='movie'){const page=exactLivePreview?liveSurface(<Saragram document={valid} persist={persistProgress}/>,rootId):<Saragram document={valid} onSelect={onSelect} selectedId={selectedId} persist={persistProgress}/>;return exactLivePreview?liveShell(page,'os-home os-adore-page',true):page}

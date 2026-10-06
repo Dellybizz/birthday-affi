@@ -170,3 +170,27 @@ test('B3 OS configuration saves privately, publishes immutable snapshots and rej
  });
  await assert.rejects(()=>run(editor,()=>db.query('select public.change_site_configuration($1,$2,0,false)',[site,JSON.stringify({...osContent.defaultSiteDocument,os:osContent.defaultOsSettings})])),/Owner required/);
 });
+
+const b5=loadContentModule('packages/content/src/app-settings.ts');
+const privateVault={answers:['test memory only'],story:{title:'Test story',subtitle:'Example',dedication:'Tests only',chapters:[{id:'one',title:'One',period:'',motif:'letters',keepsake:'',quote:'',body:'Private test fixture',noteTitle:'Note',note:'For testing'}]}};
+test('B5 Vault configuration is owner-only and denies direct anonymous reads',async()=>{
+ for(const user of [editor,viewer])await run(user,async()=>{await rejects(()=>db.query('select public.read_vault_configuration($1)',[site]),/Not authorized/);await rejects(()=>db.query('select public.change_vault_configuration($1,$2,0,false)',[site,JSON.stringify(privateVault)]),/Not authorized/)});
+ await db.exec('begin;set local role anon');try{await rejects(()=>db.query('select * from private.vault_configurations'),/permission denied/);await rejects(()=>db.query('select public.read_vault_configuration($1)',[site]),/permission denied/)}finally{await db.exec('rollback')}
+});
+test('B5 private Vault drafts, publication and revision conflicts protect live answers',async()=>{await run(owner,async()=>{
+ const change=async(document,rev,pub)=>(await db.query('select public.change_vault_configuration($1,$2,$3,$4) result',[site,JSON.stringify(document),rev,pub])).rows[0].result;
+ assert.equal((await change(privateVault,0,false)).revision,1);
+ const unlock=async(answer)=>(await db.query("select public.unlock_vault_story('phase5-test',$1) story",[answer])).rows[0].story;
+ assert.equal(await unlock('test memory only'),null);await rejects(()=>change(privateVault,0,true),/DRAFT_CONFLICT/);
+ await change(privateVault,1,true);assert.equal((await unlock('TEST memory only!!')).title,'Test story');assert.equal(await unlock('wrong memory'),null);
+ const next={...privateVault,answers:['different test memory'],story:{...privateVault.story,title:'New test draft'}};await change(next,2,false);
+ assert.equal((await unlock('test memory only')).title,'Test story');assert.equal(await unlock('different test memory'),null);
+ assert.equal((await db.query('select public.read_vault_configuration($1) result',[site])).rows[0].result.hasChanges,true);
+ await change(next,3,true);assert.equal(await unlock('test memory only'),null);assert.equal((await unlock('different test memory')).title,'New test draft');
+ await rejects(()=>change({...next,answers:['']},4,false),/Invalid Vault answer/);
+})});
+test('B5 public app SQL validation matches the editor and blocks private fields',async()=>{await run(owner,async()=>{
+ for(const app of ['camera','vault','pieces'])await db.query('select private.assert_page_document($1)',[JSON.stringify(b5.createRuntimeAppDocument(app))]);
+ for(const props of [{cols:1},{rows:2.5},{ratio:0},{difficulty:'unknown'},{cols:null}]){const d=b5.createRuntimeAppDocument('pieces');Object.assign(d.nodes[1].props,props);await rejects(()=>db.query('select private.assert_page_document($1)',[JSON.stringify(d)]),/Invalid puzzle/)}
+ for(const props of [{answers:'private'},{story:'private'},{savedDestination:'https://evil.test'},{videoEnabled:'unknown'}]){const d=b5.createRuntimeAppDocument('camera');Object.assign(d.nodes[0].props,props);await rejects(()=>db.query('select private.assert_page_document($1)',[JSON.stringify(d)]),/Private Vault|Invalid app/)}
+})});

@@ -17,7 +17,10 @@
     "./archive-navigation": "./src/archive-navigation.tsx",
     "./public-page-shell": "./src/public-page-shell.tsx",
     "./os-settings-surface": "./src/os-settings-surface.tsx",
-    "./phone-home": "./src/phone-home.tsx"
+    "./phone-home": "./src/phone-home.tsx",
+    "./vault-app": "./src/vault-app.tsx",
+    "./vault-story-book": "./src/vault-story-book.tsx",
+    "./vault.css": "./src/vault.css"
   },
   "peerDependencies": {
     "react": "^19.0.0"
