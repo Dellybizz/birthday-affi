@@ -1,3 +1,5 @@
+import {loadContentModule} from './load-content-module.mjs';
+const osContent={...loadContentModule('packages/content/src/site-document.ts'),...loadContentModule('packages/content/src/os-settings.ts')};
 import {execFileSync} from 'node:child_process';
 import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -145,4 +147,26 @@ test('B2 whole-site releases snapshot SEO changes, deduplicate unchanged pages a
   assert.equal(info.metadata.seoTitle,undefined);
   assert.equal((await db.query('select settings from public.pages where id=$1',[other])).rows[0].settings.seoTitle,'New search title');
  });
+});
+
+test('B3 OS configuration saves privately, publishes immutable snapshots and rejects stale writes',async()=>{
+ await run(owner,async()=>{
+  const document={...osContent.defaultSiteDocument,os:{...osContent.defaultOsSettings,width:450}};
+  await db.query('select public.change_site_configuration($1,$2,0,false)',[site,JSON.stringify(document)]);
+  assert.equal((await db.query("select public.get_published_site_configuration('phase5-test') doc")).rows[0].doc,null);
+  await db.query('select public.change_site_configuration($1,null,1,true)',[site]);
+  await db.query('select public.change_site_configuration($1,$2,1,false)',[site,JSON.stringify({...document,os:{...document.os,width:380}})]);
+  assert.equal((await db.query("select public.get_published_site_configuration('phase5-test') doc")).rows[0].doc.os.width,450);
+  await rejects(()=>db.query('select public.change_site_configuration($1,$2,1,false)',[site,JSON.stringify(document)]),/Settings changed/);
+  for(const patch of [{width:319},{height:1101},{gridColumns:3.5},{wallpaper:'javascript:bad'},{clockMode:'other'},{fixedTime:'25:00'},{motionEnabled:null},{unknown:true}]){
+   await rejects(()=>db.query('select public.change_site_configuration($1,$2,2,false)',[site,JSON.stringify({...document,os:{...document.os,...patch}})]),/Invalid OS/);
+  }
+  const first=(await db.query("select public.publish_site_release($1,'B3 original') result",[site])).rows[0].result;
+  await db.query('select public.change_site_configuration($1,$2,2,false)',[site,JSON.stringify(document)]);
+  await db.query("select public.publish_site_release($1,'B3 changed')",[site]);
+  await db.query("select public.rollback_site_release($1,$2,'B3 rollback')",[site,first.releaseId]);
+  assert.equal((await db.query("select public.get_published_site_configuration('phase5-test') doc")).rows[0].doc.os.width,380);
+  assert.equal((await db.query('select draft from public.site_configurations where site_id=$1',[site])).rows[0].draft.os.width,450);
+ });
+ await assert.rejects(()=>run(editor,()=>db.query('select public.change_site_configuration($1,$2,0,false)',[site,JSON.stringify({...osContent.defaultSiteDocument,os:osContent.defaultOsSettings})])),/Owner required/);
 });

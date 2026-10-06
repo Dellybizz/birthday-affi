@@ -2,8 +2,9 @@
 import {startTransition,useCallback,useEffect,useRef,useState} from 'react';
 import {CMSRenderer} from '@wiffeyyyy/ui/cms-renderer';
 import {ArchiveNavigationProvider} from '@wiffeyyyy/ui/archive-navigation';
+import {OsSettingsSurface} from '@wiffeyyyy/ui/os-settings-surface';
 import {PublicPageShell} from '@wiffeyyyy/ui/public-page-shell';
-import {getPublicApp,type CMSField,type PageDocument,type SiteDocument} from '@wiffeyyyy/content';
+import {getPublicApp,getExperience,type CMSField,type PageDocument,type SiteDocument} from '@wiffeyyyy/content';
 
 type Device='mobile'|'tablet'|'desktop';
 type Box={top:number;left:number;width:number;height:number;label:string;root:boolean};
@@ -38,7 +39,7 @@ export default function DraftPreviewFrame({initialDocument,pageSlug:initialPageS
  const shellNotifications=(inbox?.children??[]).map(id=>homeDocument.nodes.find(node=>node.id===id)!).filter(node=>node?.visible).map(node=>{const slug=String(node.props.pageSlug??'home');return {id:node.id,title:String(node.props.title??''),body:String(node.props.body??''),icon:String(node.props.icon??'♡'),href:slug==='home'?'/home':getPublicApp(slug)?'/app/'+slug:'/home'}});
  const currentArchiveRoot=document.nodes.find(node=>node.props.archivePart==='page'&&node.parentId===null),archiveSettings:Record<string,CMSField>={...(currentArchiveRoot?.props??initialArchiveSettings)};
  const renderer=<CMSRenderer document={document} embedded previewDevice={device} selectedId={selectedId??undefined} onSelect={interactive?undefined:select} externalShell={shellPage}/>;
- const preview=shellPage?<ArchiveNavigationProvider backLabel={String(archiveSettings.archiveBackLabel??'‹ In My Heart')}><PublicPageShell settings={siteSettings} notifications={shellNotifications} notificationTitle={String(inbox?.props.title??'Notifications')} notificationEmptyMessage={String(inbox?.props.emptyMessage??'All caught up. ♡')} notificationBackground={inbox?.props.background?String(inbox.props.background):undefined} unreadCount={3}><main className={pageSlug==='in-my-heart'?'os-heart-page':'os-archive-page'}>{renderer}</main></PublicPageShell></ArchiveNavigationProvider>:renderer;
+ const preview=shellPage?<ArchiveNavigationProvider backLabel={String(archiveSettings.archiveBackLabel??'‹ In My Heart')}><PublicPageShell settings={siteSettings} notifications={shellNotifications} notificationTitle={String(inbox?.props.title??'Notifications')} notificationEmptyMessage={String(inbox?.props.emptyMessage??'All caught up. ♡')} notificationBackground={inbox?.props.background?String(inbox.props.background):undefined} unreadCount={3}><main className={pageSlug==='in-my-heart'?'os-heart-page':'os-archive-page'}>{renderer}</main></PublicPageShell></ArchiveNavigationProvider>:getExperience(pageSlug)?.surface==='phone'?<OsSettingsSurface settings={siteSettings}>{renderer}</OsSettingsSurface>:renderer;
  return <div ref={host} data-isolated-live-preview data-preview-page={pageSlug} data-editor-inspect={!interactive?'true':undefined} data-public-shell-parity={shellPage?'true':undefined} onClickCapture={click} onMouseMoveCapture={move} onMouseLeave={leave} onScrollCapture={scheduleMeasure} className="relative min-h-screen bg-white">
   <style>{`html,body{margin:0;min-height:100%;background:white}[data-isolated-live-preview]{min-height:100vh}[data-editor-inspect="true"] *{animation-play-state:paused!important}[data-editor-inspect="true"] video,[data-editor-inspect="true"] audio{pointer-events:none}[data-editor-hovered="true"]{outline:1px solid #4f8cff!important;outline-offset:-1px}`}</style>
   {preview}
