@@ -44,7 +44,7 @@ test('P1 isolates the live preview in an iframe and streams unsaved drafts throu
  assert.match(editor,/EditorLiveFrame/);
  assert.doesNotMatch(editor,/<CMSRenderer document=\{doc\}/);
  assert.match(frame,/VIEWPORTS/);
- assert.match(frame,/1440/);assert.match(frame,/390/);assert.match(frame,/768/);
+ const viewport=fs.readFileSync('apps/admin/lib/editor-viewport.ts','utf8');assert.match(viewport,/1440/);assert.match(viewport,/390/);assert.match(viewport,/768/);
  assert.match(frame,/postMessage\(\{source:'wiffey-editor'/);
  assert.match(frame,/type:'state'/);
  assert.match(preview,/source!=='wiffey-editor'/);
@@ -59,7 +59,7 @@ test('P2 Archive and Heart preview reuse the same public non-phone shell without
  assert.match(preview,/PublicPageShell/);
  assert.match(preview,/ArchiveNavigationProvider/);
  assert.match(preview,/pageSlug==='memories-archive'\|\|pageSlug==='in-my-heart'/);
- assert.match(preview,/externalShell=\{shellPage\}/);
+ assert.match(preview,/externalShell=\{shellPage\|\|phonePage\}/);
  assert.match(renderer,/externalShell=false/);
  assert.match(renderer,/if\(!exactLivePreview\|\|externalShell\)return content/);
  assert.match(previewPage,/published_version_id,draft_document/);

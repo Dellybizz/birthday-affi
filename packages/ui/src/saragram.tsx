@@ -1,6 +1,6 @@
 'use client';
 import {useContext,useEffect,useRef,useState} from 'react';
-import {safeMediaUrl,type CMSNode,type PageDocument} from '@wiffeyyyy/content';
+import {getOrderedNodes,safeMediaUrl,type CMSNode,type PageDocument} from '@wiffeyyyy/content';
 import {DocumentSettingsContext} from './page-layout';
 import {playbackCoordinator} from '../../audio/src/controller';
 import {SaragramLogo,SocialIcon} from './saragram-icon';
@@ -22,7 +22,7 @@ export function Saragram({document,onSelect,selectedId,persist=false}:{document:
  const settings=useContext(DocumentSettingsContext),[tab,setTab]=useState('Home'),[query,setQuery]=useState(''),[likes,setLikes]=useState<string[]>([]),[saved,setSaved]=useState<string[]>([]),[ready,setReady]=useState(!persist),[clock,setClock]=useState('9:41'),[detail,setDetail]=useState(''),[notice,setNotice]=useState(''),[commentId,setCommentId]=useState(''),[draft,setDraft]=useState(''),[comments,setComments]=useState<Record<string,string[]>>({});
  const appRef=useRef<HTMLDivElement>(null),modal=useRef<HTMLDialogElement>(null),byId=new Map(document.nodes.map(n=>[n.id,n]));
  const visible=(n:CMSNode):boolean=>n.visible&&(!n.parentId||!!byId.get(n.parentId)&&visible(byId.get(n.parentId)!));
- const nodes=document.nodes.filter(visible),profile=nodes.find(n=>n.props.sectionKind==='movie-credits'),collection=nodes.find(n=>n.props.sectionKind==='movie-player');
+ const nodes=getOrderedNodes(document).filter(visible),profile=nodes.find(n=>n.props.sectionKind==='movie-credits'),collection=nodes.find(n=>n.props.sectionKind==='movie-player');
  const media=nodes.filter(n=>['movie-scene','image','video'].includes(n.component)&&url(n,'src'));
  const reels=media.filter(isVideo),username=text(profile,'username','sara'),name=text(profile,'profileName',settings.nickname==='favourite person'?'Sara':settings.nickname),avatar=url(profile,'avatar'),bio=text(profile,'bio','My little world, through your eyes. ♡');
  const editorNode=onSelect?nodes.find(n=>n.id===selectedId&&['movie-scene','image','video'].includes(n.component)):undefined;

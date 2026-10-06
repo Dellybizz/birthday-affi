@@ -1,6 +1,6 @@
 'use client';
 import {useContext,useEffect,useRef,useState} from 'react';
-import type {PageDocument,CMSNode} from '@wiffeyyyy/content';
+import {getOrderedNodes,type PageDocument,type CMSNode} from '@wiffeyyyy/content';
 import {DocumentSettingsContext} from './page-layout';
 import {MediaPlayer} from './media-player';
 const text=(n:CMSNode|undefined,key:string,fallback='')=>String(n?.props[key]??fallback);
@@ -8,7 +8,7 @@ export function AdoreJournal({document,onSelect,selectedId,persist=false}:{docum
  const settings=useContext(DocumentSettingsContext),[tab,setTab]=useState('Notes'),[category,setCategory]=useState('All'),[browse,setBrowse]=useState(false),[chosen,setChosen]=useState(''),[favorites,setFavorites]=useState<string[]>([]),[ready,setReady]=useState(!persist),[letterOpen,setLetterOpen]=useState(false),[clock,setClock]=useState('9:41');
  const gesture=useRef<{x:number;y:number}|null>(null),byId=new Map(document.nodes.map(n=>[n.id,n]));
  const visible=(n:CMSNode):boolean=>n.visible&&(!n.parentId||!!byId.get(n.parentId)&&visible(byId.get(n.parentId)!));
- const nodes=document.nodes.filter(visible),reasons=nodes.filter(n=>n.component==='reason'),intro=nodes.find(n=>n.props.sectionKind==='intro'),deck=nodes.find(n=>n.props.sectionKind==='reason-deck'),letter=nodes.find(n=>n.props.sectionKind==='heartfelt-card');
+ const nodes=getOrderedNodes(document).filter(visible),reasons=nodes.filter(n=>n.component==='reason'),intro=nodes.find(n=>n.props.sectionKind==='intro'),deck=nodes.find(n=>n.props.sectionKind==='reason-deck'),letter=nodes.find(n=>n.props.sectionKind==='heartfelt-card');
  const children=(parent:CMSNode|undefined)=>parent?.children.map(id=>byId.get(id)!).filter(n=>n&&visible(n))??[];
  const introChildren=children(intro),letterChildren=children(letter),selected=byId.get(selectedId??'');
  const editorLetter=!!onSelect&&!!selected&&(selected.id===letter?.id||selected.parentId===letter?.id);

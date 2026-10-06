@@ -25,3 +25,5 @@ export * from './memories-archive';
 export * from './navigation-operations';
 
 export * from './os-settings';
+
+export * from './tree-order';

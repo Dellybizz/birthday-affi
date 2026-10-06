@@ -34,3 +34,12 @@ export function normalizeInspectorValue(field:InspectorField,raw:string):CMSFiel
 export function resetNodeProperty(document:PageDocument,nodeId:string,key:string,hasDefault=false,defaultValue?:CMSField):PageDocument{const next=structuredClone(document),node=next.nodes.find(n=>n.id===nodeId);if(!node)throw new Error('Layer not found');if(hasDefault)node.props[key]=defaultValue??null;else delete node.props[key];const baseKey=key.includes(':')?key.split(':')[1]:key;if(baseKey==='src'&&!key.includes(':')){node.props.mediaAssetId=null;node.props.mediaWidth=null;node.props.mediaHeight=null;node.props.variantWidths=''}return parsePageDocument(next)}
 export function mediaDirectPatch(target:MediaTargetContract,value:string):Record<string,CMSField>{if(target.key==='src')return {src:value,mediaAssetId:null,mediaWidth:null,mediaHeight:null,variantWidths:''};return {[target.key]:value}}
 export function mediaSelectionPatch(target:MediaTargetContract,media:{id:string;alt_text?:string|null;width?:number|null;height?:number|null;metadata?:{variants?:Array<string|number>}|null}):Record<string,CMSField>{const src='/media/'+media.id;if(target.key!=='src')return {[target.key]:src};return {src,mediaAssetId:media.id,alt:media.alt_text??'',mediaWidth:media.width??null,mediaHeight:media.height??null,variantWidths:(media.metadata?.variants??[]).join(',')}}
+
+/** Reset one inspector group as a single undoable document change. */
+export function resetInspectorGroup(document:PageDocument,nodeId:string,capabilities:InspectorCapability[],scope:'base'|'mobile'|'tablet'|'desktop'='base'):PageDocument {
+ return capabilities.reduce((next,cap)=>{
+  const responsive=cap.group==='appearance'&&scope!=='base';
+  if(responsive&&!cap.responsive)return next;
+  return resetNodeProperty(next,nodeId,(responsive?scope+':':'')+cap.field.key,!responsive&&cap.hasDefault,cap.defaultValue);
+ },document);
+}

@@ -1,6 +1,6 @@
 'use client';
 import {useContext,useEffect,useRef,useState} from 'react';
-import type {PageDocument,CMSNode} from '@wiffeyyyy/content';
+import {getOrderedNodes,type PageDocument,type CMSNode} from '@wiffeyyyy/content';
 import {useCameraRoll} from './use-camera-roll';
 import {captureFilename,deleteCameraCapture,saveCameraCapture,type CameraCapture} from './camera-roll-store';
 import {DocumentSettingsContext} from './page-layout';
@@ -16,7 +16,7 @@ export function PhotoLibrary({document,onSelect,selectedId,persist=false}:{docum
  const library=document.nodes.find(n=>n.props.sectionKind==='photo-library');
  const cameraRoll=useCameraRoll(persist&&!onSelect);
  const cameraItems:CMSNode[]=cameraRoll.items.map(c=>({id:c.id,type:'block',component:c.kind,label:'Camera '+(c.kind==='image'?'photo':'video'),parentId:null,children:[],visible:true,props:{src:c.url,title:c.kind==='image'?'Camera photo':'Camera video',alt:'Captured with Clicksara',date:c.createdAt,album:'Camera',body:'Captured with Clicksara · saved on this device'}}));
- const items=[...document.nodes.filter(n=>['image','video'].includes(n.component)&&visible(n)),...cameraItems];
+ const items=[...getOrderedNodes(document).filter(n=>['image','video'].includes(n.component)&&visible(n)),...cameraItems];
  const populated=items.filter(n=>value(n,'src'));
  const source=onSelect?items:populated;
  const shown=source.filter(n=>(filter!=='Favourites'||favorites.includes(n.id))&&(!album||(value(n,'album')||'Fit checks')===album)&&(filter!=='Photos'||n.component==='image')&&(filter!=='Videos'||n.component==='video')&&(!dateGroup||(dateGroup==='Undated'?!value(n,'date'):value(n,'date').startsWith(dateGroup)))&&(!query||[value(n,'title'),value(n,'alt'),value(n,'body'),value(n,'album'),value(n,'date')].join(' ').toLowerCase().includes(query.toLowerCase()))).sort((a,b)=>newest?value(b,'date').localeCompare(value(a,'date')):value(a,'date').localeCompare(value(b,'date')));

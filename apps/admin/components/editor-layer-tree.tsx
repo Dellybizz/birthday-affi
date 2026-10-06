@@ -1,0 +1,22 @@
+'use client';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import type {CMSNode,PageDocument} from '@wiffeyyyy/content';
+import {AdminIcon} from './admin-icon';
+
+export default function EditorLayerTree({document,selected,onSelect,onToggle,onMove,canWrite}:{document:PageDocument;selected:string|null;onSelect:(id:string)=>void;onToggle:(node:CMSNode)=>void;onMove:(id:string,targetId:string,placement:'before'|'after')=>void;canWrite:boolean}){
+ const dragging=useRef<string|null>(null),[dropTarget,setDropTarget]=useState<string|null>(null);
+ const [collapsed,setCollapsed]=useState<Set<string>>(new Set());const list=useRef<HTMLUListElement>(null);const byId=useMemo(()=>new Map(document.nodes.map(n=>[n.id,n])),[document]);
+ useEffect(()=>{if(!selected)return;setCollapsed(old=>{const next=new Set(old);let parent=byId.get(selected)?.parentId;while(parent){next.delete(parent);parent=byId.get(parent)?.parentId}return next});const frame=requestAnimationFrame(()=>list.current?.querySelector<HTMLElement>('[data-layer-id="'+CSS.escape(selected)+'"]')?.scrollIntoView({block:'nearest'}));return()=>cancelAnimationFrame(frame)},[selected,byId]);
+ const render=(id:string,depth=0):React.ReactNode=>{const node=byId.get(id);if(!node)return null;const active=selected===id;return <li key={id} data-layer-id={id}>
+  <div data-drop-target={dropTarget===id?'true':undefined} onDragOver={event=>{const source=dragging.current?byId.get(dragging.current):null;if(!canWrite||!source||source.id===id||source.parentId!==node.parentId)return;event.preventDefault();event.dataTransfer.dropEffect='move';setDropTarget(id)}} onDragLeave={()=>setDropTarget(null)} onDrop={event=>{event.preventDefault();const source=dragging.current;dragging.current=null;setDropTarget(null);if(!canWrite||!source)return;const box=event.currentTarget.getBoundingClientRect();onMove(source,id,event.clientY>box.top+box.height/2?'after':'before')}} className={'group flex h-8 items-center rounded-md text-[13px] '+(active?'bg-[#9b4361] text-white':'text-[#303030] hover:bg-[#f1f1f1]')} style={{paddingLeft:Math.min(depth,4)*12,outline:dropTarget===id?'2px solid #9b4361':undefined}}>
+   <button type="button" draggable={canWrite} disabled={!canWrite} aria-label={'Drag '+(node.label??node.component)+' to reorder'} title="Drag to reorder, or use Alt + Up/Down. Move up/down is also available in element actions" className="h-7 w-4 cursor-grab text-[11px] opacity-60" onDragStart={event=>{dragging.current=id;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',id)}} onDragEnd={()=>{dragging.current=null;setDropTarget(null)}} onKeyDown={event=>{if(!canWrite||!event.altKey||!['ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();const siblings=node.parentId?byId.get(node.parentId)?.children??[]:document.rootIds,index=siblings.indexOf(id),target=siblings[index+(event.key==='ArrowUp'?-1:1)];if(target)onMove(id,target,event.key==='ArrowUp'?'before':'after')}}>⋮⋮</button>
+   {node.children.length?<button className={'grid h-7 w-6 place-items-center '+(active?'text-white':'text-[#6d7175]')} aria-label={(collapsed.has(id)?'Expand ':'Collapse ')+(node.label??node.component)} aria-expanded={!collapsed.has(id)} onClick={()=>setCollapsed(old=>{const next=new Set(old);if(next.has(id))next.delete(id);else next.add(id);return next})}><AdminIcon name={collapsed.has(id)?"right":"chevron"} className="h-4 w-4"/></button>:<span className="w-6"/>}
+   <span aria-hidden className={'mr-1 grid w-4 place-items-center text-[11px] '+(active?'text-white':'text-[#6d7175]')}><AdminIcon name={node.type==='section'?'sections':'block'} className="h-4 w-4"/></span>
+   <button className="min-w-0 flex-1 truncate py-1 text-left" aria-current={active?'true':undefined} onClick={()=>onSelect(id)}>{node.label??node.component}</button>
+   <button className={'grid h-7 w-7 place-items-center rounded-md text-[11px] '+(active?'text-white/80 hover:bg-white/15':'text-[#6d7175] opacity-100 hover:bg-white lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100')} disabled={!canWrite} aria-label={(node.visible?'Hide ':'Show ')+(node.label??node.component)} onClick={()=>onToggle(node)}><AdminIcon name={node.visible?'eye':'hidden'} className="h-4 w-4"/></button>
+  </div>
+  {!collapsed.has(id)&&node.children.length>0&&<ul>{node.children.map(child=>render(child,depth+1))}</ul>}
+ </li>};
+ return <ul ref={list} className="space-y-0.5">{document.rootIds.map(id=>render(id))}</ul>;
+}
+
