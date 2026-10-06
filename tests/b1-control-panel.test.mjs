@@ -24,3 +24,5 @@ test('new drafts, failed publication, publishing and broken pointers are distinc
  assert.equal(state({...base,hasPublication:true}),'error');
  assert.equal(state({...base,hasPublication:true,liveDocument:{nodes:[{}]}}),'changed');
 });
+
+test('B2 metadata-only draft changes keep Publish page enabled',()=>{const doc={nodes:[]};assert.equal(state({draft:doc,liveDocument:doc,hasPublication:true,draftMetadata:{title:'New'},liveMetadata:{title:'Old'}}),'changed');assert.equal(state({draft:doc,liveDocument:doc,hasPublication:true,draftMetadata:{title:'New'},liveMetadata:{title:'New'}}),'published');});

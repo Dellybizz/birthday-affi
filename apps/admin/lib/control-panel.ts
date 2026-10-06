@@ -14,7 +14,8 @@ export type ControlPanelPage={
 export type VersionedWorkspace={draft:unknown;publishedId:string|null;publishedDocument:unknown|undefined;revision?:number|null}|null;
 
 export function documentsEqual(left:unknown,right:unknown){
- return JSON.stringify(left??null)===JSON.stringify(right??null);
+ const canonical=(value:unknown):unknown=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,canonical(item)])):value;
+ return JSON.stringify(canonical(left??null))===JSON.stringify(canonical(right??null));
 }
 
 export function publicationState(input:{recordPresent?:boolean;draft:unknown;publishedId:string|null;publishedDocument:unknown|undefined}):PublicationState{

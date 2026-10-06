@@ -13,7 +13,7 @@ export default async function Navigation(){
  if(error)throw new Error('Site unavailable');
  const {data:config,error:readError}=await db.from('site_navigation').select('draft,revision').eq('site_id',site.id).single();
  if(readError)throw new Error('Navigation unavailable');
- const {data:pages,error:pageError}=await db.from('pages').select('id,title,slug,settings').eq('site_id',site.id);
+ const {data:pages,error:pageError}=await db.from('pages').select('id,title,slug,settings,published_version_id').eq('site_id',site.id);
  if(pageError)throw new Error('Pages unavailable');
  return <div>
   <AdminPageHeader eyebrow="Content" title="Navigation" description="Control the phone home grid and site journeys from one navigation workspace. Draft changes remain private until published through the existing navigation flow."/>
