@@ -194,3 +194,12 @@ test('B5 public app SQL validation matches the editor and blocks private fields'
  for(const props of [{cols:1},{rows:2.5},{ratio:0},{difficulty:'unknown'},{cols:null}]){const d=b5.createRuntimeAppDocument('pieces');Object.assign(d.nodes[1].props,props);await rejects(()=>db.query('select private.assert_page_document($1)',[JSON.stringify(d)]),/Invalid puzzle/)}
  for(const props of [{answers:'private'},{story:'private'},{savedDestination:'https://evil.test'},{videoEnabled:'unknown'}]){const d=b5.createRuntimeAppDocument('camera');Object.assign(d.nodes[0].props,props);await rejects(()=>db.query('select private.assert_page_document($1)',[JSON.stringify(d)]),/Private Vault|Invalid app/)}
 })});
+
+test('B5 document-backed runtime apps protect their routes and publish page-ID navigation correctly',async()=>{await run(owner,async()=>{
+ const entries=[];for(const slug of ['camera','vault','pieces']){const result=await db.query('insert into public.pages(site_id,slug,title,draft_document)values($1,$2,$2,$3)returning id',[site,slug,JSON.stringify(b5.createRuntimeAppDocument(slug))]);const id=result.rows[0].id;
+ await rejects(()=>db.query('update public.pages set slug=$1 where id=$2',[slug+'-changed',id]),/Built-in route protected/);
+ await rejects(()=>db.query('update public.pages set settings=$1 where id=$2',[JSON.stringify({archived:true}),id]),/Remove navigation references/);
+ entries.push({id:slug,parentId:null,pageId:id,label:slug,icon:'♡',description:'',visible:true,startHere:false});}
+ await db.query('select public.change_navigation($1,$2,0,false)',[site,JSON.stringify(entries)]);await db.query('select public.change_navigation($1,null,1,true)',[site]);
+ const nav=(await db.query("select public.get_public_navigation('phase5-test') result")).rows[0].result;assert.deepEqual(nav.map(n=>n.href),['/app/camera','/app/vault','/app/pieces']);
+})});

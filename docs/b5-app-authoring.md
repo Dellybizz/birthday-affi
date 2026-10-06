@@ -20,7 +20,7 @@ Private Vault configuration has RLS, no direct table grants, owner/session check
 ## Validation
 
 - Full suite: 276 passed, 2 private legacy-answer fixtures skipped (fixtures were not supplied).
-- Final targeted app/security suite: 20 passed.
+- Final targeted app/security suite: 21 passed, including built-in runtime route protection and page-ID navigation.
 - TypeScript and both production builds passed.
 - Public renderer tests cover runtime labels, puzzle geometry and camera preview protection.
 - Anonymous admin smoke and production checks protect editor and private Vault routes.

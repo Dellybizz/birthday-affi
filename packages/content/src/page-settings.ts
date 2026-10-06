@@ -1,8 +1,7 @@
 import {safeMediaUrl} from './validate';
 import {experienceRegistry} from './experience-registry';
 
-// Every built-in document/preserved experience has a route contract. Runtime-only apps do
-// not own a pages row, so only non-runtime registry entries participate in page lifecycle.
+// Every document/preserved experience has a route contract, including document-backed runtime apps.
 export const protectedPageSlugs=experienceRegistry.filter(experience=>experience.authoring!=='runtime').map(experience=>experience.slug);
 
 export function parsePageSettings(input:{title:string;slug:string;description:string;seoTitle?:string;seoDescription?:string;socialImage?:string;noIndex?:boolean}){
