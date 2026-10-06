@@ -155,3 +155,19 @@ test('Original heart experience preserves the engine, editor hierarchy and safe 
  assert.doesNotMatch(HEART_ENGINE,/SITE_CONFIG|BDAY|supabase/);assert.doesNotMatch(HEART_ENGINE,/item\.title\}\s*<\/div>/);
  const vm= req('node:vm');assert.doesNotThrow(()=>new vm.Script(HEART_BRIDGE+'\n'+HEART_ENGINE));
 });
+
+
+test('B1 editor exposes named publication actions and published document status',()=>{
+ const doc=insertNode(empty,'section','status-section',null);
+ const html=render(Editor,{pageId:'test',initialDocument:doc,publishedId:'published',initialPublishedDocument:doc});
+ assert.match(html,/admin-status-published[^>]*>Published/);
+ assert.match(html,/>Save draft<\/button>/);
+ assert.match(html,/<button[^>]*disabled=""[^>]*>Publish page<\/button>/);
+ assert.doesNotMatch(html,/Save menu/);
+ const changed=updateNode(doc,'status-section',{label:'Changed section'});
+ const draftHtml=render(Editor,{pageId:'test',initialDocument:changed,publishedId:'published',initialPublishedDocument:doc});
+ assert.match(draftHtml,/Unpublished changes/);
+ assert.match(draftHtml,/<button class="admin-button admin-button-primary">Publish page<\/button>/);
+ const newHtml=render(Editor,{pageId:'test',initialDocument:doc});
+ assert.match(newHtml,/admin-status-draft[^>]*>Draft/);
+});
