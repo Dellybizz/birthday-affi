@@ -16,12 +16,12 @@ function PublicChrome({settings,date,unreadCount,app,children}:{settings:SiteDoc
  </>;
 }
 
-export function PublicPageShell({settings,notifications,notificationTitle='Notifications',notificationEmptyMessage='All caught up. ♡',notificationBackground,reducedMotion=false,unreadCount=notifications.length,app=null,children}:{settings:SiteDocument;notifications:PhoneNotification[];notificationTitle?:string;notificationEmptyMessage?:string;notificationBackground?:string;reducedMotion?:boolean;unreadCount?:number;app?:PublicShellApp;children:ReactNode}){
+export function PublicPageShell({settings,notifications,notificationTitle='Notifications',notificationEmptyMessage='All caught up. ♡',notificationBackground,reducedMotion=false,unreadCount=notifications.length,app=null,children,persist=true}:{settings:SiteDocument;notifications:PhoneNotification[];notificationTitle?:string;notificationEmptyMessage?:string;notificationBackground?:string;reducedMotion?:boolean;unreadCount?:number;app?:PublicShellApp;children:ReactNode;persist?:boolean}){
  const os=resolveOsSettings(settings);
  const [date,setDate]=useState('Birthday edition');
  useEffect(()=>{setDate(new Intl.DateTimeFormat('en',{month:'short',day:'numeric',timeZone:settings.timezone}).format(new Date()))},[settings.timezone]);
  return <div style={{'--phone-scale':1,'--phone-fit-top':'23px',background:settings.background,color:settings.text,'--w-accent':settings.accent,'--w-surface':settings.surface,'--w-text':settings.text,'--w-radius':settings.radius+'px'} as CSSProperties} className="birthday-os" data-reduced-motion={reducedMotion||os.reducedMotion||!os.motionEnabled?'true':undefined}>
-  <NotificationShade title={notificationTitle} emptyMessage={notificationEmptyMessage} background={notificationBackground} notifications={notifications} enabled={os.notificationsEnabled} duration={os.shadeDuration} swipeThreshold={os.swipeThreshold} siteTitle={settings.siteTitle} reducedMotion={reducedMotion||os.reducedMotion||!os.motionEnabled}>
+  <NotificationShade persist={persist} title={notificationTitle} emptyMessage={notificationEmptyMessage} background={notificationBackground} notifications={notifications} enabled={os.notificationsEnabled} duration={os.shadeDuration} swipeThreshold={os.swipeThreshold} siteTitle={settings.siteTitle} reducedMotion={reducedMotion||os.reducedMotion||!os.motionEnabled}>
    <PublicChrome settings={settings} date={date} unreadCount={unreadCount} app={app}>{children}</PublicChrome>
   </NotificationShade>
  </div>;

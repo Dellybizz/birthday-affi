@@ -51,7 +51,7 @@ export function deleteNode(doc:PageDocument,id:string):PageDocument {
 export function duplicateNode(doc:PageDocument,id:string,newId:()=>string):{document:PageDocument;selectedId:string} {
   const ids=subtree(doc,id);const remap=new Map([...ids].map(key=>[key,newId()]));const next=copy(doc);
   const original=next.nodes.find(n=>n.id===id)!;const selectedId=remap.get(id)!;
-  next.nodes.push(...doc.nodes.filter(n=>ids.has(n.id)).map(n=>({...structuredClone(n),id:remap.get(n.id)!,label:n.id===id?(n.label??n.component)+' Copy':n.label,parentId:n.parentId&&ids.has(n.parentId)?remap.get(n.parentId)!:n.parentId,children:n.children.map(key=>remap.get(key)!)})));
+  next.nodes.push(...doc.nodes.filter(n=>ids.has(n.id)).map(n=>({...structuredClone(n),id:remap.get(n.id)!,label:n.id===id?(n.label??n.component)+' Copy':n.label,parentId:n.parentId&&ids.has(n.parentId)?remap.get(n.parentId)!:n.parentId,children:n.children.map(key=>remap.get(key)!),props:{...structuredClone(n.props),...Object.fromEntries(['sceneId','stationId'].filter(key=>typeof n.props[key]==='string'&&remap.has(String(n.props[key]))).map(key=>[key,remap.get(String(n.props[key]))!]))}})));
   const siblings=original.parentId?next.nodes.find(n=>n.id===original.parentId)!.children:next.rootIds;
   siblings.splice(siblings.indexOf(id)+1,0,selectedId);
   return {document:parsePageDocument(next),selectedId};
@@ -63,4 +63,15 @@ export function moveNode(doc:PageDocument,id:string,direction:-1|1):PageDocument
   if(target<0||target>=siblings.length)return doc;
   [siblings[index],siblings[target]]=[siblings[target],siblings[index]];
   return parsePageDocument(next);
+}
+
+/** Reorder within the current parent; cross-parent moves need an explicit adapter. */
+export function reorderNode(doc:PageDocument,id:string,targetId:string,placement:'before'|'after'='before'):PageDocument {
+ const node=doc.nodes.find(n=>n.id===id),target=doc.nodes.find(n=>n.id===targetId);
+ if(!node||!target)throw new Error('Layer not found');
+ if(node.parentId!==target.parentId)throw new Error('Move within the same section or block group.');
+ if(id===targetId)return doc;
+ const next=copy(doc),siblings=node.parentId?next.nodes.find(n=>n.id===node.parentId)!.children:next.rootIds;
+ siblings.splice(siblings.indexOf(id),1);siblings.splice(siblings.indexOf(targetId)+(placement==='after'?1:0),0,id);
+ return parsePageDocument(next);
 }

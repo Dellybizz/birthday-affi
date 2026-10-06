@@ -19,7 +19,7 @@ export function searchNodes(document:PageDocument,query:string):CMSNode[]{
  const q=query.trim().toLocaleLowerCase();if(!q)return [];
  return document.nodes.filter(n=>[n.label,n.component,...Object.values(n.props).filter(v=>typeof v==='string')].join(' ').toLocaleLowerCase().includes(q));
 }
-export type RevisionChange={id:string;label:string;kind:'added'|'removed'|'changed';fields:string[]};
+export type RevisionChange={id:string;label:string;kind:'added'|'removed'|'changed';fields:string[];details?:Array<{field:string;before:unknown;after:unknown}>};
 export function compareDocuments(before:PageDocument,after:PageDocument):RevisionChange[]{
  const a=new Map(before.nodes.map(n=>[n.id,n])),b=new Map(after.nodes.map(n=>[n.id,n]));
  const changes:RevisionChange[]=[];
@@ -28,7 +28,7 @@ export function compareDocuments(before:PageDocument,after:PageDocument):Revisio
   if(!old||!node){changes.push({id,label,kind:old?'removed':'added',fields:[]});continue}
   const fields=['label','visible','parentId','component','children'].filter(k=>JSON.stringify(old[k as keyof CMSNode])!==JSON.stringify(node[k as keyof CMSNode]));
   for(const key of new Set([...Object.keys(old.props),...Object.keys(node.props)]))if(old.props[key]!==node.props[key])fields.push('settings.'+key);
-  if(fields.length)changes.push({id,label,kind:'changed',fields});
+  if(fields.length)changes.push({id,label,kind:'changed',fields,details:fields.map(field=>({field,before:field.startsWith('settings.')?old.props[field.slice(9)]:old[field as keyof CMSNode],after:field.startsWith('settings.')?node.props[field.slice(9)]:node[field as keyof CMSNode]}))});
  }
  if(JSON.stringify(before.theme)!==JSON.stringify(after.theme))changes.push({id:'theme',label:'Page theme',kind:'changed',fields:['theme']});
  if(JSON.stringify(before.rootIds)!==JSON.stringify(after.rootIds))changes.push({id:'order',label:'Section order',kind:'changed',fields:['rootIds']});
@@ -71,6 +71,6 @@ export function exportSection(document:PageDocument,id:string):PageDocument{
 export function importSection(document:PageDocument,input:unknown,newId:()=>string):PageDocument{
  const source=parsePageDocument(input);if(source.rootIds.length!==1)throw new Error('A reusable section must have one root');
  const remap=new Map(source.nodes.map(n=>[n.id,newId()]));
- const nodes=source.nodes.map(n=>({...n,id:remap.get(n.id)!,parentId:n.parentId?remap.get(n.parentId)!:null,children:n.children.map(id=>remap.get(id)!)}));
+ const nodes=source.nodes.map(n=>({...n,id:remap.get(n.id)!,parentId:n.parentId?remap.get(n.parentId)!:null,children:n.children.map(id=>remap.get(id)!),props:{...structuredClone(n.props),...Object.fromEntries(['sceneId','stationId'].filter(key=>typeof n.props[key]==='string'&&remap.has(String(n.props[key]))).map(key=>[key,remap.get(String(n.props[key]))!]))}}));
  return parsePageDocument({...structuredClone(document),nodes:[...document.nodes,...nodes],rootIds:[...document.rootIds,remap.get(source.rootIds[0])!]});
 }

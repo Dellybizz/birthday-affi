@@ -62,13 +62,13 @@ test('P9 editor preview uses the live renderer families and live route shells',(
  assert.match(preview,/PublicPageShell/);
  assert.match(preview,/ArchiveNavigationProvider/);
  assert.match(preview,/pageSlug==='memories-archive'\|\|pageSlug==='in-my-heart'/);
- assert.match(preview,/pageSlug==='in-my-heart'\?'os-heart-page':'os-archive-page'/);
+ assert.match(preview,/pageSlug==='in-my-heart'\?'os-heart-page':pageSlug==='memories-archive'\?'os-archive-page':'os-home'/);
  assert.match(preview,/data-public-shell-parity=\{shellPage\?'true':undefined\}/);
 });
 
 test('P9 browser zoom cannot redefine preview breakpoints or collapse Shopify sidebars',()=>{
  for(const [name,width,height] of [['mobile',390,830],['large-phone',430,932],['tablet',768,1024],['desktop',1440,900]]){
-  assert.ok(frame.includes(`${name==='large-phone'?"'large-phone'":name}:{width:${width},height:${height}}`),name);
+  assert.ok((frame+fs.readFileSync('apps/admin/lib/editor-viewport.ts','utf8')).includes(`${name==='large-phone'?"'large-phone'":name}:{width:${width},height:${height}}`),name);
  }
  assert.match(frame,/transform:`scale\(\$\{scale\}\)`/);
  assert.match(frame,/transformOrigin:'top left'/);

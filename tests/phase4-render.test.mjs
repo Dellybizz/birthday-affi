@@ -13,6 +13,9 @@ function load(file){
  const code=ts.transpile(fs.readFileSync(file,'utf8'),{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022});
  const localRequire=name=>{
   if(name==='@wiffeyyyy/content')return load(path.join(root,'packages/content/src/index.ts'));
+  if(name==='@wiffeyyyy/ui/notification-shade')return load(path.join(root,'packages/ui/src/notification-shade.tsx'));
+  if(name==='@wiffeyyyy/ui/public-page-shell')return load(path.join(root,'packages/ui/src/public-page-shell.tsx'));
+  if(name==='@wiffeyyyy/ui/archive-navigation')return load(path.join(root,'packages/ui/src/archive-navigation.tsx'));
   if(name==='@wiffeyyyy/ui/os-settings-surface')return load(path.join(root,'packages/ui/src/os-settings-surface.tsx'));
   if(name==='@wiffeyyyy/ui/phone-home')return load(path.join(root,'packages/ui/src/phone-home.tsx'));
   if(name==='@wiffeyyyy/ui/page-layout')return load(path.join(root,'packages/ui/src/page-layout.tsx'));
@@ -196,4 +199,50 @@ test('B3 settings workspace renders owner controls and a real phone preview with
  for(const label of ['Personalization','OS interface','Appearance','Status bar &amp; dock','Motion &amp; notifications','Private phone preview','Save draft','Publish saved settings'])assert.ok(html.includes(label),label);
  assert.match(html,/global-wallpaper.jpg/);assert.match(html,/21:42/);assert.doesNotMatch(html,/Clear all/);assert.match(html,/os-settings-preview/);
  const readOnly=render(ConfigurationEditor,{siteId:'site',initial:defaultSiteDocument,initialRevision:4,canWrite:false});assert.match(readOnly,/<fieldset disabled=""/);assert.match(readOnly,/<button disabled=""[^>]*>Publish saved settings/);
+});
+
+
+test('B4 has one controlled viewport toolbar and a full inspector workspace navigation',()=>{
+ const html=render(Editor,{pageId:'test',currentSlug:'home',initialDocument:createDefaultPage('home')});
+ assert.equal((html.match(/data-editor-responsive-toolbar="true"/g)??[]).length,1);
+ assert.equal((html.match(/aria-label="Preview viewport"/g)??[]).length,1);
+ for(const workspace of ['Content','Appearance','Layout','Spacing','Responsive','Behavior','Animation','Advanced'])assert.ok(html.includes('>'+workspace+'</button>'),workspace);
+ assert.match(html,/Drag .* to reorder/);assert.match(html,/Paste copied section/);assert.match(html,/Search selected element settings/);
+ const readonly=render(Editor,{pageId:'test',initialDocument:createDefaultPage('home'),canWrite:false});
+ assert.match(readonly,/draggable="false" disabled=""/);
+});
+
+test('B4 phone preview has one configured OS shell and shared notification shade without a nested shell',()=>{
+ const Frame=load(path.join(root,'apps/admin/app/preview/[pageId]/preview-client.tsx')).default;
+ const {defaultSiteDocument,defaultOsSettings}=load(path.join(root,'packages/content/src/index.ts'));
+ const home=createDefaultPage('home'),settings={...defaultSiteDocument,os:{...defaultOsSettings,width:450,height:950}};
+ const Live=load(path.join(root,'packages/ui/src/cms-renderer.tsx')).LiveEditorPreviewProvider;
+ const markup=render(Live,{children:createElement(Frame,{initialDocument:home,pageSlug:'home',siteSettings:settings,homeDocument:home,initialArchiveSettings:{}})});
+ assert.equal((markup.match(/class="birthday-os birthday-os-phone os-settings-screen os-configured"/g)??[]).length,1);
+ assert.doesNotMatch(markup,/data-editor-live-shell/);assert.match(markup,/--os-width:450px/);assert.match(markup,/--os-height:950px/);
+ assert.equal((markup.match(/<dialog/g)??[]).length,1);
+ const custom={schemaVersion:2,nodes:[{id:'section',type:'section',component:'section',parentId:null,children:[],visible:true,props:{}}],rootIds:['section']};
+ const page=render(Live,{children:createElement(Frame,{initialDocument:custom,pageSlug:'letter',siteSettings:settings,homeDocument:home,initialArchiveSettings:{}})});
+ assert.doesNotMatch(page,/os-settings-screen/);
+});
+
+test('B4 Adore renders the reordered hierarchy even when the physical storage array is unchanged',()=>{
+ const {reorderNode}=load(path.join(root,'packages/content/src/index.ts'));
+ const original=createDefaultPage('reasons'),reasons=original.nodes.filter(n=>n.component==='reason');
+ const next=reorderNode(original,reasons[1].id,reasons[0].id,'before');
+ const html=render(CMSRenderer,{document:next});
+ assert.match(html,new RegExp(reasons[1].props.title));
+ assert.equal(next.nodes[original.nodes.indexOf(reasons[0])].id,reasons[0].id);
+});
+
+test('B4 inspector filters workspaces and resets groups while keeping unrelated controls hidden',()=>{
+ const Inspector=load(path.join(root,'apps/admin/components/editor-inspector-fields.tsx')).default;
+ const doc={schemaVersion:2,nodes:[{id:'s',type:'section',component:'section',parentId:null,children:['text'],visible:true,props:{}},{id:'text',type:'block',component:'text',parentId:'s',children:[],visible:true,props:{text:'A message',padding:8,color:'#ffffff'}}],rootIds:['s']};
+ const props={document:doc,node:doc.nodes[1],pageSlug:'letter',canWrite:true,busy:false,designScope:'base',onDesignScope:()=>{},onCommit:()=>{}};
+ const spacing=render(Inspector,{...props,group:'appearance',workspace:'Spacing'});
+ assert.match(spacing,/Reset padding group/);assert.doesNotMatch(spacing,/Text colour|Responsive settings/);
+ const mobile=render(Inspector,{...props,group:'appearance',workspace:'Responsive',designScope:'mobile'});
+ assert.match(mobile,/Inherited/);assert.match(mobile,/Reset mobile/);
+ const searched=render(Inspector,{...props,group:'appearance',workspace:'Appearance',settingQuery:'text colour'});
+ assert.doesNotMatch(searched,/Padding/);assert.match(searched,/Text colour/);
 });

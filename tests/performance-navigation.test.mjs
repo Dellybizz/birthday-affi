@@ -124,7 +124,7 @@ test('P6 keeps editor typing, autosave and iframe updates off the hot path',()=>
 });
 
 test('P1 fixed logical viewports scale to fit without changing preview breakpoints',()=>{
- const frame=read('apps/admin/components/editor-live-frame.tsx');
+ const frame=read('apps/admin/components/editor-live-frame.tsx')+read('apps/admin/lib/editor-viewport.ts');
  assert.match(frame,/mobile:\{width:390,height:830\}/);
  assert.match(frame,/tablet:\{width:768,height:1024\}/);
  assert.match(frame,/desktop:\{width:1440,height:900\}/);
@@ -134,7 +134,7 @@ test('P1 fixed logical viewports scale to fit without changing preview breakpoin
 });
 
 test('P3 offers real device presets and a manually resizable logical viewport',()=>{
- const frame=read('apps/admin/components/editor-live-frame.tsx');
+ const frame=read('apps/admin/components/editor-live-frame.tsx')+read('apps/admin/lib/editor-viewport.ts');
  assert.match(frame,/'large-phone':\{width:430,height:932\}/);
  assert.match(frame,/type PreviewMode=Device\|'large-phone'\|'responsive'/);
  assert.match(frame,/Responsive · custom viewport/);
