@@ -12,7 +12,7 @@ test('B6 soundtrack validates exact shape, ordered unique tracks and default mem
  const copy=parseAudioSettings(value);copy.tracks[0].title='Changed';assert.equal(value.tracks[0].title,'Birthday song');assert.deepEqual(parseSiteDocument(defaultSiteDocument),defaultSiteDocument);
 });
 test('B6 upload retry preserves reservation and never overwrites completed objects',async()=>{
- let reservations=0,finalizations=0,fail=true,puts=[];const events=[];const actions={reserveMedia:async()=>{reservations++;return{id,path:'site/id/original',bucket:'wiffeyyyy-audio'}},finalizeMedia:async()=>{finalizations++}};
+ let reservations=0,finalizations=0,fail=true,puts=[];const events=[];const actions={reserveMedia:async()=>{reservations++;return{ok:true,id,path:'site/id/original',bucket:'wiffeyyyy-audio'}},finalizeMedia:async()=>{finalizations++;return{ok:true}}};
  const source=readFileSync('apps/admin/lib/media-upload.ts','utf8');const mod={exports:{}};
  const require=name=>name==='@supabase/ssr'?{createBrowserClient:()=>({auth:{getSession:async()=>({data:{session:{access_token:'test'}}})}})}:name==='./media-actions'?actions:name==='./media-policy'?loadContentModule('apps/admin/lib/media-policy.ts'):null;
  const previous={URL:global.URL,document:global.document,HTMLVideoElement:global.HTMLVideoElement,XMLHttpRequest:global.XMLHttpRequest};
@@ -23,4 +23,13 @@ test('B6 upload retry preserves reservation and never overwrites completed objec
 
 test('B6 picker copies accessible text and captions with the immutable asset reference',()=>{
  const {mediaSelectionPatch}=loadContentModule('packages/content/src/inspector-capabilities.ts');const picked=mediaSelectionPatch({key:'src',kind:'audio',label:'Recording'},{id,alt_text:'A message',captions:'0 | 2 | Hello',transcript:'Hello'});assert.equal(picked.src,'/media/'+id);assert.equal(picked.captions,'0 | 2 | Hello');assert.equal(picked.transcript,'Hello');assert.equal(picked.mediaAssetId,id);
+});
+
+test('B6 missing Storage returns a safe action result without reserving an upload',async()=>{
+ let storageError={message:'TenantNotFound: private provider diagnostics'},inserts=0;const permissions=[];
+ const query={select(){return this},eq(){return this},single:async()=>({data:{id},error:null}),insert:async()=>{inserts++;return{error:null}}};
+ const db={from:()=>query,storage:{from:()=>({list:async()=>({error:storageError})})}};
+ const mod={exports:{}};new Function('require','module','exports',ts.transpile(readFileSync('apps/admin/lib/media-actions.ts','utf8'),{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}))(name=>name==='./supabase'?{adminDb:async()=>db}:name==='./auth'?{requireAdmin:async permission=>{permissions.push(permission)}}:name==='./media-policy'?loadContentModule('apps/admin/lib/media-policy.ts'):null,mod,mod.exports);
+ const input={siteId:id,kind:'audio',filename:'song.mp3',mimeType:'audio/mpeg',size:100};const result=await mod.exports.reserveMedia(input);assert.equal(result.ok,false);assert.match(result.error,/Storage must be activated/);assert.doesNotMatch(result.error,/TenantNotFound|private provider/);assert.equal(inserts,0);assert.equal(permissions[0],'media:write');
+ assert.equal((await mod.exports.checkMediaStorage(id)).available,false);storageError=null;assert.equal((await mod.exports.checkMediaStorage(id)).available,true);assert.equal((await mod.exports.reserveMedia(input)).ok,true);assert.equal(inserts,1);
 });

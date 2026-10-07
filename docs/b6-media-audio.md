@@ -22,3 +22,7 @@ End-to-end acceptance is pending until an authenticated owner uploads a file, se
 ## Verification
 
 283 automated tests passed; two existing private-answer fixtures skipped. TypeScript and both production builds passed. Anonymous admin smoke checks passed. The B6 migration was applied and verified in the existing Supabase project; the usage RPC is not anonymous and authenticated media deletion remains revoked. Advisors show existing unrelated findings, with no new B6 finding.
+
+## Upload error follow-up
+
+Expected reservation and finalization failures now return safe structured results so production does not replace them with Next.js's generic Server Components error. The library checks Storage before enabling file selection and drag/drop, shows the activation requirement, and rechecks with Refresh. Unknown production errors use a safe retry message. The missing-Storage regression verifies no reservation is written and no provider diagnostics are exposed.
