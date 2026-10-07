@@ -23,4 +23,4 @@ export function matchesSignature(mime:string,b:Uint8Array){
  }
 }
 export const mediaBucket=(kind:MediaKind)=>'wiffeyyyy-'+kind;
-export type MediaAsset={id:string;site_id:string;kind:MediaKind;filename:string;mime_type:string;byte_size:number;width:number|null;height:number|null;duration_ms:number|null;alt_text:string|null;caption?:string;transcript?:string;captions?:string;metadata:{variants?:number[]};status:string;previewUrl:string};
+export type MediaAsset={id:string;site_id:string;kind:MediaKind;filename:string;mime_type:string;byte_size:number;width:number|null;height:number|null;duration_ms:number|null;alt_text:string|null;caption?:string;transcript?:string;captions?:string;metadata:{variants?:number[]};status:string;created_at?:string;previewUrl:string};

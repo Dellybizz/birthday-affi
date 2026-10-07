@@ -33,3 +33,13 @@ test('B6 missing Storage returns a safe action result without reserving an uploa
  const input={siteId:id,kind:'audio',filename:'song.mp3',mimeType:'audio/mpeg',size:100};const result=await mod.exports.reserveMedia(input);assert.equal(result.ok,false);assert.match(result.error,/Storage must be activated/);assert.doesNotMatch(result.error,/TenantNotFound|private provider/);assert.equal(inserts,0);assert.equal(permissions[0],'media:write');
  assert.equal((await mod.exports.checkMediaStorage(id)).available,false);storageError=null;assert.equal((await mod.exports.checkMediaStorage(id)).available,true);assert.equal((await mod.exports.reserveMedia(input)).ok,true);assert.equal(inserts,1);
 });
+
+test('Media sorting applies before pagination and rejects unknown sort fields',async()=>{
+ const calls=[];
+ const query={select(){return this},eq(){return this},single:async()=>({data:{id},error:null}),order(field,options){calls.push(['order',field,options.ascending]);return this},range(start,end){calls.push(['range',start,end]);return this},is(){return this},then(resolve){resolve({data:[],error:null})}};
+ const mod={exports:{}};new Function('require','module','exports',ts.transpile(readFileSync('apps/admin/lib/media-actions.ts','utf8'),{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}))(name=>name==='./supabase'?{adminDb:async()=>({from:()=>query})}:name==='./auth'?{requireAdmin:async()=>{}}:name==='./media-policy'?loadContentModule('apps/admin/lib/media-policy.ts'):null,mod,mod.exports);
+ for(const [sort,column,ascending] of [['newest','created_at',false],['oldest','created_at',true],['name','filename',true],['largest','byte_size',false],['smallest','byte_size',true]]){
+ calls.length=0;await mod.exports.listMediaAssets(id,false,false,{sort,offset:50});assert.deepEqual(calls,[['order',column,ascending],['order','id',false],['range',50,99]]);
+ }
+ await assert.rejects(()=>mod.exports.listMediaAssets(id,false,false,{sort:'storage_path'}),/Invalid media sort/);
+});
