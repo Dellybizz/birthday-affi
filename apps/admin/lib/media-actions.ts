@@ -2,6 +2,7 @@
 import { adminDb } from './supabase';
 import { requireAdmin } from './auth';
 import { validateMedia, matchesSignature, mediaBucket, type MediaKind, type MediaAsset } from './media-policy';
+import {verifyMediaObject} from './media-verification';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function siteDb(siteId:string){if(!uuid.test(siteId))throw new Error('Invalid site');const db=await adminDb();const {data,error}=await db.from('sites').select('id').eq('id',siteId).eq('slug',process.env.NEXT_PUBLIC_SITE_SLUG??'wiffeyyyy-os').single();if(error||!data)throw new Error('Site not found');return db}
 export async function listMediaAssets(siteId:string,archived=false,readyOnly=false,options:{search?:string;kind?:MediaKind|'';offset?:number;sort?:'newest'|'oldest'|'name'|'largest'|'smallest'}={}):Promise<MediaAsset[]>{
@@ -21,17 +22,12 @@ export async function reserveMedia(input:{siteId:string;kind:MediaKind;filename:
 }
 export async function finalizeMedia(id:string,input:{width?:number;height?:number;durationMs?:number;variants?:number[]}):Promise<{ok:true}|{ok:false;error:string}>{
  await requireAdmin('media:write');if(!uuid.test(id))return{ok:false,error:'Invalid media'};const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('*').eq('id',id).single();if(error||!m)return{ok:false,error:'Upload not found'};await siteDb(m.site_id);
+ if(m.status==='ready')return{ok:true};
  const variants=input.variants??[];if(!Array.isArray(variants)||variants.some(v=>![480,960,1600].includes(v))||new Set(variants).size!==variants.length||variants.length>3||(m.kind!=='image'&&variants.length))return{ok:false,error:'Invalid variants'};
- for(const [k,v] of Object.entries(input)){if(k==='variants')continue;if(!['width','height','durationMs'].includes(k)||typeof v!=='number'||!Number.isInteger(v)||v<1||v>(k==='durationMs'?86400000:20000))return{ok:false,error:'Invalid dimensions or duration'}}
+ for(const [k,v] of Object.entries(input)){if(k==='variants')continue;if(['width','height','durationMs'].includes(k)&&v===undefined)continue;if(!['width','height','durationMs'].includes(k)||typeof v!=='number'||!Number.isInteger(v)||v<1||v>(k==='durationMs'?86400000:20000))return{ok:false,error:'Invalid dimensions or duration'}}
  const {data:{session}}=await db.auth.getSession();if(!session)return{ok:false,error:'Session expired'};
  const paths=[{path:m.storage_path,mime:m.mime_type,size:m.byte_size},...variants.map(v=>({path:m.site_id+'/'+m.id+'/'+v+'.webp',mime:'image/webp',size:0}))];
- for(const object of paths){
-  const response=await fetch(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket(m.kind)+'/'+object.path,{headers:{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??'',Range:'bytes=0-63'},cache:'no-store'});
-  if(!response.ok)return{ok:false,error:'Uploaded file could not be verified'};
-  const length=Number(response.headers.get('content-range')?.split('/')[1]??response.headers.get('content-length'));
-  const reader=response.body?.getReader();if(!reader)return{ok:false,error:'Missing upload body'};let header=new Uint8Array(0);try{while(header.length<64){const {value,done}=await reader.read();if(done)break;const next=new Uint8Array(header.length+value.length);next.set(header);next.set(value,header.length);header=next.slice(0,64)}}finally{await reader.cancel()}
-  if((object.size&&length!==object.size)||!matchesSignature(object.mime,header))return{ok:false,error:'File content or size does not match its declared type'};
- }
+ try{await Promise.all(paths.map(object=>verifyMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket(m.kind)+'/'+object.path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY??''},object)))}catch(e){return{ok:false,error:e instanceof Error?e.message:'Unable to verify upload. Retry verification.'}};
  const {error:finishError}=await db.from('media_assets').update({status:'ready',width:input.width??null,height:input.height??null,duration_ms:input.durationMs??null,metadata:{variants}}).eq('id',id);if(finishError)return{ok:false,error:'Unable to finish upload'};return{ok:true};
 }
 export async function updateMediaMetadata(id:string,altText:string){await requireAdmin('media:write');if(!uuid.test(id)||typeof altText!=='string'||altText.length>2000)throw new Error('Invalid alt text');const db=await adminDb();const {data:m}=await db.from('media_assets').select('site_id').eq('id',id).single();if(!m)throw new Error('Media not found');await siteDb(m.site_id);const {error}=await db.from('media_assets').update({alt_text:altText}).eq('id',id);if(error)throw new Error('Unable to save alt text');return{ok:true}}
@@ -50,4 +46,10 @@ export async function mediaUsage(id:string){
 
 export async function checkMediaStorage(siteId:string):Promise<{available:boolean;message:string}>{
  await requireAdmin();const db=await siteDb(siteId);const {error}=await db.storage.from(mediaBucket('image')).list('',{limit:1});return error?{available:false,message:'Uploads are unavailable. Supabase Storage must be activated for this site before files can be uploaded.'}:{available:true,message:''};
+}
+
+export async function prepareMediaRecovery(id:string){
+ await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id,storage_path,kind,mime_type,filename,status').eq('id',id).single();if(error||!m)throw new Error('Upload not found');await siteDb(m.site_id);
+ const bucket=db.storage.from(mediaBucket(m.kind));const [signed,listing]=await Promise.all([bucket.createSignedUrl(m.storage_path,120),bucket.list(m.site_id+'/'+id,{limit:10})]);if(signed.error||!signed.data||listing.error)throw new Error('Unable to read the saved upload. Refresh and retry.');
+ return{url:signed.data.signedUrl,filename:m.filename,mimeType:m.mime_type,variants:(listing.data??[]).map(o=>Number(o.name.replace('.webp',''))).filter(v=>[480,960,1600].includes(v))};
 }

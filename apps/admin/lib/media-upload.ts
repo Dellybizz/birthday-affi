@@ -1,15 +1,15 @@
 'use client';
 import { createBrowserClient } from '@supabase/ssr';
-import { reserveMedia, finalizeMedia } from './media-actions';
+import { reserveMedia, finalizeMedia, prepareMediaRecovery } from './media-actions';
 import { mediaKind, validateMedia } from './media-policy';
-async function describe(file:File):Promise<{width?:number;height?:number;durationMs?:number;variants:Array<{width:number;blob:Blob}>}>{
+async function describe(file:File,makeVariants=true):Promise<{width?:number;height?:number;durationMs?:number;variants:Array<{width:number;blob:Blob}>}>{
  const url=URL.createObjectURL(file);
  try{
   if(file.type.startsWith('image/')){
    const image=new Image();image.src=url;await image.decode();const width=image.naturalWidth,height=image.naturalHeight;if(width*height>40000000||width>20000||height>20000)throw new Error('Image dimensions exceed the supported limit');
    const variants:Array<{width:number;blob:Blob}>=[];
    // Preserve animated GIFs. Other raster images get compact WebP delivery sizes.
-   if(file.type!=='image/gif')for(const w of [480,960,1600].filter(w=>w<width)){const canvas=document.createElement('canvas');canvas.width=w;canvas.height=Math.max(1,Math.round(height*w/width));canvas.getContext('2d')!.drawImage(image,0,0,canvas.width,canvas.height);const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/webp',.82));if(blob?.type==='image/webp')variants.push({width:w,blob})}
+   if(makeVariants&&file.type!=='image/gif')for(const w of [480,960,1600].filter(w=>w<width)){const canvas=document.createElement('canvas');canvas.width=w;canvas.height=Math.max(1,Math.round(height*w/width));canvas.getContext('2d')!.drawImage(image,0,0,canvas.width,canvas.height);const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/webp',.82));if(blob?.type==='image/webp')variants.push({width:w,blob})}
    return{width,height,variants};
   }
   const element=document.createElement(file.type.startsWith('video/')?'video':'audio');element.preload='metadata';element.src=url;await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>{element.src='';reject(new Error('Unable to read media metadata'))},15000);element.onloadedmetadata=()=>{clearTimeout(timer);resolve()};element.onerror=()=>{clearTimeout(timer);reject(new Error('Unable to read media metadata'))}});
@@ -38,6 +38,11 @@ export async function uploadMedia(siteId:string,file:File,progress:(message:stri
    });attempt.completed.add(object.path);
   }done+=object.body.size;
  }
- progress('Verifying upload',95);const finished=await finalizeMedia(upload.id,{width:metadata.width,height:metadata.height,durationMs:metadata.durationMs,variants:metadata.variants.map(v=>v.width)});if(!finished.ok)throw new Error(finished.error);
+ progress('Verifying upload',95);const finished=await finalizeMedia(upload.id,{...(metadata.width!==undefined?{width:metadata.width}:{}),...(metadata.height!==undefined?{height:metadata.height}:{}),...(metadata.durationMs!==undefined?{durationMs:metadata.durationMs}:{}),variants:metadata.variants.map(v=>v.width)});if(!finished.ok)throw new Error(finished.error);
  progress('Upload complete',100);return upload.id;
+}
+
+export async function recoverMedia(id:string){
+ const saved=await prepareMediaRecovery(id);const response=await fetch(saved.url,{signal:AbortSignal.timeout(20000)});if(!response.ok)throw new Error('Saved upload could not be read. Please retry.');const file=new File([await response.blob()],saved.filename,{type:saved.mimeType});const metadata=await describe(file,false);
+ const result=await finalizeMedia(id,{...(metadata.width?{width:metadata.width}:{}),...(metadata.height?{height:metadata.height}:{}),...(metadata.durationMs?{durationMs:metadata.durationMs}:{}),variants:saved.variants});if(!result.ok)throw new Error(result.error);return id;
 }
