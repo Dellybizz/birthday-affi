@@ -17,11 +17,11 @@ async function describe(file:File):Promise<{width?:number;height?:number;duratio
  }finally{URL.revokeObjectURL(url)}
 }
 
-export type UploadAttempt={metadata?:Awaited<ReturnType<typeof describe>>;reservation?:Awaited<ReturnType<typeof reserveMedia>>;completed:Set<string>};
+export type UploadAttempt={metadata?:Awaited<ReturnType<typeof describe>>;reservation?:Extract<Awaited<ReturnType<typeof reserveMedia>>,{ok:true}>;completed:Set<string>};
 export async function uploadMedia(siteId:string,file:File,progress:(message:string,percent?:number)=>void,attempt:UploadAttempt={completed:new Set()}){
  const kind=mediaKind(file.type);if(!kind)throw new Error('Choose an image, video or audio file');const check=validateMedia(kind,file.size,file.type);if(!check.ok)throw new Error(check.error);
  progress('Preparing media',0);attempt.metadata??=await describe(file);const metadata=attempt.metadata;
- attempt.reservation??=await reserveMedia({siteId,kind,filename:file.name,mimeType:file.type,size:file.size});const upload=attempt.reservation;
+ if(!attempt.reservation){const result=await reserveMedia({siteId,kind,filename:file.name,mimeType:file.type,size:file.size});if(!result.ok)throw new Error(result.error);attempt.reservation=result}const upload=attempt.reservation;
  const db=createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
  const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Session expired. Sign in again.');
  const objects=[{path:upload.path,body:file},...metadata.variants.map(v=>({path:upload.path.replace(/original$/,v.width+'.webp'),body:v.blob}))];
@@ -38,6 +38,6 @@ export async function uploadMedia(siteId:string,file:File,progress:(message:stri
    });attempt.completed.add(object.path);
   }done+=object.body.size;
  }
- progress('Verifying upload',95);await finalizeMedia(upload.id,{width:metadata.width,height:metadata.height,durationMs:metadata.durationMs,variants:metadata.variants.map(v=>v.width)});
+ progress('Verifying upload',95);const finished=await finalizeMedia(upload.id,{width:metadata.width,height:metadata.height,durationMs:metadata.durationMs,variants:metadata.variants.map(v=>v.width)});if(!finished.ok)throw new Error(finished.error);
  progress('Upload complete',100);return upload.id;
 }
