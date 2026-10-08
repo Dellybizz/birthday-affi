@@ -9,9 +9,27 @@ export async function listMediaAssets(siteId:string,archived=false,readyOnly=fal
  await requireAdmin();const search=options.search?.trim()??'',offset=options.offset??0;if(search.length>200||!Number.isSafeInteger(offset)||offset<0||offset>100000||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
  const sort=options.sort??'newest';if(!['newest','oldest','name','largest','smallest'].includes(sort))throw new Error('Invalid media sort');
  const db=await siteDb(siteId);let query=db.from('media_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,caption,transcript,captions,metadata,status,created_at').eq('site_id',siteId).order(sort==='name'?'filename':['largest','smallest'].includes(sort)?'byte_size':'created_at',{ascending:['oldest','name','smallest'].includes(sort)}).order('id',{ascending:false}).range(offset,offset+49);
+ query=filterMediaQuery(query,archived,readyOnly,options);const {data,error}=await query;if(error)throw new Error('Unable to load media');return(data??[]).map(m=>({...m,previewUrl:'/media/'+m.id}));
+}
+
+function filterMediaQuery(query:any,archived:boolean,readyOnly:boolean,options:{search?:string;kind?:MediaKind|''}){
+ const search=options.search?.trim()??'';if(search.length>200||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
  if(readyOnly)query=query.eq('status','ready');if(options.kind)query=query.eq('kind',options.kind);
  if(search){const pattern='%'+search.replace(/[\\%_]/g,char=>'\\'+char)+'%';query=query.or(['filename','alt_text','caption','transcript'].map(field=>field+'.ilike.'+JSON.stringify(pattern)).join(','))}
- query=archived?query.not('archived_at','is',null):query.is('archived_at',null);const {data,error}=await query;if(error)throw new Error('Unable to load media');return(data??[]).map(m=>({...m,previewUrl:'/media/'+m.id}));
+ return archived?query.not('archived_at','is',null):query.is('archived_at',null);
+}
+export async function countMediaAssets(siteId:string,archived=false,readyOnly=false,options:{search?:string;kind?:MediaKind|''}={}){
+ await requireAdmin();const db=await siteDb(siteId);const {count,error}=await filterMediaQuery(db.from('media_assets').select('id',{count:'exact',head:true}).eq('site_id',siteId),archived,readyOnly,options);if(error||typeof count!=='number')throw new Error('Unable to count media');return count as number;
+}
+export async function renameMedia(id:string,filename:string){
+ await requireAdmin('media:write');if(!uuid.test(id)||typeof filename!=='string'||!filename.trim()||filename.trim().length>255||/[\\/\x00-\x1f\x7f]/.test(filename))throw new Error('Invalid filename');
+ const db=await adminDb();const {data:m,error:lookupError}=await db.from('media_assets').select('site_id').eq('id',id).single();if(lookupError||!m)throw new Error('Media not found');await siteDb(m.site_id);
+ const {error}=await db.from('media_assets').update({filename:filename.trim()}).eq('id',id).eq('site_id',m.site_id);if(error)throw new Error('Unable to rename media');return{ok:true};
+}
+export async function bulkArchiveMedia(siteId:string,ids:string[],archive:boolean){
+ await requireAdmin('media:write');if(!Array.isArray(ids)||!ids.length||ids.length>100||ids.some(id=>typeof id!=='string'||!uuid.test(id))||typeof archive!=='boolean')throw new Error('Select between 1 and 100 files');
+ const unique=[...new Set(ids)],db=await siteDb(siteId);const {data,error}=await db.from('media_assets').select('id').eq('site_id',siteId).in('id',unique);if(error||data?.length!==unique.length)throw new Error('Some files are unavailable in this site');
+ const succeeded:string[]=[],failed:string[]=[];for(const id of unique){try{const {error}=await db.rpc('archive_media',{asset_id:id,archive});(error?failed:succeeded).push(id)}catch{failed.push(id)}}return{succeeded,failed};
 }
 
 export async function reserveMedia(input:{siteId:string;kind:MediaKind;filename:string;mimeType:string;size:number}):Promise<{ok:true;id:string;path:string;bucket:string}|{ok:false;error:string}>{
