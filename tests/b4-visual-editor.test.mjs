@@ -70,3 +70,18 @@ test('B4 one viewport model drives presets, resize bounds and responsive breakpo
  assert.equal(deviceForWidth(599),'mobile');assert.equal(deviceForWidth(600),'tablet');assert.equal(deviceForWidth(960),'desktop');
  assert.equal(clampViewport(200,320,1600),320);assert.equal(clampViewport(2000,320,1600),1600);assert.equal(clampViewport(NaN,320,1600),320);
 });
+
+test('Adore photo controls are editable and Heart replacement preserves the memory and other images',()=>{
+ let adore=insertNode(empty(),'section','deck',null);adore=insertNode(adore,'reason','note','deck');
+ const caps=getInspectorCapabilities('reasons',adore,adore.nodes.find(n=>n.id==='note'));
+ for(const key of ['src','objectFit','focalX','focalY','imageHeight','imageRadius','imageRotation'])assert.ok(caps.some(c=>c.field.key===key&&c.group==='content'),key);
+ const {createHeartPage}=loadContentModule('packages/content/src/heart-page.ts');
+ const {mediaSelectionPatch}=loadContentModule('packages/content/src/inspector-capabilities.ts');
+ let id=0;const heart=createHeartPage(()=>String(++id)),images=heart.nodes.filter(n=>n.component==='image');
+ const selected=images[0],mediaCap=getInspectorCapabilities('in-my-heart',heart,selected).find(c=>c.field.key==='src');
+ assert.equal(mediaCap.media.kind,'image');
+ const next=updateNode(heart,selected.id,{props:mediaSelectionPatch(mediaCap.media,{id:'11111111-1111-4111-8111-111111111111',alt_text:'New photo'})});
+ const memory=next.nodes.find(n=>n.id===selected.id);
+ assert.equal(memory.props.src,'/media/11111111-1111-4111-8111-111111111111');assert.equal(memory.props.body,selected.props.body);assert.equal(memory.parentId,selected.parentId);
+ assert.deepEqual(next.nodes.find(n=>n.id===images[1].id),images[1]);
+});

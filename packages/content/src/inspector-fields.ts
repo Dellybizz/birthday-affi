@@ -43,6 +43,14 @@ for(const [kind,keys] of Object.entries({
 sectionContentFields['date-widget']=[{key:'dateMode',label:'Date display',type:'select',options:['current','birthday']}];
 for(const kind of ['image','video'])componentFields[kind].push({key:'title',label:'Media title',type:'text'},{key:'album',label:'Album',type:'text'},{key:'date',label:'Date (YYYY-MM-DD)',type:'text'},{key:'body',label:'Caption',type:'textarea'});
 sectionContentFields['photo-library']=[{key:'title',label:'App heading',type:'text'},{key:'subtitle',label:'Library message',type:'text'}];
+componentFields.reason.push(
+ {key:'objectFit',label:'Photo fit',type:'select',options:['cover','contain','fill','scale-down']},
+ {key:'focalX',label:'Photo crop horizontal (%)',type:'number',min:0,max:100},
+ {key:'focalY',label:'Photo crop vertical (%)',type:'number',min:0,max:100},
+ {key:'imageHeight',label:'Photo height (px)',type:'number',min:60,max:600},
+ {key:'imageRadius',label:'Photo corner radius (px)',type:'number',min:0,max:64},
+ {key:'imageRotation',label:'Photo rotation (degrees)',type:'number',min:-15,max:15,step:.5}
+);
 componentFields.reason.push({key:'voiceSrc',label:'Voice note URL',type:'text'},{key:'transcript',label:'Voice transcript',type:'textarea'});
 sectionContentFields['heartfelt-card']=[{key:'sealedTitle',label:'Envelope title',type:'text'},{key:'openLabel',label:'Open letter button',type:'text'}];
 componentFields['movie-scene'].push({key:'poster',label:'Reel cover URL',type:'text'});
