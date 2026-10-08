@@ -83,7 +83,7 @@ export async function saveMediaPoster(id:string,input:FormData){
  const path=m.storage_path.replace(/original$/,'poster.webp');const {error:uploadError}=await db.storage.from(mediaBucket('video')).upload(path,file,{contentType:'image/webp',upsert:false});
  if(uploadError&&!['409','400'].includes(String(uploadError.statusCode)))throw new Error('Unable to save thumbnail. Retry.');
  const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Session expired');
- await verifyMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket('video')+'/'+path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??''},{mime:'image/webp',size:0,maxSize:524288});
+ await verifyMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket('video')+'/'+path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||''},{mime:'image/webp',size:0,maxSize:524288});
  const {error:saveError}=await db.from('media_assets').update({poster_ready:true}).eq('id',id).eq('site_id',m.site_id);if(saveError)throw new Error('Thumbnail is saved; retry to finish verification');return{ok:true};
 }
 
@@ -110,6 +110,6 @@ export async function addMediaToCollection(siteId:string,collection:string,ids:s
 export async function fingerprintMedia(id:string){
  await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id,status,storage_path,kind,mime_type,byte_size,content_sha256').eq('id',id).single();if(error||!m||m.status!=='ready')throw new Error('A verified file is required');await siteDb(m.site_id);if(m.content_sha256)return{ok:true};
  const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Session expired');
- const hash=await fingerprintMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket(m.kind)+'/'+m.storage_path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??''},{mime:m.mime_type,size:m.byte_size});
+ const hash=await fingerprintMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket(m.kind)+'/'+m.storage_path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||''},{mime:m.mime_type,size:m.byte_size});
  const {error:saveError}=await db.from('media_assets').update({content_sha256:hash}).eq('id',id).eq('site_id',m.site_id).is('content_sha256',null);if(saveError)throw new Error('Unable to save the duplicate scan result');return{ok:true};
 }
