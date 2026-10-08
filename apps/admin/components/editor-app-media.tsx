@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import {addAppItem,getOrderedNodes,mediaSelectionPatch,updateNode,type PageDocument} from '@wiffeyyyy/content';
-import MediaLibrary from './media-library';
+import EditorMediaPicker from './editor-media-picker';
 import type {MediaAsset} from '../lib/media-policy';
 
 type ItemKind='post'|'reel'|'photo'|'video';
@@ -36,7 +36,7 @@ export default function EditorAppMedia({document,app,siteId,canWrite,selectedId,
    <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-semibold">Add {choice.label.toLowerCase()} to {app==='movie'?'Saragram':'Pardanasheen'}</h2><button className={button} onClick={()=>setTarget(null)}>Close</button></div>
    <p className="mb-3 text-sm text-[#6d7175]">Upload a file below or select an existing {choice.media==='image'?'image':'video'} and press “Use this {choice.media}”.</p>
    {error&&<p role="alert" className="mb-3 text-sm text-red-700">{error}</p>}
-   <MediaLibrary key={choice.kind} siteId={siteId} canWrite={canWrite} kind={choice.media} onPick={add} onClose={()=>setTarget(null)}/>
+   <EditorMediaPicker key={choice.kind} siteId={siteId} canWrite={canWrite} kind={choice.media} onPick={add}/>
   </dialog>}
  </section>;
 }

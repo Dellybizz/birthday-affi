@@ -38,4 +38,4 @@ export async function middleware(request: NextRequest) {
   if (roleError || !admin) return path === '/unauthorized' ? response : redirectTo('/unauthorized');
   return path === '/login' || path === '/unauthorized' ? redirectTo('/') : response;
 }
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|api/health).*)'] };
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|api/health|api/media-picker).*)'] };
