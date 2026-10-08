@@ -48,7 +48,7 @@ function settingSection(cap:InspectorCapability,group:InspectorGroup):SettingsSe
  if(paddingKeys.has(key))return 'Padding';
  if(marginKeys.has(key))return 'Margin';
  if(borderKeys.has(key))return 'Border & shadow';
- if(colorKeys.has(key))return 'Colours';
+ if(colorKeys.has(key)&&cap.field.type==='color')return 'Colours';
  if(layoutKeys.has(key))return 'Layout';
  if(playbackKeys.has(key))return 'Playback';
  if(navigationKeys.has(key))return 'Navigation';
