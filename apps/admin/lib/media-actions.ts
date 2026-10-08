@@ -8,7 +8,7 @@ async function siteDb(siteId:string){if(!uuid.test(siteId))throw new Error('Inva
 export async function listMediaAssets(siteId:string,archived=false,readyOnly=false,options:{search?:string;kind?:MediaKind|'';offset?:number;sort?:'newest'|'oldest'|'name'|'largest'|'smallest'}={}):Promise<MediaAsset[]>{
  await requireAdmin();const search=options.search?.trim()??'',offset=options.offset??0;if(search.length>200||!Number.isSafeInteger(offset)||offset<0||offset>100000||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
  const sort=options.sort??'newest';if(!['newest','oldest','name','largest','smallest'].includes(sort))throw new Error('Invalid media sort');
- const db=await siteDb(siteId);let query=db.from('media_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,caption,transcript,captions,metadata,status,created_at').eq('site_id',siteId).order(sort==='name'?'filename':['largest','smallest'].includes(sort)?'byte_size':'created_at',{ascending:['oldest','name','smallest'].includes(sort)}).order('id',{ascending:false}).range(offset,offset+49);
+ const db=await siteDb(siteId);let query=db.from('media_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,caption,transcript,captions,metadata,status,poster_ready,created_at').eq('site_id',siteId).order(sort==='name'?'filename':['largest','smallest'].includes(sort)?'byte_size':'created_at',{ascending:['oldest','name','smallest'].includes(sort)}).order('id',{ascending:false}).range(offset,offset+49);
  query=filterMediaQuery(query,archived,readyOnly,options);const {data,error}=await query;if(error)throw new Error('Unable to load media');return(data??[]).map(m=>({...m,previewUrl:'/media/'+m.id}));
 }
 
@@ -63,11 +63,23 @@ export async function mediaUsage(id:string){
 }
 
 export async function checkMediaStorage(siteId:string):Promise<{available:boolean;message:string}>{
- await requireAdmin();const db=await siteDb(siteId);const {error}=await db.storage.from(mediaBucket('image')).list('',{limit:1});return error?{available:false,message:'Uploads are unavailable. Supabase Storage must be activated for this site before files can be uploaded.'}:{available:true,message:''};
+ await requireAdmin();const db=await siteDb(siteId);const checks=await Promise.all((['image','video','audio'] as const).map(async kind=>{try{const {error}=await db.storage.from(mediaBucket(kind)).list('',{limit:1});return error?kind:null}catch{return kind}}));const unavailable=checks.filter(Boolean);return unavailable.length?{available:false,message:'Uploads unavailable for '+unavailable.join(', ')+'. Check media Storage and retry.'}:{available:true,message:''};
 }
 
 export async function prepareMediaRecovery(id:string){
  await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id,storage_path,kind,mime_type,filename,status').eq('id',id).single();if(error||!m)throw new Error('Upload not found');await siteDb(m.site_id);
  const bucket=db.storage.from(mediaBucket(m.kind));const [signed,listing]=await Promise.all([bucket.createSignedUrl(m.storage_path,120),bucket.list(m.site_id+'/'+id,{limit:10})]);if(signed.error||!signed.data||listing.error)throw new Error('Unable to read the saved upload. Refresh and retry.');
  return{url:signed.data.signedUrl,filename:m.filename,mimeType:m.mime_type,variants:(listing.data??[]).map(o=>Number(o.name.replace('.webp',''))).filter(v=>[480,960,1600].includes(v))};
+}
+
+/** A poster is an immutable sidecar; it cannot repoint an original or its variants. */
+export async function saveMediaPoster(id:string,input:FormData){
+ await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');
+ const file=input.get('poster');if(!(file instanceof Blob)||file.type!=='image/webp'||file.size<12||file.size>524288||!matchesSignature('image/webp',new Uint8Array(await file.slice(0,64).arrayBuffer())))throw new Error('Choose a WebP thumbnail up to 512 KB');
+ const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id,kind,status,storage_path,poster_ready').eq('id',id).single();if(error||!m||m.kind!=='video'||m.status!=='ready')throw new Error('A verified video is required');await siteDb(m.site_id);if(m.poster_ready)return{ok:true};
+ const path=m.storage_path.replace(/original$/,'poster.webp');const {error:uploadError}=await db.storage.from(mediaBucket('video')).upload(path,file,{contentType:'image/webp',upsert:false});
+ if(uploadError&&!['409','400'].includes(String(uploadError.statusCode)))throw new Error('Unable to save thumbnail. Retry.');
+ const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Session expired');
+ await verifyMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket('video')+'/'+path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??''},{mime:'image/webp',size:0,maxSize:524288});
+ const {error:saveError}=await db.from('media_assets').update({poster_ready:true}).eq('id',id).eq('site_id',m.site_id);if(saveError)throw new Error('Thumbnail is saved; retry to finish verification');return{ok:true};
 }
