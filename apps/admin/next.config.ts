@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-const publicSiteUrl=(process.env.NEXT_PUBLIC_WEB_URL??'').trim().replace(/\/+$/,'');
+const publicSiteUrl=(process.env.NEXT_PUBLIC_WEB_URL||'https://wiffeyyyy-os.vercel.app').trim().replace(/\/+$/,'');
 const nextConfig: NextConfig = {
  transpilePackages: ["@wiffeyyyy/ui"],
  async rewrites(){
