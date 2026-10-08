@@ -1,16 +1,6 @@
 html,body{margin:0;width:100%;min-height:100%;background:#f6f6f7}
 body:has([data-editor-live-shell="true"].birthday-os-phone){display:block;place-items:initial;min-height:100%;background:#f6f6f7}
 
-/* P0 editor geometry: browser zoom must not turn the desktop visual editor into the compact/mobile editor. */
-body:has(main[data-editor-context="Inspector"]){min-width:1160px;overflow-x:auto;overflow-y:hidden;background:#f6f6f7}
-main[data-editor-context="Inspector"]{width:100%;min-width:1160px}
-main[data-editor-context="Inspector"]>header{min-width:1160px;flex-wrap:nowrap}
-main[data-editor-context="Inspector"]>header>div:nth-child(2)>div:first-child{display:flex!important}
-main[data-editor-context="Inspector"]>header div:has(>button[title="Desktop preview"]){display:flex!important}
-main[data-editor-context="Inspector"]>nav[aria-label="Editor panels"]{display:none!important}
-main[data-editor-context="Inspector"]>nav[aria-label="Editor panels"]+div{display:grid!important;grid-template-columns:292px minmax(540px,1fr) 312px!important;min-width:1144px}
-main[data-editor-context="Inspector"]>nav[aria-label="Editor panels"]+div>aside:first-child,
-main[data-editor-context="Inspector"]>nav[aria-label="Editor panels"]+div>aside:last-child,
-main[data-editor-context="Inspector"]>nav[aria-label="Editor panels"]+div>section[aria-label="Live canvas"]{display:block!important}
-main[data-editor-context="Inspector"] section[aria-label="Live canvas"]{position:relative;min-width:540px;overflow:auto!important;overscroll-behavior:contain}
-main[data-editor-context="Inspector"] section[aria-label="Live canvas"]>div{margin-inline:auto}
+/* Let the workspace follow its actual viewport at browser zoom and tablet widths. */
+main[data-editor-context="Inspector"]{width:100%;min-width:0}
+main[data-editor-context="Inspector"] section[aria-label="Live canvas"]{position:relative;min-width:0;overflow:hidden;overscroll-behavior:contain}

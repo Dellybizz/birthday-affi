@@ -53,6 +53,6 @@ test('P1 moves inspect-mode media pausing and selection overlays inside the isol
  assert.doesNotMatch(source,/querySelectorAll(?:<HTMLMediaElement>)?\('audio,video'\)/);
  assert.match(preview,/querySelectorAll<HTMLMediaElement>\('audio,video'\).*pause/);
  assert.match(preview,/scrollIntoView\(\{block:'nearest'\}\)/);
- assert.match(preview,/animation-play-state:paused/);
+ assert.match(preview,/animation:none!important;transition:none!important/);
  assert.match(preview,/border-2 border-\[#1677ff\]/);
 });
