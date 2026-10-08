@@ -50,3 +50,37 @@ test('video posters append only at the reserved sidecar path and stay private',(
 test('viewer cannot append video posters and image records cannot advertise them',async()=>{
  await db.exec('begin');try{await role(owner);await ready();await rejects(()=>db.query('update media_assets set poster_ready=true where id=$1',[asset]),/video_poster_only/);await role(viewer);await rejects(()=>db.query("insert into storage.objects(bucket_id,name)values('wiffeyyyy-video',$1)",[site+'/'+asset+'/poster.webp']),/row-level security/)}finally{await db.exec('rollback')}
 });
+
+test('collections and tags save atomically without changing a verified original',()=>run(editor,async()=>{
+ await ready();const collection=(await db.query("insert into media_collections(site_id,name) values($1,'Memories') returning id",[site])).rows[0].id;
+ await db.query('select save_media_organization($1,$2,true,$3)',[asset,['birthday','memories'],[collection]]);
+ const result=(await db.query('select favourite,tags,collection_ids,storage_path from media_library_assets where id=$1',[asset])).rows[0];assert.equal(result.favourite,true);assert.deepEqual(result.tags,['birthday','memories']);assert.deepEqual(result.collection_ids,[collection]);assert.equal(result.storage_path,site+'/'+asset+'/original');
+ await rejects(()=>db.query("insert into media_collections(site_id,name) values($1,'MEMORIES')",[site]),/unique/);
+ await rejects(()=>db.query('select save_media_organization($1,$2,false,$3)',[asset,['duplicate','duplicate'],[collection]]),/Invalid organization/);
+ assert.equal((await db.query('select favourite from media_assets where id=$1',[asset])).rows[0].favourite,true);
+ await db.query('delete from media_collections where id=$1',[collection]);assert.equal((await db.query('select cardinality(collection_ids) n from media_library_assets where id=$1',[asset])).rows[0].n,0);assert.equal((await db.query('select count(*)::int n from media_assets where id=$1',[asset])).rows[0].n,1);
+}));
+test('cross-site collection assignments fail before any tags or membership change',()=>run(owner,async()=>{
+ await ready();const foreign=(await db.query("insert into sites(name,slug) values('Other','collection-other') returning id")).rows[0].id;const collection=(await db.query("insert into media_collections(site_id,name) values($1,'Other collection') returning id",[foreign])).rows[0].id;
+ await rejects(()=>db.query('select save_media_organization($1,$2,true,$3)',[asset,['changed'],[collection]]),/unavailable in this site/);
+ assert.deepEqual((await db.query('select tags from media_assets where id=$1',[asset])).rows[0].tags,[]);
+ await rejects(()=>db.query('insert into media_collection_assets(site_id,collection_id,asset_id) values($1,$2,$3)',[site,collection,asset]),/foreign key/);
+ await rejects(()=>db.query('select add_media_to_collection($1,$2,$3)',[site,collection,[asset]]),/unavailable in this site/);
+}));
+test('unused excludes draft, settings and historical media references',()=>run(owner,async()=>{
+ await ready();const unused=async()=>(await db.query('select is_unused from media_library_assets where id=$1',[asset])).rows[0].is_unused;
+ assert.equal(await unused(),true);await save(mediaDoc());assert.equal(await unused(),false);await publish(1);await save(doc('Removed from current draft'),1);assert.equal(await unused(),false);
+}));
+test('unused detects media in URL query strings and page settings',()=>run(owner,async()=>{
+ await ready();await db.query('update pages set settings=$1 where id=$2',[JSON.stringify({backgroundUrl:'/media/'+asset+'?variant=480'}),page]);assert.equal((await db.query('select is_unused from media_library_assets where id=$1',[asset])).rows[0].is_unused,false);
+}));
+test('duplicate groups use fingerprints and archive membership, never filenames',()=>run(owner,async()=>{
+ await ready();const second='00000000-0000-4000-8000-000000000021',hash='a'.repeat(64);
+ await db.query("insert into media_assets(id,site_id,kind,storage_path,filename,mime_type,byte_size,status,content_sha256) values($1,$2,'image',$3,'different.png','image/png',100,'ready',$4)",[second,site,site+'/'+second+'/original',hash]);
+ await db.query('update media_assets set content_sha256=$1 where id=$2',[hash,asset]);assert.equal((await db.query('select duplicate_count from media_library_assets where id=$1',[asset])).rows[0].duplicate_count,2);
+ await rejects(()=>db.query('update media_assets set content_sha256=$1 where id=$2',['b'.repeat(64),asset]),/immutable/);
+ await db.query('select archive_media($1,true)',[second]);assert.equal((await db.query('select duplicate_count from media_library_assets where id=$1',[asset])).rows[0].duplicate_count,1);
+}));
+test('viewer may read organization but cannot change it; anonymous inventory stays private',async()=>{
+ await db.exec('begin');try{await role(owner);await ready();await role(viewer);assert.equal((await db.query('select count(*)::int n from media_library_assets')).rows[0].n,1);await rejects(()=>db.query('select save_media_organization($1,$2,true,$3)',[asset,['tag'],[]]),/Not authorized/);await rejects(()=>db.query("insert into media_collections(site_id,name) values($1,'Denied')",[site]),/row-level security/);await db.exec('set local role anon');await rejects(()=>db.query('select * from media_library_assets'),/permission denied/);await rejects(()=>db.query('select * from media_collections'),/permission denied/)}finally{await db.exec('rollback')}
+});

@@ -2,24 +2,27 @@
 import { adminDb } from './supabase';
 import { requireAdmin } from './auth';
 import { validateMedia, matchesSignature, mediaBucket, type MediaKind, type MediaAsset } from './media-policy';
+import {normalizeMediaTags,validateOrganizationFilters,collectionName,type MediaListOptions,type MediaOrganizationFilters,type MediaCollection} from './media-organization';
+import {fingerprintMediaObject} from './media-fingerprint';
 import {verifyMediaObject} from './media-verification';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function siteDb(siteId:string){if(!uuid.test(siteId))throw new Error('Invalid site');const db=await adminDb();const {data,error}=await db.from('sites').select('id').eq('id',siteId).eq('slug',process.env.NEXT_PUBLIC_SITE_SLUG??'wiffeyyyy-os').single();if(error||!data)throw new Error('Site not found');return db}
-export async function listMediaAssets(siteId:string,archived=false,readyOnly=false,options:{search?:string;kind?:MediaKind|'';offset?:number;sort?:'newest'|'oldest'|'name'|'largest'|'smallest'}={}):Promise<MediaAsset[]>{
+export async function listMediaAssets(siteId:string,archived=false,readyOnly=false,options:MediaListOptions={}):Promise<MediaAsset[]>{
  await requireAdmin();const search=options.search?.trim()??'',offset=options.offset??0;if(search.length>200||!Number.isSafeInteger(offset)||offset<0||offset>100000||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
  const sort=options.sort??'newest';if(!['newest','oldest','name','largest','smallest'].includes(sort))throw new Error('Invalid media sort');
- const db=await siteDb(siteId);let query=db.from('media_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,caption,transcript,captions,metadata,status,poster_ready,created_at').eq('site_id',siteId).order(sort==='name'?'filename':['largest','smallest'].includes(sort)?'byte_size':'created_at',{ascending:['oldest','name','smallest'].includes(sort)}).order('id',{ascending:false}).range(offset,offset+49);
+ const db=await siteDb(siteId);let query=db.from('media_library_assets').select('id,site_id,kind,filename,mime_type,byte_size,width,height,duration_ms,alt_text,caption,transcript,captions,metadata,status,poster_ready,created_at,tags,favourite,collection_ids,is_unused,content_sha256,duplicate_count').eq('site_id',siteId).order(sort==='name'?'filename':['largest','smallest'].includes(sort)?'byte_size':'created_at',{ascending:['oldest','name','smallest'].includes(sort)}).order('id',{ascending:false}).range(offset,offset+49);
  query=filterMediaQuery(query,archived,readyOnly,options);const {data,error}=await query;if(error)throw new Error('Unable to load media');return(data??[]).map(m=>({...m,previewUrl:'/media/'+m.id}));
 }
 
-function filterMediaQuery(query:any,archived:boolean,readyOnly:boolean,options:{search?:string;kind?:MediaKind|''}){
- const search=options.search?.trim()??'';if(search.length>200||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
+function filterMediaQuery(query:any,archived:boolean,readyOnly:boolean,options:MediaOrganizationFilters&{search?:string;kind?:MediaKind|''}){
+ validateOrganizationFilters(options);const search=options.search?.trim()??'';if(search.length>200||options.kind&&!['image','video','audio'].includes(options.kind))throw new Error('Invalid media filter');
+ if(options.state&&options.state!=='all')query=query.eq('status',options.state);if(options.favourites)query=query.eq('favourite',true);if(options.unused)query=query.eq('is_unused',true);if(options.duplicates)query=query.gt('duplicate_count',1);if(options.tag)query=query.contains('tags',[options.tag]);if(options.collection)query=options.collection==='unfiled'?query.eq('collection_ids','{}'):query.contains('collection_ids',[options.collection]);
  if(readyOnly)query=query.eq('status','ready');if(options.kind)query=query.eq('kind',options.kind);
  if(search){const pattern='%'+search.replace(/[\\%_]/g,char=>'\\'+char)+'%';query=query.or(['filename','alt_text','caption','transcript'].map(field=>field+'.ilike.'+JSON.stringify(pattern)).join(','))}
  return archived?query.not('archived_at','is',null):query.is('archived_at',null);
 }
-export async function countMediaAssets(siteId:string,archived=false,readyOnly=false,options:{search?:string;kind?:MediaKind|''}={}){
- await requireAdmin();const db=await siteDb(siteId);const {count,error}=await filterMediaQuery(db.from('media_assets').select('id',{count:'exact',head:true}).eq('site_id',siteId),archived,readyOnly,options);if(error||typeof count!=='number')throw new Error('Unable to count media');return count as number;
+export async function countMediaAssets(siteId:string,archived=false,readyOnly=false,options:MediaOrganizationFilters&{search?:string;kind?:MediaKind|''}={}){
+ await requireAdmin();const db=await siteDb(siteId);const {count,error}=await filterMediaQuery(db.from('media_library_assets').select('id',{count:'exact',head:true}).eq('site_id',siteId),archived,readyOnly,options);if(error||typeof count!=='number')throw new Error('Unable to count media');return count as number;
 }
 export async function renameMedia(id:string,filename:string){
  await requireAdmin('media:write');if(!uuid.test(id)||typeof filename!=='string'||!filename.trim()||filename.trim().length>255||/[\\/\x00-\x1f\x7f]/.test(filename))throw new Error('Invalid filename');
@@ -82,4 +85,31 @@ export async function saveMediaPoster(id:string,input:FormData){
  const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Session expired');
  await verifyMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket('video')+'/'+path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??''},{mime:'image/webp',size:0,maxSize:524288});
  const {error:saveError}=await db.from('media_assets').update({poster_ready:true}).eq('id',id).eq('site_id',m.site_id);if(saveError)throw new Error('Thumbnail is saved; retry to finish verification');return{ok:true};
+}
+
+export async function getMediaOrganization(siteId:string){
+ await requireAdmin();const db=await siteDb(siteId);const {data,error}=await db.rpc('get_media_organization',{p_site:siteId});if(error)throw new Error('Unable to load collections and tags');return data as {collections:MediaCollection[];tags:string[]};
+}
+export async function createMediaCollection(siteId:string,name:string){
+ await requireAdmin('media:write');name=collectionName(name);const db=await siteDb(siteId);const {data,error}=await db.from('media_collections').insert({site_id:siteId,name}).select('id,name').single();if(error||!data)throw new Error(error?.code==='23505'?'A collection with this name already exists':'Unable to create collection');return data as MediaCollection;
+}
+export async function changeMediaCollection(siteId:string,id:string,name:string|null){
+ await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid collection');if(name!==null)name=collectionName(name);const db=await siteDb(siteId);const query=name===null?db.from('media_collections').delete():db.from('media_collections').update({name});const {data,error}=await query.eq('site_id',siteId).eq('id',id).select('id');if(error||!data?.length)throw new Error(error?.code==='23505'?'A collection with this name already exists':'Unable to change collection');return{ok:true};
+}
+export async function saveMediaOrganization(id:string,input:{tags:string[];favourite:boolean;collections:string[]}){
+ await requireAdmin('media:write');if(!uuid.test(id)||typeof input?.favourite!=='boolean'||!Array.isArray(input.collections)||input.collections.length>100||input.collections.some(value=>typeof value!=='string'||!uuid.test(value)))throw new Error('Invalid organization');const tags=normalizeMediaTags(input.tags),collections=[...new Set(input.collections)];
+ const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id').eq('id',id).single();if(error||!m)throw new Error('Media not found');await siteDb(m.site_id);
+ const {error:saveError}=await db.rpc('save_media_organization',{p_asset:id,p_tags:tags,p_favourite:input.favourite,p_collections:collections});if(saveError)throw new Error('Unable to save organization. Refresh collections and retry.');return{ok:true};
+}
+export async function setMediaFavourite(id:string,favourite:boolean){
+ await requireAdmin('media:write');if(!uuid.test(id)||typeof favourite!=='boolean')throw new Error('Invalid favourite');const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id').eq('id',id).single();if(error||!m)throw new Error('Media not found');await siteDb(m.site_id);const {error:saveError}=await db.from('media_assets').update({favourite}).eq('id',id).eq('site_id',m.site_id);if(saveError)throw new Error('Unable to save favourite');return{ok:true};
+}
+export async function addMediaToCollection(siteId:string,collection:string,ids:string[]){
+ await requireAdmin('media:write');if(!uuid.test(collection)||!Array.isArray(ids)||!ids.length||ids.length>100||ids.some(id=>typeof id!=='string'||!uuid.test(id)))throw new Error('Select a collection and up to 100 files');const db=await siteDb(siteId);const {error}=await db.rpc('add_media_to_collection',{p_site:siteId,p_collection:collection,p_assets:[...new Set(ids)]});if(error)throw new Error('Unable to add files. Check that the collection and files belong to this site.');return{ok:true};
+}
+export async function fingerprintMedia(id:string){
+ await requireAdmin('media:write');if(!uuid.test(id))throw new Error('Invalid media');const db=await adminDb();const {data:m,error}=await db.from('media_assets').select('site_id,status,storage_path,kind,mime_type,byte_size,content_sha256').eq('id',id).single();if(error||!m||m.status!=='ready')throw new Error('A verified file is required');await siteDb(m.site_id);if(m.content_sha256)return{ok:true};
+ const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Session expired');
+ const hash=await fingerprintMediaObject(process.env.NEXT_PUBLIC_SUPABASE_URL+'/storage/v1/object/authenticated/'+mediaBucket(m.kind)+'/'+m.storage_path,{Authorization:'Bearer '+session.access_token,apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??''},{mime:m.mime_type,size:m.byte_size});
+ const {error:saveError}=await db.from('media_assets').update({content_sha256:hash}).eq('id',id).eq('site_id',m.site_id).is('content_sha256',null);if(saveError)throw new Error('Unable to save the duplicate scan result');return{ok:true};
 }
