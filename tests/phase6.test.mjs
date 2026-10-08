@@ -35,3 +35,18 @@ test('pending, missing, cross-site and wrong-kind assets cannot enter saved vers
 test('verified identity, variants and metadata dimensions cannot be replaced',()=>run(owner,async()=>{await ready();await rejects(()=>db.query("update media_assets set storage_path='another/path' where id=$1",[asset]),/immutable/);await rejects(()=>db.query("update media_assets set metadata='{}' where id=$1",[asset]),/immutable/);await rejects(()=>db.query("update media_assets set status='pending' where id=$1",[asset]),/immutable/);await db.query("update media_assets set alt_text='New description' where id=$1",[asset])}));
 test('SQL document validator rejects unsafe crop settings, variants and mismatched source',()=>run(owner,async()=>{await ready();for(const patch of [{focalX:101},{objectFit:'fill'},{displayHeight:2000},{variantWidths:'999'},{src:'/media/other'},{mediaWidth:0}]){const d=mediaDoc();Object.assign(d.nodes[1].props,patch);await rejects(()=>save(d),/Invalid|match/)}await save(mediaDoc())}));
 test('anonymous clients cannot invoke storage configuration or archiving',async()=>{await db.exec('begin;set local role anon');try{await rejects(()=>db.query('select public.configure_media_storage()'),/permission denied/);await rejects(()=>db.query('select public.archive_media($1,true)',[asset]),/permission denied/)}finally{await db.exec('rollback')}});
+
+test('video posters append only at the reserved sidecar path and stay private',()=>run(editor,async()=>{
+ await db.query("insert into public.media_assets(id,site_id,kind,storage_path,filename,mime_type,byte_size,status)values($1,$2,'video',$3,'clip.mp4','video/mp4',100,'ready')",[asset,site,site+'/'+asset+'/original']);
+ assert.equal((await db.query("select private.can_upload_media_object('wiffeyyyy-video',$1) allowed",[site+'/'+asset+'/original'])).rows[0].allowed,false);
+ await db.query("insert into storage.objects(bucket_id,name)values('wiffeyyyy-video',$1)",[site+'/'+asset+'/poster.webp']);
+ await rejects(()=>db.query("insert into storage.objects(bucket_id,name)values('wiffeyyyy-video',$1)",[site+'/'+asset+'/other.webp']),/row-level security/);
+ await rejects(()=>db.query("update media_assets set storage_path='replaced' where id=$1",[asset]),/immutable/);
+ await db.query('update media_assets set poster_ready=true where id=$1',[asset]);
+ assert.equal((await db.query("select private.can_upload_media_object('wiffeyyyy-video',$1) allowed",[site+'/'+asset+'/poster.webp'])).rows[0].allowed,false);
+ assert.equal((await db.query("select public.is_published_media_object('wiffeyyyy-video',$1) allowed",[site+'/'+asset+'/poster.webp'])).rows[0].allowed,false);
+ await db.exec('set local role anon');assert.equal((await db.query("select count(*)::int as n from storage.objects where name=$1",[site+'/'+asset+'/poster.webp'])).rows[0].n,0);
+}));
+test('viewer cannot append video posters and image records cannot advertise them',async()=>{
+ await db.exec('begin');try{await role(owner);await ready();await rejects(()=>db.query('update media_assets set poster_ready=true where id=$1',[asset]),/video_poster_only/);await role(viewer);await rejects(()=>db.query("insert into storage.objects(bucket_id,name)values('wiffeyyyy-video',$1)",[site+'/'+asset+'/poster.webp']),/row-level security/)}finally{await db.exec('rollback')}
+});

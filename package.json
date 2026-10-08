@@ -37,7 +37,7 @@
     "test:b3": "node --test tests/b3-os-settings.test.mjs",
     "test:b4": "node --test tests/b4-visual-editor.test.mjs",
     "test:b5": "node --test tests/b5-app-authoring.test.mjs",
-    "test:b6": "node --test tests/b6-media-audio.test.mjs tests/media-finalization.test.mjs tests/media-m1.test.mjs"
+    "test:b6": "node --test tests/b6-media-audio.test.mjs tests/media-finalization.test.mjs tests/media-m1.test.mjs tests/media-m02.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
