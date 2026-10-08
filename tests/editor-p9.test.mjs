@@ -39,8 +39,8 @@ test('P9 active-page matrix keeps all eight live/editor experiences addressable'
  }
  assert.match(pages,/activeDocumentExperiences/);
  assert.match(pages,/editorHref:'\/editor\/'\+page\.slug/);
- assert.match(rootPage,/getPublishedDocument\('memories-archive'\)/);
- assert.match(rootPage,/className="os-archive-page"/);
+ assert.match(rootPage,/import CountdownPage from '.\/countdown\/page'/);
+ assert.match(rootPage,/<CountdownPage\s*\/>/);
  assert.match(customPage,/slug==='in-my-heart'\?'os-heart-page'/);
  assert.match(homePage,/getPublishedDocument\('home'\)/);
  assert.match(homePage,/className="os-phone-home"/);
