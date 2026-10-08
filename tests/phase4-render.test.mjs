@@ -12,6 +12,7 @@ function load(file){
  const module={exports:{}};cache.set(file,module);
  const code=ts.transpile(fs.readFileSync(file,'utf8'),{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022});
  const localRequire=name=>{
+  if(name==='server-only')return {};
   if(name==='@wiffeyyyy/content')return load(path.join(root,'packages/content/src/index.ts'));
   if(name==='@wiffeyyyy/ui/notification-shade')return load(path.join(root,'packages/ui/src/notification-shade.tsx'));
   if(name==='@wiffeyyyy/ui/public-page-shell')return load(path.join(root,'packages/ui/src/public-page-shell.tsx'));
@@ -254,3 +255,7 @@ test('B5 runtime previews use authored labels, media and safe preview behavior',
  const vault=createRuntimeAppDocument('vault');vault.nodes[0].props.question='Our test question?';vault.nodes[0].props.lockedTitle='A test keepsake';const vaultHtml=render(CMSRenderer,{document:vault,onSelect:()=>{}});assert.match(vaultHtml,/Our test question/);assert.match(vaultHtml,/A test keepsake/);assert.doesNotMatch(vaultHtml,/Private test fixture/);
  const pieces=createRuntimeAppDocument('pieces');pieces.nodes[0].props.puzzleTitle='Our custom puzzle';pieces.nodes[1].props.title='A new beginning';pieces.nodes[1].props.src='https://example.test/puzzle.jpg';pieces.nodes[1].props.cols=2;pieces.nodes[1].props.rows=2;const html=render(CMSRenderer,{document:pieces,onSelect:()=>{}});assert.match(html,/Our custom puzzle/);assert.match(html,/A new beginning/);assert.match(html,/4 pieces/);assert.match(html,/Preview progress is temporary/);
 });
+
+ test('Saragram defers video sources and removes native feed controls',()=>{
+ const {AppVideo,imagePreview}=load(path.join(root,'packages/ui/src/app-media.tsx'));const node={id:'test',component:'video',props:{src:'/media/00000000-0000-4000-8000-000000000020',mediaWidth:720,mediaHeight:1280}};const html=render(AppVideo,{node});assert.match(html,/preload="none"/);assert.doesNotMatch(html,/<video[^>]* src=|controls=""/);assert.match(html,/Play video/);assert.match(html,/Unmute video/);assert.equal(imagePreview({...node,component:'image',props:{...node.props,variantWidths:'480,960'}},960),node.props.src+'?variant=960');
+ });

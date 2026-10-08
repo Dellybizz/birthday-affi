@@ -84,3 +84,10 @@ test('duplicate groups use fingerprints and archive membership, never filenames'
 test('viewer may read organization but cannot change it; anonymous inventory stays private',async()=>{
  await db.exec('begin');try{await role(owner);await ready();await role(viewer);assert.equal((await db.query('select count(*)::int n from media_library_assets')).rows[0].n,1);await rejects(()=>db.query('select save_media_organization($1,$2,true,$3)',[asset,['tag'],[]]),/Not authorized/);await rejects(()=>db.query("insert into media_collections(site_id,name) values($1,'Denied')",[site]),/row-level security/);await db.exec('set local role anon');await rejects(()=>db.query('select * from media_library_assets'),/permission denied/);await rejects(()=>db.query('select * from media_collections'),/permission denied/)}finally{await db.exec('rollback')}
 });
+
+ test('published video posters use the original publication boundary',()=>run(owner,async()=>{
+ await db.query("insert into public.media_assets(id,site_id,kind,storage_path,filename,mime_type,byte_size,status,poster_ready)values($1,$2,'video',$3,'clip.mp4','video/mp4',100,'ready',true)",[asset,site,site+'/'+asset+'/original']);
+ const d=mediaDoc();d.nodes[1].component='video';d.nodes[1].props={src:'/media/'+asset,mediaAssetId:asset};await save(d);assert.equal(await publicMedia(),null);await publish(1);assert.equal((await publicMedia()).posterReady,true);
+ const allowed=async path=>(await db.query("select public.is_published_media_object('wiffeyyyy-video',$1) allowed",[path])).rows[0].allowed;
+ assert.equal(await allowed(site+'/'+asset+'/poster.webp'),true);assert.equal(await allowed(site+'/'+asset+'/other.webp'),false);await save(doc('Removed'),1);await publish(2);assert.equal(await allowed(site+'/'+asset+'/poster.webp'),false);
+ }));
