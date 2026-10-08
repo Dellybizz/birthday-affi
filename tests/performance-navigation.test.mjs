@@ -109,10 +109,10 @@ test('P6 keeps editor typing, autosave and iframe updates off the hot path',()=>
  assert.match(editor,/nodeById=useMemo\(\(\)=>new Map/);
  assert.match(editor,/searchResults=useMemo/);
  assert.match(editor,/allCapabilities=\{currentCapabilities\}/);
- assert.match(inspector,/Layer name<input[^>]+defaultValue=/);
- assert.match(inspector,/Layer name<input[^>]+onBlur=/);
- assert.match(inspector,/Horizontal<input[^>]+defaultValue=\{x\}[^>]+onBlur=/);
- assert.match(inspector,/Vertical<input[^>]+defaultValue=\{y\}[^>]+onBlur=/);
+ assert.match(inspector,/Layer name<LiveInput[^>]+value=/);
+ assert.match(inspector,/Layer name<LiveInput[^>]+onChange=/);
+ assert.match(inspector,/Horizontal<LiveInput[^>]+value=\{x\}[^>]+onChange=/);
+ assert.match(inspector,/Vertical<LiveInput[^>]+value=\{y\}[^>]+onChange=/);
  assert.match(inspector,/allCapabilities\?:InspectorCapability\[\]/);
  assert.match(frame,/type:'state'/);
  assert.match(frame,/pendingDocument/);
@@ -153,11 +153,11 @@ test('admin Supabase client is reused within a server request',()=>{
  assert.match(source,/adminDb=cache/);
 });
 
-test('P0 keeps Shopify editor sidebars beside the live canvas across browser zoom',()=>{
+test('P0 editor follows the available viewport instead of forcing horizontal overflow',()=>{
  const css=read('apps/admin/app/admin-preview-isolation.css');
- assert.match(css,/min-width:1160px/);
- assert.match(css,/grid-template-columns:292px minmax\(540px,1fr\) 312px!important/);
- assert.match(css,/nav\[aria-label="Editor panels"\]\{display:none!important\}/);
- assert.match(css,/section\[aria-label="Live canvas"\]\{display:block!important\}/);
- assert.match(css,/overflow-x:auto/);
+ const editor=read('apps/admin/app/editor/[slug]/editor-client.tsx');
+ assert.match(css,/min-width:0/);
+ assert.doesNotMatch(css,/min-width:1160px|minmax\(540px/);
+ assert.match(editor,/lg:grid-cols-\[240px_minmax\(0,1fr\)_280px\]/);
+ assert.match(editor,/xl:grid-cols-\[292px_minmax\(0,1fr\)_312px\]/);
 });

@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {loadContentModule} from './load-content-module.mjs';
+const {previewScale,defaultPreviewMode}=loadContentModule('apps/admin/lib/editor-viewport.ts');
+test('Phone apps start at their phone viewport while full pages retain desktop',()=>{for(const app of ['home','movie','adventure','camera','vault'])assert.equal(defaultPreviewMode(app),'mobile');for(const page of ['memories-archive','in-my-heart','welcome'])assert.equal(defaultPreviewMode(page),'desktop')});
+test('Fit follows canvas size and can enlarge a phone when browser zoom exposes more room',()=>{const phone={width:390,height:830};for(const area of [{width:300,height:500},{width:760,height:840},{width:1100,height:1100}]){const scale=previewScale(phone,area,'fit');assert.ok(phone.width*scale<=area.width-24+.001);assert.ok(phone.height*scale<=area.height-24+.001)}assert.ok(previewScale(phone,{width:1100,height:1100},'fit')>1);assert.equal(previewScale(phone,{width:2000,height:3000},'fit'),2)});
+test('Fit width and manual zoom allow scrolling instead of forcing the entire page smaller',()=>{const desktop={width:1440,height:900},area={width:744,height:400};assert.equal(previewScale(desktop,area,'width'),.5);assert.ok(previewScale(desktop,area,'fit')<.5);assert.equal(previewScale(desktop,area,1),1);assert.equal(previewScale(desktop,area,0),.25);assert.equal(previewScale(desktop,area,3),2)});

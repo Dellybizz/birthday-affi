@@ -66,7 +66,7 @@ test('P9 editor preview uses the live renderer families and live route shells',(
  assert.match(preview,/data-public-shell-parity=\{shellPage\?'true':undefined\}/);
 });
 
-test('P9 browser zoom cannot redefine preview breakpoints or collapse Shopify sidebars',()=>{
+test('P9 browser zoom refits the canvas without changing the selected preview breakpoint',()=>{
  for(const [name,width,height] of [['mobile',390,830],['large-phone',430,932],['tablet',768,1024],['desktop',1440,900]]){
   assert.ok((frame+fs.readFileSync('apps/admin/lib/editor-viewport.ts','utf8')).includes(`${name==='large-phone'?"'large-phone'":name}:{width:${width},height:${height}}`),name);
  }
@@ -74,9 +74,10 @@ test('P9 browser zoom cannot redefine preview breakpoints or collapse Shopify si
  assert.match(frame,/transformOrigin:'top left'/);
  assert.match(frame,/visualViewport\?\.addEventListener\('resize',schedule\)/);
  assert.match(frame,/deviceForWidth\(viewport\.width\)/);
- assert.match(adminCss,/grid-template-columns:292px minmax\(540px,1fr\) 312px!important/);
- assert.match(adminCss,/min-width:1160px/);
- assert.match(adminCss,/overflow-x:auto/);
+ assert.match(adminCss,/min-width:0/);
+ assert.doesNotMatch(adminCss,/min-width:1160px|minmax\(540px/);
+ assert.match(frame,/host.clientWidth,height:host.clientHeight/);
+ assert.match(frame,/observer.observe\(host\)/);
 });
 
 test('P9 navigation responds immediately and app morphs are bounded/fail-open',()=>{
