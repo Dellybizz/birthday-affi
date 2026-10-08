@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {addAppItem,getOrderedNodes,mediaSelectionPatch,updateNode,type PageDocument} from '@wiffeyyyy/content';
 import EditorMediaPicker from './editor-media-picker';
+import EditorHeartMedia from './editor-heart-media';
 import type {MediaAsset} from '../lib/media-policy';
 
 type ItemKind='post'|'reel'|'photo'|'video';
@@ -15,6 +16,7 @@ export default function EditorAppMedia({document,app,siteId,canWrite,selectedId,
  const dialog=useRef<HTMLDialogElement>(null);
  const choices=options[app],choice=choices?.find(item=>item.kind===target);
  useEffect(()=>{if(target)dialog.current?.showModal();else dialog.current?.close()},[target]);
+ if(app==='in-my-heart'||document.nodes.some(node=>node.props.heartPart==='page'))return <EditorHeartMedia document={document} siteId={siteId} canWrite={canWrite} selectedId={selectedId} onSelect={onSelect} onCommit={onCommit}/>;
  if(!choices)return null;
  const collection=document.nodes.find(node=>node.props.sectionKind===(app==='movie'?'movie-player':'photo-library'));
  const items=getOrderedNodes(document).filter(node=>node.parentId===collection?.id&&['movie-scene','image','video'].includes(node.component));
