@@ -19,7 +19,7 @@ export function BirthdaySoundtrack({settings}:{settings:SiteDocument}){
  useEffect(()=>{if(ref.current){ref.current.volume=volume;ref.current.muted=false}},[volume,track?.assetId]);
  useEffect(()=>{
   if(!track)return;
-  const unlock=()=>{context.current={...context.current,unlocked:true};setUnlocked(true);engine.current?.update(context.current)};
+  const unlock=()=>{context.current={...context.current,unlocked:true};setUnlocked(true);engine.current?.update(context.current);engine.current?.retry()};
   const visibility=()=>{const visible=!document.hidden;context.current={...context.current,visible};setVisible(visible);engine.current?.update(context.current)};
   const bind=(doc:Document,iframe=false)=>{
    doc.addEventListener('pointerdown',unlock,true);doc.addEventListener('click',unlock,true);doc.addEventListener('keydown',unlock,true);
@@ -29,6 +29,7 @@ export function BirthdaySoundtrack({settings}:{settings:SiteDocument}){
    if(iframe){doc.addEventListener('play',play,true);doc.addEventListener('pause',pause,true);doc.addEventListener('ended',pause,true);doc.addEventListener('error',pause,true)}
    return()=>{doc.removeEventListener('pointerdown',unlock,true);doc.removeEventListener('click',unlock,true);doc.removeEventListener('keydown',unlock,true);if(iframe){doc.removeEventListener('play',play,true);doc.removeEventListener('pause',pause,true);doc.removeEventListener('ended',pause,true);doc.removeEventListener('error',pause,true);for(const player of players){player.pause();playbackCoordinator.release(player)}}};
   };
+  window.addEventListener('birthday:opening-interaction',unlock);
   const cleanup=bind(document),frames=new Map<HTMLIFrameElement,{load:()=>void;cleanup:()=>void}>();
   const scan=()=>{
    for(const [frame,entry] of frames)if(!frame.isConnected){frame.removeEventListener('load',entry.load);entry.cleanup();frames.delete(frame)}
@@ -39,7 +40,7 @@ export function BirthdaySoundtrack({settings}:{settings:SiteDocument}){
   };
   scan();const observer=new MutationObserver(records=>{if(records.some(record=>[...record.addedNodes,...record.removedNodes].some(node=>node instanceof Element&&(node.tagName==='IFRAME'||node.querySelector('iframe')))))scan()});observer.observe(document.body,{subtree:true,childList:true});document.addEventListener('visibilitychange',visibility);visibility();
   const storage=(event:StorageEvent)=>{if(event.key===MUSIC_PREFERENCE_KEY)setEnabled(parseMusicPreference(event.newValue,!settings.defaultMuted))};window.addEventListener('storage',storage);
-  return()=>{cleanup();observer.disconnect();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('storage',storage);for(const [frame,entry] of frames){frame.removeEventListener('load',entry.load);entry.cleanup()}};
+  return()=>{window.removeEventListener('birthday:opening-interaction',unlock);cleanup();observer.disconnect();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('storage',storage);for(const [frame,entry] of frames){frame.removeEventListener('load',entry.load);entry.cleanup()}};
  },[Boolean(track),settings.defaultMuted]);
  const toggle=()=>{const next=!enabled;context.current={...context.current,enabled:next,unlocked:true};setEnabled(next);setUnlocked(true);engine.current?.update(context.current);try{localStorage.setItem(MUSIC_PREFERENCE_KEY,JSON.stringify({version:1,enabled:next}))}catch{}};
  const select=(next:string)=>{setId(next);setUnlocked(true)};

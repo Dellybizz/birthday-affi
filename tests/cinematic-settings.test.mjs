@@ -83,3 +83,16 @@ test('photo movement applies both axes even with a fallback photo and no custom 
   assert.equal(frame.image.style.transform,transform);assert.equal(frame.image.src,'/puzzles/level1.jpg');
  }
 });
+
+test('live countdown boot preserves published main, after and phase controls',async()=>{
+ const vm=await import('node:vm');
+ const cinematic=mutation(d=>{d.countdown.before.titleLine='Saved main title';d.countdown.after.titleLine='Saved birthday title';d.countdown.phases[0].text='Saved last minutes'});
+ const html=renderCountdownHtml({...defaultSiteDocument,cinematic});
+ const bootstrap=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(s=>s.includes('window.SITE_CONFIG='));
+ const context=vm.createContext({window:{}});vm.runInContext(bootstrap,context);
+ const state=context.window.BDAY.read();
+ assert.equal(state.pages.countdown.before.titleLine,'Saved main title');
+ assert.equal(state.pages.countdown.after.titleLine,'Saved birthday title');
+ assert.equal(state.pages.countdown.phases[0].text,'Saved last minutes');
+ assert.match(html,/parent.dispatchEvent\(new parent.CustomEvent\('birthday:opening-interaction'\)\)/);
+});
