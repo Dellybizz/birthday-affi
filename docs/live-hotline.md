@@ -28,12 +28,9 @@ configuration returns configured credentials only after verifying a capability.
 
 ## Receiver APK boundary
 
-This commit implements browser calling and receiver-link pairing credentials.
-An Android APK, Firebase device registration/push delivery, foreground call service,
-and lock-screen notifications are NOT shipped here. Browser receiver must remain
-open; Enable incoming ringtone unlocks browser audio. Receiving a push alone does
-not create an audio call; Android must accept, acquire its microphone and negotiate
-WebRTC. Do not advertise background ringing until native device tests pass.
+The private native Android receiver is in `apps/hotline-android`. It includes incoming call notifications and an explicit foreground polling service. Its hidden WebView supplies WebRTC transport; the native screen supplies call controls. Answer opens over the lock screen. Local hold silences microphone and received audio while keeping signaling alive. Browser speaker switching works only when the browser exposes output-device selection; other browsers use the device's current audio route.
+
+Signaling is hosted in Mumbai next to the database. Polling and HTTP connection reuse reduce avoidable delay, but cannot guarantee immediate delivery in Android Doze. High-priority FCM push delivery is required for that and is not configured. APK updates require the private receiver credential and original signing key; do not generate an unconfigured APK or revoke the existing receiver merely to test a build.
 
 ## Checks
 

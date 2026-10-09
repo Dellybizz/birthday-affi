@@ -32,7 +32,7 @@ public class HotlineService extends Service {
   if(!Config.prefs(this).getBoolean("armed",false)||Config.key(this).isEmpty()){stopSelf();return START_NOT_STICKY;}
   if(MIC.equals(action))microphone=true;lastStatus="";
   if(Build.VERSION.SDK_INT>=34)startForeground(MONITOR,monitor("Connecting…"),ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE|(microphone?ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE:0));else startForeground(MONITOR,monitor("Connecting…"));
-  if(worker==null){alive=true;wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"Hotline:receiver");wake.acquire();worker=Executors.newSingleThreadScheduledExecutor();worker.scheduleWithFixedDelay(this::poll,0,600,TimeUnit.MILLISECONDS);}
+  if(worker==null){alive=true;wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"Hotline:receiver");wake.acquire();worker=Executors.newSingleThreadScheduledExecutor();worker.scheduleWithFixedDelay(this::poll,0,300,TimeUnit.MILLISECONDS);}
   if(DECLINE.equals(action)){final String id=intent.getStringExtra("callId");suppressed=id;notifications.cancel(INCOMING);worker.execute(()->{try{Config.exchange(this,"end",new JSONObject().put("callId",id));}catch(Exception e){notifications.notify(MONITOR,monitor("Decline failed. Check call screen."));}});}
   return START_STICKY;
  }
