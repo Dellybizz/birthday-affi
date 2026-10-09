@@ -11,7 +11,7 @@ test('birthday stays unlocked after the selected time on the day, rolls over aft
 test('database birthday time validator accepts legacy settings and rejects invalid time',async()=>{const db=new PGlite();try{await db.exec(`create schema private;create role anon;create role authenticated;create function private.assert_base_site_document(doc jsonb) returns void language plpgsql as $$begin if doc ? 'birthtime' then raise exception 'Unexpected field';end if;end$$;`);await db.exec(fs.readFileSync('supabase/migrations/20261009004914_birthday_time_setting.sql','utf8'));await db.query('select private.assert_base_site_document($1)',[{birthtime:'23:59'}]);await db.query('select private.assert_base_site_document($1)',[{}]);await assert.rejects(db.query('select private.assert_base_site_document($1)',[{birthtime:'25:00'}]),/Invalid birthday time/);}finally{await db.close()}});
 
  test('preserved Final Reel scripts compile without the previous project runtime',()=>{
-  const source=fs.readFileSync('apps/web/lib/final-reel-source.ts','utf8');
+  const source=fs.readFileSync('packages/content/src/final-reel-source.ts','utf8');
   const html=JSON.parse(source.slice(source.indexOf('=')+1).trim().replace(/;$/,''));
   assert.doesNotMatch(html,/supabase\.co|script src=/);assert.match(html,/play final reel/);assert.match(html,/wiffey-final-reel:back/);
   for(const match of html.replace('__FINAL_REEL_CONFIG__','{}').matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))assert.doesNotThrow(()=>new Function(match[1]));

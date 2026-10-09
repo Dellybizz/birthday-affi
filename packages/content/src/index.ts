@@ -34,3 +34,9 @@ export * from './vault-contract';
 
 export * from './audio-settings';
 export * from './birthday-settings';
+
+export * from './cinematic-settings';
+export * from './countdown-source';
+export * from './final-reel-source';
+
+export * from './cinematic-html';
