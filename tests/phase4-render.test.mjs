@@ -295,3 +295,5 @@ test('Shared app audio preference reaches feed, reel and story video controls',(
   for(const n of photos.slice(0,6)){assert.equal(n.props.src,'');assert.equal(n.props.offsetZ,12);assert.ok(!n.props.mediaAssetId);assert.ok(!n.props.poster);assert.equal(n.props.body,slots.find(s=>s.id===n.id).props.body);}
   assert.deepEqual(doc.nodes.find(n=>n.props.heartPart==='memories').children,converted.nodes.find(n=>n.props.heartPart==='memories').children);
  });
+
+ test('OS home offers integrated backward and Final Reel journey links',()=>{const document=load(path.join(root,'packages/content/src/index.ts')).installPhoneHome(createDefaultPage('home'));const html=render(CMSRenderer,{document});assert.match(html,/phone-journey-controls/);assert.match(html,/aria-label="Continue to Final Reel"/);assert.match(html,/href="\/final-reel"/);assert.match(html,/Return to In My Heart/);});

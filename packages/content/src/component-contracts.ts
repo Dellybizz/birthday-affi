@@ -20,7 +20,7 @@ export const appSlotContracts={
 } as const;
 
 export const globalSlotContracts={
- personalization:['name','nickname','birthdate','timezone','greeting'],
+ personalization:['name','nickname','birthdate','birthtime','timezone','greeting'],
  welcome:['startingText','heading','message','enterLabel','duration'],
  home:['heading','message','dateWidget','appOrder','appIcons','startHereBadge'],
  shell:['statusBar','brand','backLabel','homeLabel','phoneFrame','safeAreas'],
