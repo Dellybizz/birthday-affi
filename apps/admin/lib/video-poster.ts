@@ -1,7 +1,7 @@
 'use client';
 /** Decode one silent frame with a bounded lifetime, then release its source. */
-export async function createVideoPoster(source:Blob,timeoutMs=15000):Promise<Blob>{
- const url=URL.createObjectURL(source),video=document.createElement('video');video.muted=true;video.playsInline=true;video.preload='auto';
+export async function createVideoPoster(source:Blob|string,timeoutMs=15000):Promise<Blob>{
+ const url=typeof source==='string'?source:URL.createObjectURL(source),video=document.createElement('video');if(typeof source==='string')video.crossOrigin='anonymous';video.muted=true;video.playsInline=true;video.preload='auto';
  let timer:ReturnType<typeof setTimeout>|undefined;
  try{return await new Promise<Blob>((resolve,reject)=>{
   let capturing=false;
@@ -13,5 +13,5 @@ export async function createVideoPoster(source:Blob,timeoutMs=15000):Promise<Blo
    canvas.toBlob(blob=>blob?.type==='image/webp'&&blob.size<=524288?resolve(blob):fail(),'image/webp',.8);
   }catch{fail()}};
   timer=setTimeout(fail,timeoutMs);video.onerror=fail;video.onloadedmetadata=()=>{const target=Math.min(.5,video.duration/2);if(Number.isFinite(target)&&target>0)video.currentTime=target;else capture()};video.onseeked=capture;video.onloadeddata=()=>{if(!video.seeking)capture()};video.src=url;video.load();
- })}finally{if(timer)clearTimeout(timer);video.onloadedmetadata=null;video.onloadeddata=null;video.onseeked=null;video.onerror=null;video.pause();video.removeAttribute('src');video.load();URL.revokeObjectURL(url)}
+ })}finally{if(timer)clearTimeout(timer);video.onloadedmetadata=null;video.onloadeddata=null;video.onseeked=null;video.onerror=null;video.pause();video.removeAttribute('src');video.load();if(typeof source!=='string')URL.revokeObjectURL(url)}
 }

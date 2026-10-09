@@ -53,5 +53,5 @@ export async function recoverMedia(id:string){
 
 async function uploadVideoPoster(id:string,file:Blob){const poster=await createVideoPoster(file);const input=new FormData();input.set('poster',poster,'poster.webp');await saveMediaPoster(id,input)}
 export async function generateMediaPoster(asset:{id:string;previewUrl:string;mime_type:string}){
- const response=await fetch(asset.previewUrl,{signal:AbortSignal.timeout(30000)});if(!response.ok)throw new Error('Unable to read video. Retry.');const blob=await response.blob();await uploadVideoPoster(asset.id,blob);
+ const poster=await createVideoPoster(asset.previewUrl,30000);const input=new FormData();input.set('poster',poster,'poster.webp');await saveMediaPoster(asset.id,input);
 }

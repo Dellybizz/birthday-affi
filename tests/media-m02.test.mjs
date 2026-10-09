@@ -32,3 +32,10 @@ test('Poster delivery rejects missing, wrong-kind and unsigned inventory before 
  const {GET}=load('apps/admin/app/media/[id]/route.ts',name=>name.endsWith('/auth')?{requireAdmin:async()=>{}}:name.endsWith('/supabase')?{adminDb:async()=>({from:()=>q,storage:{from:()=>({createSignedUrl:async path=>{signed++;assert.equal(path,'site/id/poster.webp');return{data:{signedUrl:'https://example.test/private'}}}})}})}:policy);
  const get=()=>GET(new Request('https://example.test/media/'+id+'?poster=1'),{params:Promise.resolve({id})});assert.equal((await get()).status,404);ready=true;kind='image';assert.equal((await get()).status,404);assert.equal(signed,0);kind='video';assert.equal((await get()).status,307);assert.equal(signed,1)
 });
+test('remote poster generation decodes a ranged video source without downloading a full Blob',async()=>{
+ const old={document:global.document,URL:global.URL};let source='',crossOrigin='',revoked=0;
+ const {createVideoPoster}=load('apps/admin/lib/video-poster.ts');
+ global.URL={createObjectURL:()=>{throw Error('Remote previews must not allocate a full video Blob')},revokeObjectURL:()=>revoked++};
+ global.document={createElement:kind=>kind==='canvas'?{getContext:()=>({drawImage:()=>{}}),toBlob:callback=>callback(new Blob(['RIFF0000WEBP'],{type:'image/webp'}))}:(()=>{const video={readyState:2,videoWidth:720,videoHeight:1280,duration:2,pause(){},removeAttribute(){this.src=''},load(){if(this.src){source=this.src;crossOrigin=this.crossOrigin;queueMicrotask(()=>this.onloadedmetadata?.())}}};Object.defineProperty(video,'currentTime',{set(){queueMicrotask(()=>video.onseeked?.())}});return video})()};
+ try{const poster=await createVideoPoster('/media/verified-video',100);assert.equal(poster.type,'image/webp');assert.equal(source,'/media/verified-video');assert.equal(crossOrigin,'anonymous');assert.equal(revoked,0)}finally{Object.assign(global,old)}
+});
