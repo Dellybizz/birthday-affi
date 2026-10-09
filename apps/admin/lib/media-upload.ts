@@ -53,5 +53,5 @@ export async function recoverMedia(id:string){
 
 async function uploadVideoPoster(id:string,file:Blob){const poster=await createVideoPoster(file);const input=new FormData();input.set('poster',poster,'poster.webp');await saveMediaPoster(id,input)}
 export async function generateMediaPoster(asset:{id:string;previewUrl:string;mime_type:string}){
- const poster=await createVideoPoster(asset.previewUrl,30000);const input=new FormData();input.set('poster',poster,'poster.webp');await saveMediaPoster(asset.id,input);
+ try{const poster=await createVideoPoster(asset.previewUrl,12000);const input=new FormData();input.set('poster',poster,'poster.webp');await saveMediaPoster(asset.id,input)}catch{const response=await fetch('/api/media-poster',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:asset.id}),signal:AbortSignal.timeout(60000)});const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'Unable to generate thumbnail.')}
 }

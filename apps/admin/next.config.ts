@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 const publicSiteUrl=(process.env.NEXT_PUBLIC_WEB_URL||'https://wiffeyyyy-os.vercel.app').trim().replace(/\/+$/,'');
 const nextConfig: NextConfig = {
+ serverExternalPackages:['ffmpeg-static'],
+ outputFileTracingIncludes:{'/api/media-poster':['./node_modules/ffmpeg-static/ffmpeg']},
  transpilePackages: ["@wiffeyyyy/ui"],
  async rewrites(){
   // Bundled experience photos belong to the public app, while /media stays private here.
