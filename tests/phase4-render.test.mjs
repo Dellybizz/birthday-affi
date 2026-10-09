@@ -151,7 +151,7 @@ test('Memories Archive edits flow to both public and editor rendering, with resp
 test('Original heart experience preserves the engine, editor hierarchy and safe three-page journey',()=>{
  const {createHeartPage,createMemoriesArchive,heartFields,HEART_ROUTE,duplicateNode}=load(path.join(root,'packages/content/src/index.ts'));
  let i=0,doc=createHeartPage(()=> 'heart-'+(++i));
- const collection=doc.nodes.find(n=>n.props.heartPart==='memories');assert.equal(collection.children.length,20);
+ const collection=doc.nodes.find(n=>n.props.heartPart==='memories');assert.equal(collection.children.length,20);assert.ok(doc.nodes.filter(n=>n.props.heartPart==='memory').every(n=>n.component==='image'));
  const memory=doc.nodes.find(n=>n.id===collection.children[0]);
  doc=updateNode(doc,memory.id,{props:{title:'My edited memory',body:'My own romantic words',src:'/puzzles/our-moment.jpg',offsetZ:12,paddingLeft:7}});
  const copy=duplicateNode(doc,memory.id,()=> 'copy-'+(++i)).document;assert.equal(copy.nodes.find(n=>n.props.heartPart==='memories').children.length,21);
@@ -259,3 +259,13 @@ test('B5 runtime previews use authored labels, media and safe preview behavior',
  test('Saragram defers video sources and removes native feed controls',()=>{
  const {AppVideo,imagePreview}=load(path.join(root,'packages/ui/src/app-media.tsx'));const node={id:'test',component:'video',props:{src:'/media/00000000-0000-4000-8000-000000000020',mediaWidth:720,mediaHeight:1280}};const html=render(AppVideo,{node});assert.match(html,/preload="none"/);assert.doesNotMatch(html,/<video[^>]* src=|controls=""/);assert.match(html,/Play video/);assert.match(html,/Unmute video/);assert.equal(imagePreview({...node,component:'image',props:{...node.props,variantWidths:'480,960'}},960),node.props.src+'?variant=960');
  });
+
+test('Shared app audio preference reaches feed, reel and story video controls',()=>{
+ const React=req('react'),{renderToStaticMarkup}=req('react-dom/server');
+ const {AppVideo,AppVideoAudioContext}=load(path.join(root,'packages/ui/src/app-media.tsx'));
+ for(const muted of [true,false]){
+  const nodes=['feed','reel','story'].map((mode,i)=>React.createElement(AppVideo,{key:i,mode,node:{id:'v'+i,component:'video',props:{src:'https://example.com/video.mp4'}}}));
+  const html=renderToStaticMarkup(React.createElement(AppVideoAudioContext.Provider,{value:{muted,setMuted:()=>{}}},nodes));
+  assert.equal((html.match(new RegExp('aria-label="'+(muted?'Unmute video':'Mute video')+'"','g'))||[]).length,3);
+ }
+});

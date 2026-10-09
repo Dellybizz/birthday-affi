@@ -1,48 +1,19 @@
-# Hotline Receiver for Android
+# Hotline for Android
 
-Android 8+ receiver using the existing private Hotline API and WebRTC receiver.
-This is a development APK, not a tested production phone client. No pairing key
-or microphone data is embedded in the APK. Pair with Admin → Hotline → receiver
-link. The caller link cannot pair as a receiver.
+Android 8+ personal receiver with a native contact screen, incoming-call screen, Recents and Settings. The call screen includes elapsed time, microphone mute, speaker and hang-up. A restricted hidden WebView handles the existing WebRTC audio transport; this is not a replacement for the system cellular Phone app.
 
-## Use
+## Personal build
 
-1. Install the APK and allow microphone and notification permissions.
-2. Paste the private **receiver** link, then tap **Pair & enable receiver**.
-3. In Battery settings, give Hotline Receiver unrestricted battery use. On
-   Android 14+, allow full-screen incoming-call notifications in display settings.
-4. Leave the ongoing receiver notification enabled. Answer or Decline incoming
-   calls from the notification or lock-screen call panel. Stop receiving is always
-   available from settings and the ongoing notification.
-5. After reboot, reopen the app and enable receiver. Force-stopping it prevents
-   reception until it is reopened. Do not share your private receiver link.
+No pairing form or pasted link is used. The private build includes a receiver-only credential. Keep this APK private: someone who obtains it could receive this Hotline's calls. Replacing the receiver configuration in Admin revokes it. No credential is committed to Git.
 
-The foreground service checks authenticated call state every 600ms **after each
-request completes**. Network/backend delay adds to detection time. A wake lock
-keeps monitoring active while explicitly enabled; it uses battery and mobile data.
-Alerts obey notification/DND settings. This is polling, not Firebase push:
-Doze restrictions, vendor battery policies, lost internet, force-stop, permission
-revocation and backend downtime can delay/prevent alerts. No instant-delivery SLA
-or physical-phone latency result is claimed. Production reception should use
-high-priority FCM call pushes and phone testing before relying on this as the only
-way to receive calls.
+Allow microphone and notifications. Incoming monitoring starts after notification permission is granted. Set battery use to Unrestricted and allow full-screen call alerts in Settings. Stop receiving remains available in Settings and the persistent notification.
 
-Answer opens the trusted HTTPS receiver in Android System WebView and answers
-only the matching call ID. Keep Android System WebView current. Network reachability
-and the backend's STUN/TURN configuration still determine audio connection.
-The call screen stays awake during use; closing it ends the browser call.
+Polling runs 600 ms after each response. Network delay, Android battery restrictions, force-stop and loss of internet can delay reception. Reliable screen-off latency and two-way audio require physical phone testing. The app preloads its call transport while open to reduce answer delay.
 
 ## Build
 
-Install JDK 17, Android SDK `platforms;android-34`, `build-tools;34.0.0`.
-Run `ANDROID_HOME=/path/to/sdk ./build.sh`. Output defaults to
-`/tmp/hotline-android-build/Hotline-Receiver.apk`. No Maven dependencies required.
-Use `HOTLINE_BUILD_DIR` for another output directory. For release signing supply
-`HOTLINE_KEYSTORE`, `HOTLINE_STORE_PASS`, `HOTLINE_KEY_ALIAS`. Never commit signing
-keys, receiver tokens, or built APKs. The local default development certificate
-must be retained if subsequent development APKs should update this installation.
+Use JDK 17, Android SDK platform 34 and build tools 34.0.0. Set `ANDROID_HOME`, and set `HOTLINE_RECEIVER_KEY_FILE` to a private file containing the 64-character receiver credential registered for this site. Run `bash build.sh`. Without a credential, the build cannot receive calls.
 
-Build verification checks compilation, APK signature and Android manifest.
-Incoming-call delivery, permissions, microphone routing and audio must also be
-verified on the recipient's actual phone, including screen-off and Wi-Fi/mobile
-network combinations.
+Use `HOTLINE_BUILD_DIR` for output and retain the signing certificate for updates. For release signing supply `HOTLINE_KEYSTORE`, `HOTLINE_STORE_PASS`, and `HOTLINE_KEY_ALIAS`. Do not commit credentials, signing keys, generated sources or APKs.
+
+Build checks verify compilation, signature and manifest. Screen-off ringing, Answer/Decline, Bluetooth/earpiece/speaker routing and audio over different networks still need device verification.

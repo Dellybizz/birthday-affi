@@ -10,13 +10,22 @@ platform_jar="$sdk_dir/platforms/android-34/android.jar"
 mkdir -p "$build_dir/classes" "$build_dir/gen" "$build_dir/dex"
 "$tools_dir/aapt2" compile --dir "$project_dir/res" -o "$build_dir/resources.zip"
 "$tools_dir/aapt2" link -I "$platform_jar" --manifest "$project_dir/AndroidManifest.xml" -o "$build_dir/base.apk" "$build_dir/resources.zip" --java "$build_dir/gen"
+# Only a private build receives the receiver credential. Never write it to the repo.
+provisioning_key=""
+if [[ -n "${HOTLINE_RECEIVER_KEY_FILE:-}" ]]; then
+ provisioning_key="$(cat "$HOTLINE_RECEIVER_KEY_FILE")"
+ [[ "$provisioning_key" =~ ^[a-f0-9]{64}$ ]] || { echo "Invalid receiver build configuration" >&2; exit 1; }
+fi
+mkdir -p "$build_dir/gen/com/wiffeyyyy/hotline"
+printf 'package com.wiffeyyyy.hotline; final class Provisioning { static final String KEY="%s"; }\n' "$provisioning_key" > "$build_dir/gen/com/wiffeyyyy/hotline/Provisioning.java"
+unset provisioning_key
 mapfile -t java_sources < <(find "$project_dir/src" "$build_dir/gen" -name '*.java')
 javac -source 8 -target 8 -classpath "$platform_jar" -d "$build_dir/classes" "${java_sources[@]}"
 jar cf "$build_dir/classes.jar" -C "$build_dir/classes" .
 "$tools_dir/d8" --lib "$platform_jar" --min-api 26 --output "$build_dir/dex" "$build_dir/classes.jar"
 (cd "$build_dir/dex" && zip -q -j "$build_dir/base.apk" classes.dex)
 "$tools_dir/zipalign" -f 4 "$build_dir/base.apk" "$build_dir/aligned.apk"
-# Development build uses a local debug certificate. Private pairing key is never bundled.
+# Personal receiver builds are private artifacts; only the credential hash is stored on the server.
 keystore="${HOTLINE_KEYSTORE:-$build_dir/debug.keystore}"
 if [[ ! -f "$keystore" ]]; then
  if [[ -n "${HOTLINE_KEYSTORE:-}" ]]; then echo "Release keystore missing" >&2; exit 1; fi
