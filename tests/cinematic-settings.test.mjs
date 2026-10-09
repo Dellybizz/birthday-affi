@@ -13,7 +13,7 @@ const mutation=(fn)=>{const d=structuredClone(defaultCinematicSettings);fn(d);re
 test('cinematic settings survive site validation and reject invalid scene orders',()=>{
  const cinematic=mutation(d=>{d.countdown.phases[0].seconds=200;d.countdown.before.titleLine='My changed countdown';d.reel.birthdaySeconds=71});
  assert.deepEqual(parseSiteDocument({...defaultSiteDocument,cinematic}).cinematic,cinematic);
- for(const broken of [mutation(d=>d.countdown.phases[2].seconds=180),mutation(d=>d.reel.sceneSeconds[3]=1),mutation(d=>d.reel.birthdaySeconds=60),mutation(d=>d.reel.copy[0].key='bad'),mutation(d=>d.countdown.access.password='123')])assert.throws(()=>parseCinematicSettings(broken));
+ for(const broken of [mutation(d=>d.reel.photoPosition.x=101),mutation(d=>d.reel.photoPosition.y=-1),mutation(d=>d.reel.photoPosition.x='50'),mutation(d=>d.reel.photoPosition=null),mutation(d=>d.reel.photoPosition.extra=1),mutation(d=>d.countdown.phases[2].seconds=180),mutation(d=>d.reel.sceneSeconds[3]=1),mutation(d=>d.reel.birthdaySeconds=60),mutation(d=>d.reel.copy[0].key='bad'),mutation(d=>d.countdown.access.password='123')])assert.throws(()=>parseCinematicSettings(broken));
 });
 test('both published and preview HTML apply saved copy, timestamps and safe JSON',()=>{
  const cinematic=mutation(d=>{d.countdown.before.titleLine='</script><script>bad()</script>';d.countdown.phases[0].seconds=200;d.reel.copy[20].text='Happy day, {nickname}!';d.reel.sceneSeconds[2]=5});
@@ -26,8 +26,9 @@ test('database validator permits legacy settings and enforces the same cinematic
  const db=new PGlite();try{
  await db.exec(`create schema private;create role anon;create role authenticated;create function private.assert_base_site_document(doc jsonb) returns void language plpgsql as $$begin if doc ? 'cinematic' then raise exception 'Unexpected field';end if;end$$;`);
  await db.exec(fs.readFileSync('supabase/migrations/20261009090759_cinematic_editor_controls.sql','utf8'));
- await db.query('select private.assert_base_site_document($1)',[{}]);await db.query('select private.assert_base_site_document($1)',[{cinematic:defaultCinematicSettings}]);
- for(const broken of [mutation(d=>d.countdown.phases[2].seconds=180),mutation(d=>d.reel.sceneSeconds[3]=1),mutation(d=>d.reel.birthdaySeconds=60),mutation(d=>d.reel.copy[0].key='bad'),mutation(d=>d.countdown.access.password='123')])await assert.rejects(db.query('select private.assert_base_site_document($1)',[{cinematic:broken}]));
+ await db.exec(fs.readFileSync('supabase/migrations/'+fs.readdirSync('supabase/migrations').find(file=>file.endsWith('_final_reveal_photo_position.sql')),'utf8'));
+ await db.query('select private.assert_base_site_document($1)',[{}]);await db.query('select private.assert_base_site_document($1)',[{cinematic:defaultCinematicSettings}]);const legacy=mutation(d=>delete d.reel.photoPosition);await db.query('select private.assert_base_site_document($1)',[{cinematic:legacy}]);
+ for(const broken of [mutation(d=>d.reel.photoPosition.x=101),mutation(d=>d.reel.photoPosition.y=-1),mutation(d=>d.reel.photoPosition.x='50'),mutation(d=>d.reel.photoPosition=null),mutation(d=>d.reel.photoPosition.extra=1),mutation(d=>d.countdown.phases[2].seconds=180),mutation(d=>d.reel.sceneSeconds[3]=1),mutation(d=>d.reel.birthdaySeconds=60),mutation(d=>d.reel.copy[0].key='bad'),mutation(d=>d.countdown.access.password='123')])await assert.rejects(db.query('select private.assert_base_site_document($1)',[{cinematic:broken}]));
  }finally{await db.close()}
 });
 
@@ -45,4 +46,24 @@ test('the actual reel engine uses edited copy, selected preview scene and saved 
  assert.equal(element('[data-reel-field="copy20"]').textContent,'For Sara, with love.');
  vm.runInContext('runFinale()',context);
  assert.ok(timings.includes(5000));assert.ok(!timings.includes(4300));assert.ok(timings.includes(70400));
+});
+
+
+test('photo framing preserves legacy settings and reaches both preview and live photo styles',async()=>{
+ const legacy=mutation(d=>delete d.reel.photoPosition);
+ assert.deepEqual(parseCinematicSettings(legacy).reel.photoPosition,{x:50,y:50});
+ assert.equal(Object.hasOwn(legacy.reel,'photoPosition'),false);
+ const cinematic=mutation(d=>{d.reel.photoPosition={x:25,y:80};d.reel.favoritePhoto='/media/123e4567-e89b-42d3-a456-426614174000'});
+ const vm=await import('node:vm');
+ for(const scene of [undefined,5]){
+  const html=renderFinalReelHtml({...defaultSiteDocument,cinematic},undefined,scene),img={style:{},addEventListener(){}},frame={replaceChildren(value){this.image=value}};
+  const context=vm.createContext({window:{},document:{createElement(){return img},getElementById(){return frame}}});
+  const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+  vm.runInContext(scripts.find(script=>script.includes('window.SITE_CONFIG=')),context);
+  const engine=scripts.find(script=>script.includes('const CONFIG='));
+  vm.runInContext(engine.slice(engine.indexOf('const CONFIG='),engine.indexOf('const CONFIG=')+engine.slice(engine.indexOf('const CONFIG=')).indexOf('\n')),context);
+  vm.runInContext(engine.slice(engine.indexOf('function setupPhoto()'),engine.indexOf('setupPhoto();')+'setupPhoto();'.length),context);
+  assert.equal(frame.image.style.objectPosition,'25% 80%');
+  assert.equal(frame.image.src,cinematic.reel.favoritePhoto);
+ }
 });
