@@ -3,7 +3,8 @@ import {useEffect,useMemo,useRef,type CSSProperties} from 'react';
 import type {PageDocument} from '@wiffeyyyy/content';
 import {HEART_SHELL,HEART_ENGINE,HEART_COLORS} from './heart-source';
 import {HEART_BRIDGE} from './heart-bridge';
-const source=HEART_SHELL+'<script>const ORIGINAL_HEART_COLORS='+JSON.stringify(HEART_COLORS)+';'+HEART_BRIDGE+'\n'+HEART_ENGINE+'</script></body></html>';
+import {appInteractionCSS} from '../../content/src/interaction-style';
+const source=HEART_SHELL+'<style>'+appInteractionCSS+'</style>'+'<script>const ORIGINAL_HEART_COLORS='+JSON.stringify(HEART_COLORS)+';'+HEART_BRIDGE+'\n'+HEART_ENGINE+'</script></body></html>';
 export function HeartPage({document,onSelect,selectedId,contained=false,liveVisual=false}:{document:PageDocument;onSelect?:(id:string)=>void;selectedId?:string;contained?:boolean;liveVisual?:boolean}){
  const frame=useRef<HTMLIFrameElement>(null),latest=useRef({document,onSelect,selectedId,liveVisual});latest.current={document,onSelect,selectedId,liveVisual};
  const visibleRoot=document.nodes.find(n=>n.props.heartPart==='page'&&n.parentId===null&&n.visible);

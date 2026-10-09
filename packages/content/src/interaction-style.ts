@@ -1,0 +1,2 @@
+// Public experiences behave like apps; editable fields retain native selection.
+export const appInteractionCSS=`*:not(input):not(textarea):not([contenteditable]):not([contenteditable] *){user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}input,textarea,[contenteditable],[contenteditable] *{user-select:text;-webkit-user-select:text;-webkit-touch-callout:default}img,a,svg image{-webkit-user-drag:none}`;
