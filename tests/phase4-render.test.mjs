@@ -51,7 +51,7 @@ test('complete default pages render the same real layout in selection and intera
  for(const slug of builtinPages){const document=createDefaultPage(slug);for(const editing of [false,true]){const html=render(CMSRenderer,{document,onSelect:editing?()=>{}:undefined});assert.ok(html.includes(checks[slug]),slug);assert.doesNotMatch(html,/Something lovely is on its way|There’s no content/);if(slug!=='hotline')assert.doesNotMatch(html,/autoplay/);}}
 });
 test('typed app sections retain edited labels and media in the real editor layout',()=>{
- let document=createDefaultPage('hotline');const message=document.nodes.find(n=>n.component==='hotline-message');document=edit(document,message.id,{props:{title:'My real message',body:'My own transcript',src:'https://example.com/greeting.mp3'}});const html=render(CMSRenderer,{document,onSelect:()=>{},selectedId:message.id});assert.match(html,/My real message/);assert.match(html,/My own transcript/);assert.match(html,/data-layout-node-id/);assert.match(html,/greeting.mp3/);
+ let document=createDefaultPage('hotline');const message=document.nodes.find(n=>n.component==='hotline-message');document=edit(document,message.id,{props:{title:'My real message',body:'My own transcript',src:'https://example.com/greeting.mp3'}});const html=render(CMSRenderer,{document,onSelect:()=>{},selectedId:message.id});assert.doesNotMatch(html,/My real message/);assert.match(html,/My own transcript/);assert.match(html,/data-layout-node-id/);assert.match(html,/greeting.mp3/);
 });
 test('receipt images escape user copy instead of injecting SVG markup',()=>{const {giftReceiptSvg}=load(path.join(root,'packages/ui/src/page-layout.tsx'));const svg=giftReceiptSvg([{id:'gift',props:{title:'<script>alert(1)</script>'}}],'A & B','No expiry');assert.doesNotMatch(svg,/<script>/);assert.match(svg,/&lt;script&gt;/);assert.match(svg,/A &amp; B/)});
 
@@ -88,7 +88,7 @@ test('live Hotline keeps editable section labels and a disabled editor call prev
  let document=createDefaultPage('adventure');const image=document.nodes.find(n=>n.component==='image'),video=document.nodes.find(n=>n.component==='video');
  assert.match(render(CMSRenderer,{document}),/No Photos or Videos/);
  document=edit(document,image.id,{props:{src:'https://example.com/fit.jpg',title:'Evening look',album:'Evenings'}});document=edit(document,video.id,{props:{src:'https://example.com/fit.mp4',title:'In motion'}});
- const publicHtml=render(CMSRenderer,{document});assert.match(publicHtml,/fit.jpg/);assert.match(publicHtml,/fit.mp4/);assert.match(publicHtml,/Open Evening look/);assert.doesNotMatch(publicHtml,/Choose an atmosphere|It’s a date/);
+ const publicHtml=render(CMSRenderer,{document});assert.match(publicHtml,/fit.jpg/);assert.match(publicHtml,/fit.mp4/);assert.match(publicHtml,/Open image/);assert.doesNotMatch(publicHtml,/Evening look|In motion/);assert.doesNotMatch(publicHtml,/Choose an atmosphere|It’s a date/);
  const editor=render(CMSRenderer,{document,onSelect:()=>{},selectedId:image.id});assert.ok(editor.includes('data-layout-node-id="'+image.id+'"'));assert.match(editor,/Select First fit check/);
  document=edit(document,image.parentId,{visible:false});assert.doesNotMatch(render(CMSRenderer,{document}),/fit.jpg|fit.mp4/);
  });
@@ -269,3 +269,17 @@ test('Shared app audio preference reaches feed, reel and story video controls',(
   assert.equal((html.match(new RegExp('aria-label="'+(muted?'Unmute video':'Mute video')+'"','g'))||[]).length,3);
  }
 });
+
+ test('frontend media keeps authored captions without exposing backend titles',()=>{
+  for(const slug of ['movie','adventure']){
+   let document=createDefaultPage(slug);
+   const media=document.nodes.filter(n=>['image','video','movie-scene'].includes(n.component));
+   for(const n of media)document=edit(document,n.id,{props:{src:'https://example.com/moment.jpg',mediaKind:'image',title:'BACKEND_ONLY_FILENAME_927.jpg',body:slug==='movie'?'Written caption':''}});
+   const html=render(CMSRenderer,{document});
+   assert.doesNotMatch(html,/BACKEND_ONLY_FILENAME_927/);
+   if(slug==='movie')assert.match(html,/Written caption/);
+  }
+  const {AppMediaThumbnail,AppVideo}=load(path.join(root,'packages/ui/src/app-media.tsx'));
+  const node={id:'media',component:'video',props:{src:'https://example.com/clip.mp4',title:'BACKEND_ONLY_FILENAME_927.mp4'}};
+  for(const Component of [AppMediaThumbnail,AppVideo])assert.doesNotMatch(render(Component,{node}),/BACKEND_ONLY_FILENAME_927/);
+ });
