@@ -13,6 +13,6 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
  const variant=download||poster?null:query.get('variant')||(query.get('thumbnail')==='1'&&m.kind==='image'&&available.length?String(available[0]):null);
  if(variant&&!(available.includes(Number(variant))&&['480','960','1600'].includes(variant)))return new Response(null,{status:404});
  const path=poster?m.path.replace(/original$/,'poster.webp'):variant?m.path.replace(/original$/,variant+'.webp'):m.path;
- let location:string;try{if(download){const {data,error}=await db.storage.from('wiffeyyyy-'+m.kind).createSignedUrl(path,300,{download:m.filename||'memory'});if(error||!data)throw error;location=data.signedUrl}else location=await signedMedia(m.kind,path)}catch{return new Response('Media unavailable',{status:503})}
+ let location:string;try{if(download){const {data,error}=await db.storage.from('wiffeyyyy-'+m.kind).createSignedUrl(path,60,{download:m.filename||'memory'});if(error||!data)throw error;location=data.signedUrl}else location=await signedMedia(m.kind,path)}catch{return new Response('Media unavailable',{status:503})}
  return new Response(null,{status:307,headers:{Location:location,'Cache-Control':download?'no-store':'private, max-age=10','Referrer-Policy':'no-referrer'}});
 }
