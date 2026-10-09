@@ -7,7 +7,6 @@ import {PublicPageShell} from '@wiffeyyyy/ui/public-page-shell';
 import {defaultSiteDocument,resolveOsSettings,installPhoneHome,createDefaultPage,getExperience,getExperienceByLivePath,type PageDocument,type SiteDocument} from '@wiffeyyyy/content';
 import {DocumentSettingsProvider} from '@wiffeyyyy/ui/page-layout';
 import {AudioDefaultsProvider} from '@wiffeyyyy/ui/media-player';
-import {playbackCoordinator} from '../../../packages/audio/src/controller';
 import {DesktopScrollbar} from './desktop-scrollbar';
 import {BirthdaySoundtrack} from './birthday-soundtrack';
 import {PhoneAppTransition} from './phone-app-transition';
@@ -30,7 +29,6 @@ export function OSProvider({children,settings=defaultSiteDocument,homeDocument}:
  const pathname=usePathname(),stateRef=useRef(state),readyRef=useRef(false);
  const currentExperience=getExperienceByLivePath(pathname);
  const phonePath=currentExperience?.surface==='phone';
- useEffect(()=>{if(['/app/movie','/app/hotline','/app/radio'].includes(pathname))playbackCoordinator.pauseActive()},[pathname]);
 
  const dispatch=useCallback((action:VisitorAction)=>{if(!readyRef.current)return;const next=reduceVisitorState(stateRef.current,action);stateRef.current=next;setState(next);try{localStorage.setItem(VISITOR_KEY,JSON.stringify(next))}catch{setStorageAvailable(false)}},[]);
  useEffect(()=>{let restored=initialVisitorState();try{restored=parseVisitorState(localStorage.getItem(VISITOR_KEY))}catch{setStorageAvailable(false)}stateRef.current=restored;readyRef.current=true;setState(restored);setReady(true);const sync=(e:StorageEvent)=>{if(e.key===VISITOR_KEY){const next=parseVisitorState(e.newValue);stateRef.current=next;setState(next)}};window.addEventListener('storage',sync);return()=>window.removeEventListener('storage',sync)},[]);

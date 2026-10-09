@@ -2,12 +2,16 @@ export type Player = { pause(): void };
 // One coordinator per browser module, shared by generic blocks and all six apps.
 export class PlaybackCoordinator {
   private active: Player | null = null;
+  private listeners = new Set<()=>void>();
+  current() {return this.active;}
+  subscribe(listener:()=>void) {this.listeners.add(listener);return()=>{this.listeners.delete(listener)};}
+  private notify() {for(const listener of this.listeners)listener();}
   claim(player: Player) {
-    if (this.active && this.active !== player) this.active.pause();
-    this.active = player;
+    if(this.active===player)return;
+    const previous=this.active;this.active=player;previous?.pause();this.notify();
   }
-  pauseActive() {const player=this.active;this.active=null;player?.pause();}
-  release(player: Player) { if (this.active === player) this.active = null; }
+  pauseActive() {const player=this.active;this.active=null;player?.pause();this.notify();}
+  release(player: Player) {if(this.active===player){this.active=null;this.notify();}}
 }
 export const playbackCoordinator = new PlaybackCoordinator();
 export type PlaybackState = { version: 1; time: number; volume: number; muted: boolean };
