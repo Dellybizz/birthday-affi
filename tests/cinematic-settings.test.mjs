@@ -63,7 +63,23 @@ test('photo framing preserves legacy settings and reaches both preview and live 
   const engine=scripts.find(script=>script.includes('const CONFIG='));
   vm.runInContext(engine.slice(engine.indexOf('const CONFIG='),engine.indexOf('const CONFIG=')+engine.slice(engine.indexOf('const CONFIG=')).indexOf('\n')),context);
   vm.runInContext(engine.slice(engine.indexOf('function setupPhoto()'),engine.indexOf('setupPhoto();')+'setupPhoto();'.length),context);
-  assert.equal(frame.image.style.objectPosition,'25% 80%');
+  assert.equal(frame.image.style.transform,'translate(-25%, 30%)');
   assert.equal(frame.image.src,cinematic.reel.favoritePhoto);
+ }
+});
+
+
+test('photo movement applies both axes even with a fallback photo and no custom favorite',async()=>{
+ const vm=await import('node:vm');
+ for(const [x,y,transform] of [[45,50,'translate(-5%, 0%)'],[55,50,'translate(5%, 0%)'],[50,45,'translate(0%, -5%)'],[50,55,'translate(0%, 5%)'],[50,50,'translate(0%, 0%)']]){
+  const cinematic=mutation(d=>{d.reel.photoPosition={x,y}});
+  const html=renderFinalReelHtml({...defaultSiteDocument,cinematic},'/puzzles/level1.jpg',5),img={style:{},addEventListener(){}},frame={replaceChildren(value){this.image=value}};
+  const context=vm.createContext({window:{},document:{createElement(){return img},getElementById(){return frame}}});
+  const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+  vm.runInContext(scripts.find(s=>s.includes('window.SITE_CONFIG=')),context);
+  const engine=scripts.find(s=>s.includes('const CONFIG=')),start=engine.indexOf('const CONFIG=');
+  vm.runInContext(engine.slice(start,start+engine.slice(start).indexOf('\n')),context);
+  vm.runInContext(engine.slice(engine.indexOf('function setupPhoto()'),engine.indexOf('setupPhoto();')+'setupPhoto();'.length),context);
+  assert.equal(frame.image.style.transform,transform);assert.equal(frame.image.src,'/puzzles/level1.jpg');
  }
 });
