@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadContentModule} from './load-content-module.mjs';
@@ -11,3 +12,15 @@ test('foreground audio has priority and background resumes when released',async(
 test('hidden tabs pause and completed tracks stay finished',async()=>{const {music,player,context}=setup();music.update({...context,unlocked:true});await tick();music.update({...context,unlocked:true,visible:false});assert.equal(player.paused,true);music.update({...context,unlocked:true});await tick();player.ended=true;player.paused=true;music.paused();assert.equal(music.status(),'finished');music.dispose();});
 test('late play promise cannot restart disabled music',async()=>{const {music,player,context}=setup();let resolve;player.play=()=>new Promise(done=>{resolve=()=>{player.paused=false;done()}});music.update({...context,unlocked:true});music.update({...context,unlocked:true,enabled:false});resolve();await tick();assert.equal(player.paused,true);music.dispose();});
 test('blocked routes and stored preferences are explicit',()=>{for(const route of ['/app/movie','/app/hotline','/app/adventure','/app/camera','/app/radio','/hotline/receive']){assert.equal(musicRouteAllowed(route,'continue'),false);assert.equal(musicRouteAllowed(route+'/nested','continue'),false)}assert.equal(musicRouteAllowed('/home','continue'),true);assert.equal(musicRouteAllowed('/app/notes','continue'),true);assert.equal(musicRouteAllowed('/app/notes','home-only'),false);assert.equal(parseMusicPreference('{"version":1,"enabled":false}',true),false);assert.equal(parseMusicPreference('broken',true),true);});
+
+ test('autoplay is attempted on load and browser denial can retry without disabling music',async()=>{
+ const {music,player,context}=setup();let attempts=0;
+ player.play=async()=>{attempts++;if(attempts===1)throw Object.assign(new Error('Blocked'),{name:'NotAllowedError'});player.paused=false};
+ music.update({...context,unlocked:true});await tick();assert.equal(attempts,1);assert.equal(music.status(),'waiting');
+ music.retry();await tick();assert.equal(attempts,2);assert.equal(player.paused,false);music.dispose();
+ });
+ test('site attempts autoplay when saved preferences become ready',()=>{
+ const source=fs.readFileSync('apps/web/components/birthday-soundtrack.tsx','utf8');
+ assert.match(source,/\[unlocked,setUnlocked\]=useState\(true\)/);
+ assert.match(source,/enabled:ready&&enabled/);
+ });
