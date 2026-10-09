@@ -1,0 +1,9 @@
+.desktop-scrollbar{position:fixed;right:0;top:0;bottom:0;width:16px;z-index:2147483000;touch-action:none;background:#e8e2eb;cursor:pointer;outline:none}
+.desktop-scrollbar-thumb{position:absolute;left:4px;right:4px;min-height:24px;border-radius:8px;background:#89778f}
+.desktop-scrollbar:hover .desktop-scrollbar-thumb,.desktop-scrollbar:focus-visible .desktop-scrollbar-thumb{background:#62476d}
+.desktop-scrollbar:focus-visible{box-shadow:inset 0 0 0 2px #62476d}
+@media(min-width:768px) and (pointer:fine){
+ .birthday-os-phone *{scrollbar-width:none!important}
+ .birthday-os-phone *::-webkit-scrollbar{display:none!important}
+}
+@media(max-width:767px),(pointer:coarse){.desktop-scrollbar{display:none}}

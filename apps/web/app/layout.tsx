@@ -1,6 +1,7 @@
 import '@wiffeyyyy/ui/vault.css';
 import "@wiffeyyyy/ui/styles";
 import "./os.css";
+import "./desktop-scrollbar.css";
 import "./navigation-performance.css";
 import "./app-transitions.css";
 import {ArchiveJourney} from "../components/archive-journey";
