@@ -105,5 +105,12 @@ export function parsePageDocument(input: unknown): PageDocument {
     }
   }
   if (issues.length) throw new ContentValidationError(issues);
-  return JSON.parse(JSON.stringify(input)) as PageDocument;
+  const document=JSON.parse(JSON.stringify(input)) as PageDocument;
+  // Legacy Heart video cards keep their IDs, order, notes and geometry as photo slots.
+  for(const node of document.nodes)if(node.props.heartPart==='memory'&&node.component==='video'){
+    node.component='image';
+    for(const key of ['src','poster','mediaAssetId','mediaWidth','mediaHeight','variantWidths','captions','transcript'])delete node.props[key];
+    node.props.src='';node.props.alt='Photo memory';
+  }
+  return document;
 }

@@ -283,3 +283,15 @@ test('Shared app audio preference reaches feed, reel and story video controls',(
   const node={id:'media',component:'video',props:{src:'https://example.com/clip.mp4',title:'BACKEND_ONLY_FILENAME_927.mp4'}};
   for(const Component of [AppMediaThumbnail,AppVideo])assert.doesNotMatch(render(Component,{node}),/BACKEND_ONLY_FILENAME_927/);
  });
+
+ test('legacy Heart video slots convert to editable photo slots without losing positions',()=>{
+  const {createHeartPage,parsePageDocument}=load(path.join(root,'packages/content/src/index.ts'));
+  let i=0;const doc=createHeartPage(()=> 'slot-'+(++i));
+  const slots=doc.nodes.filter(n=>n.props.heartPart==='memory');
+  for(const n of slots.slice(0,6)){n.component='video';Object.assign(n.props,{src:'/media/12345678-1234-1234-1234-123456789abc',mediaAssetId:'12345678-1234-1234-1234-123456789abc',poster:'/media/12345678-1234-1234-1234-123456789abc?poster=1',offsetZ:12});}
+  const converted=parsePageDocument(doc),photos=converted.nodes.filter(n=>n.props.heartPart==='memory');
+  assert.equal(photos.length,20);assert.ok(photos.every(n=>n.component==='image'));
+  assert.deepEqual(photos.map(n=>n.id),slots.map(n=>n.id));
+  for(const n of photos.slice(0,6)){assert.equal(n.props.src,'');assert.equal(n.props.offsetZ,12);assert.ok(!n.props.mediaAssetId);assert.ok(!n.props.poster);assert.equal(n.props.body,slots.find(s=>s.id===n.id).props.body);}
+  assert.deepEqual(doc.nodes.find(n=>n.props.heartPart==='memories').children,converted.nodes.find(n=>n.props.heartPart==='memories').children);
+ });
