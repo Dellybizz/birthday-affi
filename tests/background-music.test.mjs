@@ -24,3 +24,18 @@ test('blocked routes and stored preferences are explicit',()=>{for(const route o
  assert.match(source,/\[unlocked,setUnlocked\]=useState\(true\)/);
  assert.match(source,/enabled:ready&&enabled/);
  });
+
+const {MusicRecovery}=loadContentModule('packages/audio/src/music-recovery.ts');
+test('stream recovery preserves position, retries boundedly and respects other audio',()=>{
+ const player={currentTime:42,paused:false,ended:false,readyState:1,error:null};let reloads=[],resumes=0;
+ const recovery=new MusicRecovery(player,time=>reloads.push(time),()=>resumes++);
+ recovery.check(1000,true);recovery.check(12000,true);assert.deepEqual(reloads,[42]);
+ player.error={code:2};recovery.check(23000,false);assert.equal(reloads.length,1);
+ recovery.check(24000,true);recovery.check(35000,true);recovery.check(46000,true);assert.equal(reloads.length,3);
+ player.error=null;player.readyState=4;player.paused=true;recovery.check(57000,true);assert.equal(resumes,1);
+ player.ended=true;recovery.check(68000,true);assert.equal(resumes,1);
+});
+test('unsupported music does not trigger repeated downloads',()=>{
+ let reloads=0;const recovery=new MusicRecovery({currentTime:0,paused:true,ended:false,readyState:0,error:{code:4}},()=>reloads++,()=>{});
+ recovery.check(1000,true);recovery.check(20000,true);assert.equal(reloads,0);
+});

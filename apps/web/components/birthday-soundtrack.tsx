@@ -4,6 +4,7 @@ import {usePathname} from 'next/navigation';
 import {defaultAudioSettings,type SiteDocument} from '@wiffeyyyy/content';
 import {playbackCoordinator} from '../../../packages/audio/src/controller';
 import {BackgroundMusic,MUSIC_PREFERENCE_KEY,musicRouteAllowed,parseMusicPreference,type MusicStatus} from '../../../packages/audio/src/background-music';
+import {MusicRecovery} from '../../../packages/audio/src/music-recovery';
 import '../app/soundtrack.css';
 export function BirthdaySoundtrack({settings}:{settings:SiteDocument}){
  const playlist=settings.audio??defaultAudioSettings,pathname=usePathname();
@@ -16,6 +17,15 @@ export function BirthdaySoundtrack({settings}:{settings:SiteDocument}){
  useEffect(()=>{setVolume(settings.defaultVolume)},[settings.defaultVolume]);
  useEffect(()=>{const player=ref.current;if(!player)return;player.volume=volume;player.muted=false;const music=new BackgroundMusic(player,playbackCoordinator,setStatus);engine.current=music;music.update(context.current);return()=>{music.dispose();if(engine.current===music)engine.current=null}},[track?.assetId]);
  useEffect(()=>{engine.current?.update(context.current)},[ready,enabled,unlocked,visible,routeAllowed]);
+ useEffect(()=>{
+  const player=ref.current;if(!player||!track)return;
+  let restore:number|null=null;
+  const metadata=()=>{if(restore!==null){player.currentTime=restore;restore=null;engine.current?.retry()}};
+  player.addEventListener('loadedmetadata',metadata);
+  const recovery=new MusicRecovery(player,time=>{restore=time;player.src='/media/'+track.assetId+'?retry='+Date.now();player.load()},()=>engine.current?.reconcile());
+  const timer=setInterval(()=>{const state=context.current,owner=playbackCoordinator.current();recovery.check(Date.now(),state.enabled&&state.unlocked&&state.visible&&state.routeAllowed&&(!owner||owner===player))},2000);
+  return()=>{clearInterval(timer);player.removeEventListener('loadedmetadata',metadata)};
+ },[track?.assetId]);
  useEffect(()=>{if(ref.current){ref.current.volume=volume;ref.current.muted=false}},[volume,track?.assetId]);
  useEffect(()=>{
   if(!track)return;
